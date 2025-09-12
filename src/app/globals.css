@@ -24,3 +24,53 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes blob {
+  0% { transform: translate(0px, 0px) scale(1); }
+  33% { transform: translate(10px, -20px) scale(1.05); }
+  66% { transform: translate(-10px, 10px) scale(0.98); }
+  100% { transform: translate(0px, 0px) scale(1); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-float { animation: float 6s ease-in-out infinite; }
+.animate-blob { animation: blob 14s ease-in-out infinite; }
+.animate-shimmer { background-size: 200% 100%; animation: shimmer 2.4s linear infinite; }
+.animate-marquee { animation: marquee 20s linear infinite; }
+
+@keyframes rotate360 { to { transform: rotate(360deg); } }
+.animate-rotate-slow { animation: rotate360 8s linear infinite; }
+
+/* Orbit animation for how-it-works markers (revolve around center) */
+@keyframes revolve {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.orbit-base {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(var(--base-rot, 0deg));
+  transform-origin: center;
+}
+.orbit-anim { animation: none; transform-origin: center; }
+.orbit-satellite {
+  transform: translateX(var(--radius, 10rem));
+}
+/* Keep marker upright while container revolves */
+.orbit-marker { will-change: auto; animation: none; }
