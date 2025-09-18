@@ -3,6 +3,7 @@ import "./globals.css";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import AppToaster from "../components/Toaster";
+import { AuthProvider } from "../contexts/AuthContext";
 
 const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000').replace(/\/$/, '');
 
@@ -77,10 +78,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`antialiased`}>
-        <Navbar />
-        <AppToaster />
-        <main>{children}</main>
-        <Footer />
+        <AuthProvider>
+          <Navbar />
+          <AppToaster />
+          <main>{children}</main>
+          <Footer />
+        </AuthProvider>
       </body>
     </html>
   );

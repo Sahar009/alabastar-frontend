@@ -29,7 +29,7 @@ export default function Home() {
       } else {
         toast.error(msg);
       }
-    } catch (_err) {
+    } catch {
       setStatus("Failed");
       toast.error("Network error. Please try again.");
     }
@@ -66,18 +66,18 @@ export default function Home() {
   const heroTitles = [
     "Plumbing on demand",
     "Instant booking",
-    "Secure payments",
     "Verified providers",
     "Top reviews",
-    "Fast support"
+    "Fast support",
+    "Quality service"
   ];
   const heroDescriptions = [
     "Fix leaks, install heaters, and more with trusted plumbers near you.",
     "Book in seconds. Real-time scheduling that works around you.",
-    "Escrow holds your payment until you confirm the job is done.",
+    "Secure payments with verified providers you can trust.",
     "Every pro is verified with documents and continuous performance checks.",
     "Hire confidently with transparent ratings and real customer feedback.",
-    "We’re here 24/7. Get help whenever you need it."
+    "We're here 24/7. Get help whenever you need it."
   ];
 
   // Marquee categories with icons and per-item colors
@@ -119,32 +119,37 @@ export default function Home() {
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/60 dark:bg-slate-900/50 px-3 py-1 text-xs text-slate-700 dark:text-slate-200 backdrop-blur-xl animate-shimmer" style={{ backgroundImage: "linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.5), rgba(255,255,255,0))" }}>
                 <span className="h-2 w-2 rounded-full bg-[#14B8A6]"></span>
-                Escrow-backed bookings • Verified providers • 24/7 support
+                Verified providers • 24/7 support • Secure payments
               </div>
               <h1 className="mt-4 text-4xl sm:text-6xl font-extrabold leading-tight text-slate-900 dark:text-slate-50">
                 Find trusted services near you
                 <span className="block text-transparent bg-clip-text bg-gradient-to-r from-[#2563EB] to-[#14B8A6]">Fast. Safe. Guaranteed.</span>
         </h1>
               <p className="mt-4 text-lg text-slate-600 dark:text-slate-300">
-                Book plumbers, electricians, cleaners and more. Payments are held in escrow until you confirm the job is done.
+                Book plumbers, electricians, cleaners and more. Secure payments with verified providers.
               </p>
 
-              <form onSubmit={subscribe} className="mt-6 flex w-full max-w-md items-center gap-2">
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
-                  className="flex-1 rounded-xl border border-slate-300/70 dark:border-white/10 bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#2563EB]/40"
-                />
-                <button className="rounded-xl bg-gradient-to-r from-[#2563EB] to-[#14B8A6] px-5 py-3 text-white font-semibold shadow-md shadow-sky-500/20 active:scale-[.98]">
-                  Subscribe
+              {/* Search bar */}
+              <div className="mt-6 w-full max-w-lg">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search for services or providers..."
+                    className="w-full rounded-xl border border-slate-300/70 dark:border-white/10 bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl px-4 py-3 pr-12 text-sm outline-none focus:ring-2 focus:ring-[#2563EB]/40"
+                  />
+                  <Search size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                <button className="flex-1 sm:flex-none rounded-xl bg-gradient-to-r from-[#2563EB] to-[#14B8A6] px-6 py-3 text-white font-semibold shadow-md shadow-sky-500/20 hover:opacity-90 transition-opacity cursor-pointer">
+                  Book a Provider
                 </button>
-              </form>
-              {status && (
-                <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{status}</p>
-              )}
+                <button className="flex-1 sm:flex-none rounded-xl border border-slate-300/70 dark:border-white/10 bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl px-6 py-3 text-slate-700 dark:text-slate-200 font-semibold hover:bg-white/80 dark:hover:bg-slate-900/80 transition-colors cursor-pointer">
+                  Become a Provider
+                </button>
+              </div>
 
               <div className="mt-8 flex items-center gap-6">
                 <div className="flex -space-x-3">
@@ -256,7 +261,7 @@ export default function Home() {
         {/* Feature grid */}
         <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {[
-            { title: 'Escrow protection', desc: 'Funds are held until you confirm the job is done.', Icon: ShieldCheck, accent: 'from-emerald-500 to-teal-500' },
+            { title: 'Secure payments', desc: 'Safe and reliable payment processing for all transactions.', Icon: ShieldCheck, accent: 'from-emerald-500 to-teal-500' },
             { title: 'Verified providers', desc: 'Identity checks and continuous performance monitoring.', Icon: ShieldCheck, accent: 'from-sky-500 to-cyan-500' },
             { title: 'Fast matching', desc: 'Get connected to nearby pros in minutes, not days.', Icon: Zap, accent: 'from-amber-400 to-orange-500' },
             { title: 'Transparent pricing', desc: 'Clear estimates and no hidden fees.', Icon: Ruler, accent: 'from-fuchsia-500 to-violet-500' },
@@ -349,7 +354,7 @@ export default function Home() {
               },
               {
                 title: 'Book securely',
-                desc: 'Pay into escrow. We only release funds when you confirm the job is done.',
+                desc: 'Secure booking with verified providers and transparent pricing.',
                 Icon: ShieldCheck,
                 accent: 'from-emerald-500 to-teal-500',
                 text: 'text-emerald-600'
@@ -377,29 +382,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Featured providers */}
-      <section id="providers" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-20">
-        <div className="flex items-end justify-between">
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-slate-50">Top-rated providers</h2>
-          <a href="#" className="text-sm font-semibold text-[#2563EB]">See all</a>
-        </div>
-        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1,2,3,4,5,6].map((i) => (
-            <div key={i} className="group rounded-2xl border border-white/30 dark:border-white/10 bg-white/60 dark:bg-slate-900/50 backdrop-blur-xl p-5 shadow hover:shadow-xl transition-shadow">
-              <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-full bg-gradient-to-r from-[#2563EB] to-[#14B8A6]" />
-                <div>
-                  <p className="font-semibold text-slate-900 dark:text-slate-50">Provider {i}</p>
-                  <p className="text-xs text-slate-600 dark:text-slate-300">Plumbing • Lagos</p>
-                </div>
-                <div className="ml-auto text-xs font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 px-2 py-1 rounded">4.9 ★</div>
-              </div>
-              <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">“Always on time and professional. Highly recommend.”</p>
-              <button className="mt-4 w-full rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 py-2 font-semibold group-hover:translate-y-[-1px] transition-transform">Book now</button>
-            </div>
-          ))}
-        </div>
-      </section>
 
       {/* CTA band */}
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-20">
@@ -411,6 +393,33 @@ export default function Home() {
               <p className="text-white/90">Tap emergency and get matched with the nearest available provider.</p>
             </div>
             <a href="#" className="rounded-xl bg-white/90 text-slate-900 font-semibold px-5 py-3 hover:bg-white">Emergency request</a>
+          </div>
+        </div>
+      </section>
+
+      {/* Newsletter Subscription */}
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-20">
+        <div className="relative overflow-hidden rounded-3xl border border-white/30 dark:border-white/10 bg-white/60 dark:bg-slate-900/50 backdrop-blur-xl p-8 shadow">
+          <div className="absolute -inset-px opacity-10 bg-gradient-to-r from-[#2563EB] to-[#14B8A6]" />
+          <div className="relative text-center">
+            <h3 className="text-2xl font-extrabold text-slate-900 dark:text-slate-50">Stay updated</h3>
+            <p className="mt-2 text-slate-600 dark:text-slate-300">Get the latest updates on new features and providers in your area.</p>
+            <form onSubmit={subscribe} className="mt-6 flex w-full max-w-md mx-auto items-center gap-2">
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
+                className="flex-1 rounded-xl border border-slate-300/70 dark:border-white/10 bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#2563EB]/40"
+              />
+              <button className="rounded-xl bg-gradient-to-r from-[#2563EB] to-[#14B8A6] px-5 py-3 text-white font-semibold shadow-md shadow-sky-500/20 active:scale-[.98]">
+                Subscribe
+              </button>
+            </form>
+            {status && (
+              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{status}</p>
+            )}
           </div>
         </div>
       </section>
