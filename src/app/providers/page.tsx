@@ -1,6 +1,24 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { Search, MapPin, Star, Filter, User, Award, Clock, Map, List, Shield, Zap } from "lucide-react";
+import { 
+  Search, MapPin, Star, Filter, User, Award, Clock, Map, List,
+  Wrench, Droplets, Zap as ZapIcon, Sparkles, Package, Snowflake, Hammer,
+  Palette, Bug, Shirt, Square, Video, Sprout, Settings, Key, Sofa
+} from "lucide-react";
+import dynamic from "next/dynamic";
+import { Provider } from "../../types/provider";
+import Avatar from "../../components/Avatar";
+import ProviderProfileModal from "../../components/ProviderProfileModal";
+
+// Dynamically import the map component to avoid SSR issues
+const ProviderMap = dynamic(() => import("../../components/ProviderMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-[600px] bg-slate-200 dark:bg-slate-700 rounded-3xl flex items-center justify-center">
+      <div className="text-slate-500 dark:text-slate-400">Loading map...</div>
+    </div>
+  )
+});
 
 // Custom Naira symbol component
 const NairaIcon = ({ className }: { className?: string }) => (
@@ -10,31 +28,6 @@ const NairaIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-interface Provider {
-  id: string;
-  user: {
-    fullName: string;
-    email: string;
-    phone: string;
-    alternativePhone?: string;
-    avatarUrl?: string;
-  };
-  category: string;
-  subcategories: string[];
-  yearsOfExperience: number;
-  bio: string;
-  hourlyRate: number;
-  startingPrice: number;
-  locationCity: string;
-  locationState: string;
-  latitude: number;
-  longitude: number;
-  ratingAverage: number;
-  ratingCount: number;
-  verificationStatus: string;
-  isAvailable: boolean;
-  estimatedArrival: string;
-}
 
 export default function ProvidersPage() {
   const [filteredProviders, setFilteredProviders] = useState<Provider[]>([]);
@@ -46,24 +39,26 @@ export default function ProvidersPage() {
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState("rating");
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [profileProvider, setProfileProvider] = useState<Provider | null>(null);
 
   const categories = [
-    { value: '', label: 'All Services', icon: '🔧' },
-    { value: 'plumbing', label: 'Plumbing', icon: '🚰' },
-    { value: 'electrical', label: 'Electrical', icon: '⚡' },
-    { value: 'cleaning', label: 'Cleaning', icon: '🧹' },
-    { value: 'moving', label: 'Moving', icon: '📦' },
-    { value: 'ac_repair', label: 'AC Repair', icon: '❄️' },
-    { value: 'carpentry', label: 'Carpentry', icon: '🔨' },
-    { value: 'painting', label: 'Painting', icon: '🎨' },
-    { value: 'pest_control', label: 'Pest Control', icon: '🐛' },
-    { value: 'laundry', label: 'Laundry', icon: '👕' },
-    { value: 'tiling', label: 'Tiling', icon: '🧱' },
-    { value: 'cctv', label: 'CCTV', icon: '📹' },
-    { value: 'gardening', label: 'Gardening', icon: '🌱' },
-    { value: 'appliance_repair', label: 'Appliance Repair', icon: '🔧' },
-    { value: 'locksmith', label: 'Locksmith', icon: '🔐' },
-    { value: 'carpet_cleaning', label: 'Carpet Cleaning', icon: '🛋️' }
+    { value: '', label: 'All Services', icon: Wrench },
+    { value: 'plumbing', label: 'Plumbing', icon: Droplets },
+    { value: 'electrical', label: 'Electrical', icon: ZapIcon },
+    { value: 'cleaning', label: 'Cleaning', icon: Sparkles },
+    { value: 'moving', label: 'Moving', icon: Package },
+    { value: 'ac_repair', label: 'AC Repair', icon: Snowflake },
+    { value: 'carpentry', label: 'Carpentry', icon: Hammer },
+    { value: 'painting', label: 'Painting', icon: Palette },
+    { value: 'pest_control', label: 'Pest Control', icon: Bug },
+    { value: 'laundry', label: 'Laundry', icon: Shirt },
+    { value: 'tiling', label: 'Tiling', icon: Square },
+    { value: 'cctv', label: 'CCTV', icon: Video },
+    { value: 'gardening', label: 'Gardening', icon: Sprout },
+    { value: 'appliance_repair', label: 'Appliance Repair', icon: Settings },
+    { value: 'locksmith', label: 'Locksmith', icon: Key },
+    { value: 'carpet_cleaning', label: 'Carpet Cleaning', icon: Sofa }
   ];
 
   const locations = [
@@ -87,7 +82,10 @@ export default function ProvidersPage() {
 
   const fetchProviders = useCallback(async () => {
     setLoading(true);
+    
+    // Always use mock data for now since API might not be ready
     try {
+      // Check if we should try API call (only if backend is available)
       const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       const params = new URLSearchParams();
       
@@ -96,23 +94,39 @@ export default function ProvidersPage() {
       if (selectedLocation) params.append('location', selectedLocation);
       params.append('sort', sortBy);
       
-      const response = await fetch(`${base}/api/providers/search?${params}`);
-      const data = await response.json();
+      // Try API call with timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
       
-      if (response.ok) {
-        const providersData = data.data?.providers || [];
-        // Add mock data for demo
-        const mockProviders = providersData.length > 0 ? providersData : generateMockProviders();
-        setFilteredProviders(mockProviders);
-      } else {
-        console.error('Failed to fetch providers:', data.message);
-        // Use mock data as fallback
-        const mockProviders = generateMockProviders();
-        setFilteredProviders(mockProviders);
+      try {
+        const response = await fetch(`${base}/api/providers/search?${params}`, {
+          signal: controller.signal,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        clearTimeout(timeoutId);
+        
+        if (response.ok) {
+          const data = await response.json();
+          const providersData = data.data?.providers || [];
+          if (providersData.length > 0) {
+            setFilteredProviders(providersData);
+            return;
+          }
+        }
+      } catch (apiError) {
+        clearTimeout(timeoutId);
+        console.log('API not available, using mock data:', apiError);
       }
+      
+      // Fallback to mock data
+      const mockProviders = generateMockProviders();
+      setFilteredProviders(mockProviders);
+      
     } catch (error) {
-      console.error('Error fetching providers:', error);
-      // Use mock data as fallback
+      console.error('Error in fetchProviders:', error);
+      // Use mock data as final fallback
       const mockProviders = generateMockProviders();
       setFilteredProviders(mockProviders);
     } finally {
@@ -124,7 +138,12 @@ export default function ProvidersPage() {
     const mockData = [
       {
         id: '1',
-        user: { fullName: 'John Adebayo', email: 'john@example.com', phone: '+2348012345678' },
+        user: { 
+          fullName: 'John Adebayo', 
+          email: 'john@example.com', 
+          phone: '+2348012345678',
+          avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face'
+        },
         category: 'plumbing',
         subcategories: ['Pipe Repair', 'Drain Cleaning'],
         yearsOfExperience: 5,
@@ -143,7 +162,12 @@ export default function ProvidersPage() {
       },
       {
         id: '2',
-        user: { fullName: 'Sarah Okafor', email: 'sarah@example.com', phone: '+2348023456789' },
+        user: { 
+          fullName: 'Sarah Okafor', 
+          email: 'sarah@example.com', 
+          phone: '+2348023456789',
+          avatarUrl: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face'
+        },
         category: 'electrical',
         subcategories: ['Wiring', 'Outlet Installation'],
         yearsOfExperience: 8,
@@ -162,7 +186,12 @@ export default function ProvidersPage() {
       },
       {
         id: '3',
-        user: { fullName: 'Mike Johnson', email: 'mike@example.com', phone: '+2348034567890' },
+        user: { 
+          fullName: 'Mike Johnson', 
+          email: 'mike@example.com', 
+          phone: '+2348034567890',
+          avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'
+        },
         category: 'cleaning',
         subcategories: ['House Cleaning', 'Deep Cleaning'],
         yearsOfExperience: 3,
@@ -178,6 +207,54 @@ export default function ProvidersPage() {
         verificationStatus: 'verified',
         isAvailable: false,
         estimatedArrival: '30-35 mins'
+      },
+      {
+        id: '4',
+        user: { 
+          fullName: 'Aisha Mohammed', 
+          email: 'aisha@example.com', 
+          phone: '+2348045678901',
+          avatarUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face'
+        },
+        category: 'painting',
+        subcategories: ['Interior Painting', 'Exterior Painting'],
+        yearsOfExperience: 6,
+        bio: 'Creative painter with expertise in both interior and exterior painting projects.',
+        hourlyRate: 2200,
+        startingPrice: 4500,
+        locationCity: 'Port Harcourt',
+        locationState: 'Rivers',
+        latitude: 4.8156,
+        longitude: 7.0498,
+        ratingAverage: 4.6,
+        ratingCount: 98,
+        verificationStatus: 'verified',
+        isAvailable: true,
+        estimatedArrival: '25-30 mins'
+      },
+      {
+        id: '5',
+        user: { 
+          fullName: 'David Okonkwo', 
+          email: 'david@example.com', 
+          phone: '+2348056789012',
+          avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face'
+        },
+        category: 'carpentry',
+        subcategories: ['Furniture Repair', 'Custom Woodwork'],
+        yearsOfExperience: 7,
+        bio: 'Skilled carpenter specializing in custom furniture and home repairs.',
+        hourlyRate: 2800,
+        startingPrice: 5500,
+        locationCity: 'Kano',
+        locationState: 'Kano',
+        latitude: 12.0022,
+        longitude: 8.5920,
+        ratingAverage: 4.9,
+        ratingCount: 112,
+        verificationStatus: 'verified',
+        isAvailable: true,
+        estimatedArrival: '18-22 mins'
       }
     ];
     return mockData;
@@ -194,7 +271,7 @@ export default function ProvidersPage() {
 
   const getCategoryIcon = (category: string) => {
     const cat = categories.find(c => c.value === category);
-    return cat ? cat.icon : '🔧';
+    return cat ? cat.icon : Wrench;
   };
 
   const formatPrice = (price: number) => {
@@ -214,6 +291,22 @@ export default function ProvidersPage() {
     // TODO: Implement booking functionality
     console.log('Booking provider:', provider);
     alert(`Booking ${provider.user.fullName} - Coming Soon!`);
+  };
+
+  const handleViewProfile = (provider: Provider) => {
+    setProfileProvider(provider);
+    setShowProfileModal(true);
+  };
+
+  const handleContactProvider = (provider: Provider) => {
+    // TODO: Implement contact functionality
+    console.log('Contacting provider:', provider);
+    alert(`Contacting ${provider.user.fullName} - Coming Soon!`);
+  };
+
+  const handleCloseProfileModal = () => {
+    setShowProfileModal(false);
+    setProfileProvider(null);
   };
 
   return (
@@ -287,7 +380,7 @@ export default function ProvidersPage() {
                           : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
                       }`}
                     >
-                      <span className="text-lg">{cat.icon}</span>
+                      {cat.icon && <cat.icon className="w-5 h-5" />}
                       <span className="truncate">{cat.label}</span>
                     </button>
                   ))}
@@ -373,6 +466,13 @@ export default function ProvidersPage() {
                   </div>
                 ))}
               </div>
+            ) : viewMode === 'map' ? (
+              <ProviderMap
+                providers={filteredProviders}
+                selectedProvider={selectedProvider}
+                onProviderSelect={handleProviderSelect}
+                onProviderDeselect={() => setSelectedProvider(null)}
+              />
             ) : filteredProviders.length > 0 ? (
               <div className="space-y-4">
                 {filteredProviders.map((provider) => (
@@ -385,28 +485,26 @@ export default function ProvidersPage() {
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-4">
-                        <div className="relative">
-                          <div className="w-16 h-16 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg">
-                            {provider.user.fullName.charAt(0)}
-                          </div>
-                          {provider.verificationStatus === 'verified' && (
-                            <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                              <Shield className="w-3 h-3 text-white fill-current" />
-                            </div>
-                          )}
-                          {provider.isAvailable && (
-                            <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                              <Zap className="w-3 h-3 text-white fill-current" />
-                            </div>
-                          )}
-                        </div>
+                        <Avatar
+                          src={provider.user.avatarUrl}
+                          alt={provider.user.fullName}
+                          fallback={provider.user.fullName}
+                          size="lg"
+                          showVerification={true}
+                          isVerified={provider.verificationStatus === 'verified'}
+                          showAvailability={true}
+                          isAvailable={provider.isAvailable}
+                        />
                         
                         <div className="flex-1">
                           <div className="flex items-center space-x-2 mb-1">
                             <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">
                               {provider.user.fullName}
                             </h3>
-                            <span className="text-2xl">{getCategoryIcon(provider.category)}</span>
+                            {(() => {
+                              const IconComponent = getCategoryIcon(provider.category);
+                              return <IconComponent className="w-6 h-6 text-[#14B8A6]" />;
+                            })()}
                           </div>
                           
                           <p className="text-sm text-slate-600 dark:text-slate-400 font-medium mb-2">
@@ -476,7 +574,17 @@ export default function ProvidersPage() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            // TODO: Add contact functionality
+                            handleViewProfile(provider);
+                          }}
+                          className="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors text-sm font-medium"
+                        >
+                          View Profile
+                        </button>
+                        
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleContactProvider(provider);
                           }}
                           className="px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-sm"
                         >
@@ -499,6 +607,15 @@ export default function ProvidersPage() {
           </div>
         </div>
       </div>
+
+      {/* Provider Profile Modal */}
+      <ProviderProfileModal
+        provider={profileProvider}
+        isOpen={showProfileModal}
+        onClose={handleCloseProfileModal}
+        onBook={handleBookProvider}
+        onContact={handleContactProvider}
+      />
     </div>
   );
 }
