@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { 
   Search, MapPin, Star, Filter, User, Award, Clock, Map, List,
   Wrench, Droplets, Zap as ZapIcon, Sparkles, Package, Snowflake, Hammer,
@@ -9,6 +10,11 @@ import dynamic from "next/dynamic";
 import { Provider } from "../../types/provider";
 import Avatar from "../../components/Avatar";
 import ProviderProfileModal from "../../components/ProviderProfileModal";
+import BookingModal from "../../components/BookingModal";
+import { useAuth } from "../../contexts/AuthContext";
+import { useProviders } from "../../hooks/useProviders";
+import { providersService } from "../../services/providersService";
+import { useCreateBookingMutation, useGetProviderServicesQuery } from "../../store/api/providersApi";
 
 // Dynamically import the map component to avoid SSR issues
 const ProviderMap = dynamic(() => import("../../components/ProviderMap"), {
@@ -30,17 +36,39 @@ const NairaIcon = ({ className }: { className?: string }) => (
 
 
 export default function ProvidersPage() {
-  const [filteredProviders, setFilteredProviders] = useState<Provider[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [selectedLocation, setSelectedLocation] = useState("");
-  const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
-  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
-  const [showFilters, setShowFilters] = useState(false);
-  const [sortBy, setSortBy] = useState("rating");
+  const router = useRouter();
+  const { user } = useAuth();
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [profileProvider, setProfileProvider] = useState<Provider | null>(null);
+  const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
+  const [showBookingModal, setShowBookingModal] = useState(false);
+
+  // Use Redux hooks
+  const {
+    providers: filteredProviders,
+    loading,
+    error,
+    searchTerm,
+    selectedCategory,
+    selectedLocation,
+    viewMode,
+    showFilters,
+    sortBy,
+    pagination,
+    filters,
+    handleSearch,
+    handleCategoryChange,
+    handleLocationChange,
+    handleViewModeChange,
+    handleShowFilters,
+    handleSortChange,
+    handleFilterChange,
+    handleClearFilters,
+    handlePageChange,
+    refreshProviders,
+  } = useProviders();
+
+  const [createBooking] = useCreateBookingMutation();
 
   const categories = [
     { value: '', label: 'All Services', icon: Wrench },
@@ -80,189 +108,19 @@ export default function ProvidersPage() {
     { value: 'distance', label: 'Nearest First' }
   ];
 
-  const fetchProviders = useCallback(async () => {
-    setLoading(true);
-    
-    // Always use mock data for now since API might not be ready
-    try {
-      // Check if we should try API call (only if backend is available)
-      const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const params = new URLSearchParams();
-      
-      if (searchTerm) params.append('search', searchTerm);
-      if (selectedCategory) params.append('category', selectedCategory);
-      if (selectedLocation) params.append('location', selectedLocation);
-      params.append('sort', sortBy);
-      
-      // Try API call with timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-      
-      try {
-        const response = await fetch(`${base}/api/providers/search?${params}`, {
-          signal: controller.signal,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-        clearTimeout(timeoutId);
-        
-        if (response.ok) {
-          const data = await response.json();
-          const providersData = data.data?.providers || [];
-          if (providersData.length > 0) {
-            setFilteredProviders(providersData);
-            return;
-          }
-        }
-      } catch (apiError) {
-        clearTimeout(timeoutId);
-        console.log('API not available, using mock data:', apiError);
-      }
-      
-      // Fallback to mock data
-      const mockProviders = generateMockProviders();
-      setFilteredProviders(mockProviders);
-      
-    } catch (error) {
-      console.error('Error in fetchProviders:', error);
-      // Use mock data as final fallback
-      const mockProviders = generateMockProviders();
-      setFilteredProviders(mockProviders);
-    } finally {
-      setLoading(false);
-    }
-  }, [searchTerm, selectedCategory, selectedLocation, sortBy]);
-
-  const generateMockProviders = (): Provider[] => {
-    const mockData = [
-      {
-        id: '1',
-        user: { 
-          fullName: 'John Adebayo', 
-          email: 'john@example.com', 
-          phone: '+2348012345678',
-          avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face'
-        },
-        category: 'plumbing',
-        subcategories: ['Pipe Repair', 'Drain Cleaning'],
-        yearsOfExperience: 5,
-        bio: 'Professional plumber with 5+ years experience in residential and commercial plumbing.',
-        hourlyRate: 2500,
-        startingPrice: 5000,
-        locationCity: 'Lagos',
-        locationState: 'Lagos',
-        latitude: 6.5244,
-        longitude: 3.3792,
-        ratingAverage: 4.8,
-        ratingCount: 127,
-        verificationStatus: 'verified',
-        isAvailable: true,
-        estimatedArrival: '15-20 mins'
-      },
-      {
-        id: '2',
-        user: { 
-          fullName: 'Sarah Okafor', 
-          email: 'sarah@example.com', 
-          phone: '+2348023456789',
-          avatarUrl: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face'
-        },
-        category: 'electrical',
-        subcategories: ['Wiring', 'Outlet Installation'],
-        yearsOfExperience: 8,
-        bio: 'Licensed electrician specializing in home electrical systems and repairs.',
-        hourlyRate: 3000,
-        startingPrice: 6000,
-        locationCity: 'Abuja',
-        locationState: 'FCT',
-        latitude: 9.0765,
-        longitude: 7.3986,
-        ratingAverage: 4.9,
-        ratingCount: 89,
-        verificationStatus: 'verified',
-        isAvailable: true,
-        estimatedArrival: '20-25 mins'
-      },
-      {
-        id: '3',
-        user: { 
-          fullName: 'Mike Johnson', 
-          email: 'mike@example.com', 
-          phone: '+2348034567890',
-          avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'
-        },
-        category: 'cleaning',
-        subcategories: ['House Cleaning', 'Deep Cleaning'],
-        yearsOfExperience: 3,
-        bio: 'Professional cleaner offering comprehensive cleaning services for homes and offices.',
-        hourlyRate: 2000,
-        startingPrice: 4000,
-        locationCity: 'Lagos',
-        locationState: 'Lagos',
-        latitude: 6.4474,
-        longitude: 3.3903,
-        ratingAverage: 4.7,
-        ratingCount: 156,
-        verificationStatus: 'verified',
-        isAvailable: false,
-        estimatedArrival: '30-35 mins'
-      },
-      {
-        id: '4',
-        user: { 
-          fullName: 'Aisha Mohammed', 
-          email: 'aisha@example.com', 
-          phone: '+2348045678901',
-          avatarUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face'
-        },
-        category: 'painting',
-        subcategories: ['Interior Painting', 'Exterior Painting'],
-        yearsOfExperience: 6,
-        bio: 'Creative painter with expertise in both interior and exterior painting projects.',
-        hourlyRate: 2200,
-        startingPrice: 4500,
-        locationCity: 'Port Harcourt',
-        locationState: 'Rivers',
-        latitude: 4.8156,
-        longitude: 7.0498,
-        ratingAverage: 4.6,
-        ratingCount: 98,
-        verificationStatus: 'verified',
-        isAvailable: true,
-        estimatedArrival: '25-30 mins'
-      },
-      {
-        id: '5',
-        user: { 
-          fullName: 'David Okonkwo', 
-          email: 'david@example.com', 
-          phone: '+2348056789012',
-          avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face'
-        },
-        category: 'carpentry',
-        subcategories: ['Furniture Repair', 'Custom Woodwork'],
-        yearsOfExperience: 7,
-        bio: 'Skilled carpenter specializing in custom furniture and home repairs.',
-        hourlyRate: 2800,
-        startingPrice: 5500,
-        locationCity: 'Kano',
-        locationState: 'Kano',
-        latitude: 12.0022,
-        longitude: 8.5920,
-        ratingAverage: 4.9,
-        ratingCount: 112,
-        verificationStatus: 'verified',
-        isAvailable: true,
-        estimatedArrival: '18-22 mins'
-      }
-    ];
-    return mockData;
-  };
-
+  // All data fetching is handled by Redux hooks
+  
+  // Debug logging
   useEffect(() => {
-    fetchProviders();
-  }, [fetchProviders]);
+    console.log('🔍 Providers page state:', {
+      loading,
+      error,
+      filteredProviders: filteredProviders.length,
+      searchTerm,
+      selectedCategory,
+      selectedLocation
+    });
+  }, [loading, error, filteredProviders.length, searchTerm, selectedCategory, selectedLocation]);
 
   const getCategoryLabel = (category: string) => {
     const cat = categories.find(c => c.value === category);
@@ -288,9 +146,16 @@ export default function ProvidersPage() {
   };
 
   const handleBookProvider = (provider: Provider) => {
-    // TODO: Implement booking functionality
-    console.log('Booking provider:', provider);
-    alert(`Booking ${provider.user.fullName} - Coming Soon!`);
+    // Check if user is logged in
+    if (!user) {
+      // Redirect to login page with return URL
+      const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+      router.push(`/login?returnUrl=${returnUrl}`);
+      return;
+    }
+    
+    setSelectedProvider(provider);
+    setShowBookingModal(true);
   };
 
   const handleViewProfile = (provider: Provider) => {
@@ -299,6 +164,14 @@ export default function ProvidersPage() {
   };
 
   const handleContactProvider = (provider: Provider) => {
+    // Check if user is logged in
+    if (!user) {
+      // Redirect to login page with return URL
+      const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+      router.push(`/login?returnUrl=${returnUrl}`);
+      return;
+    }
+    
     // TODO: Implement contact functionality
     console.log('Contacting provider:', provider);
     alert(`Contacting ${provider.user.fullName} - Coming Soon!`);
@@ -325,7 +198,7 @@ export default function ProvidersPage() {
             
             <div className="flex items-center space-x-3">
               <button
-                onClick={() => setViewMode(viewMode === 'list' ? 'map' : 'list')}
+                onClick={() => handleViewModeChange(viewMode === 'list' ? 'map' : 'list')}
                 className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
               >
                 {viewMode === 'list' ? <Map className="w-4 h-4" /> : <List className="w-4 h-4" />}
@@ -333,7 +206,7 @@ export default function ProvidersPage() {
               </button>
               
               <button
-                onClick={() => setShowFilters(!showFilters)}
+                onClick={() => handleShowFilters(!showFilters)}
                 className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-[#2563EB] text-white hover:bg-[#2563EB]/90 transition-colors"
               >
                 <Filter className="w-4 h-4" />
@@ -356,7 +229,7 @@ export default function ProvidersPage() {
                   type="text"
                   placeholder="Search providers, services..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => handleSearch(e.target.value)}
                   className="w-full pl-12 pr-4 py-3 border border-slate-200 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#2563EB]/50 focus:border-transparent transition-all"
                 />
               </div>
@@ -373,7 +246,7 @@ export default function ProvidersPage() {
                   {categories.slice(0, 8).map(cat => (
                     <button
                       key={cat.value}
-                      onClick={() => setSelectedCategory(cat.value)}
+                      onClick={() => handleCategoryChange(cat.value)}
                       className={`flex items-center space-x-2 p-3 rounded-xl text-sm font-medium transition-all ${
                         selectedCategory === cat.value
                           ? 'bg-[#2563EB] text-white'
@@ -397,7 +270,7 @@ export default function ProvidersPage() {
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-3">Location</label>
                 <select
                   value={selectedLocation}
-                  onChange={(e) => setSelectedLocation(e.target.value)}
+                  onChange={(e) => handleLocationChange(e.target.value)}
                   className="w-full p-3 border border-slate-200 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#2563EB]/50 focus:border-transparent"
                 >
                   {locations.map(loc => (
@@ -411,7 +284,7 @@ export default function ProvidersPage() {
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-3">Sort By</label>
                 <select
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
+                  onChange={(e) => handleSortChange(e.target.value)}
                   className="w-full p-3 border border-slate-200 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#2563EB]/50 focus:border-transparent"
                 >
                   {sortOptions.map(option => (
@@ -428,19 +301,19 @@ export default function ProvidersPage() {
                     {searchTerm && (
                       <span className="inline-flex items-center gap-1 px-3 py-1 bg-[#2563EB]/10 text-[#2563EB] rounded-full text-sm">
                         Search: &quot;{searchTerm}&quot;
-                        <button onClick={() => setSearchTerm("")} className="ml-1 hover:text-[#2563EB]/70">×</button>
+                        <button onClick={() => handleSearch("")} className="ml-1 hover:text-[#2563EB]/70">×</button>
                       </span>
                     )}
                     {selectedCategory && (
                       <span className="inline-flex items-center gap-1 px-3 py-1 bg-[#14B8A6]/10 text-[#14B8A6] rounded-full text-sm">
                         {categories.find(c => c.value === selectedCategory)?.label}
-                        <button onClick={() => setSelectedCategory("")} className="ml-1 hover:text-[#14B8A6]/70">×</button>
+                        <button onClick={() => handleCategoryChange("")} className="ml-1 hover:text-[#14B8A6]/70">×</button>
                       </span>
                     )}
                     {selectedLocation && (
                       <span className="inline-flex items-center gap-1 px-3 py-1 bg-purple-500/10 text-purple-600 rounded-full text-sm">
                         {locations.find(l => l.value === selectedLocation)?.label}
-                        <button onClick={() => setSelectedLocation("")} className="ml-1 hover:text-purple-600/70">×</button>
+                        <button onClick={() => handleLocationChange("")} className="ml-1 hover:text-purple-600/70">×</button>
                       </span>
                     )}
                   </div>
@@ -486,9 +359,9 @@ export default function ProvidersPage() {
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-4">
                         <Avatar
-                          src={provider.user.avatarUrl}
-                          alt={provider.user.fullName}
-                          fallback={provider.user.fullName}
+                          src={provider.user?.avatarUrl || ''}
+                          alt={provider.user?.fullName || 'Provider'}
+                          fallback={provider.user?.fullName || 'P'}
                           size="lg"
                           showVerification={true}
                           isVerified={provider.verificationStatus === 'verified'}
@@ -499,7 +372,7 @@ export default function ProvidersPage() {
                         <div className="flex-1">
                           <div className="flex items-center space-x-2 mb-1">
                             <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">
-                              {provider.user.fullName}
+                              {provider.user?.fullName || 'Provider'}
                             </h3>
                             {(() => {
                               const IconComponent = getCategoryIcon(provider.category);
@@ -532,7 +405,7 @@ export default function ProvidersPage() {
                             <div className="flex items-center space-x-1 bg-yellow-50 dark:bg-yellow-900/20 px-3 py-1 rounded-full">
                               <Star className="w-4 h-4 text-yellow-500 fill-current" />
                               <span className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                                {provider.ratingAverage.toFixed(1)}
+                                {Number(provider.ratingAverage || 0).toFixed(1)}
                               </span>
                               <span className="text-xs text-slate-500 dark:text-slate-400">
                                 ({provider.ratingCount} reviews)
@@ -562,7 +435,7 @@ export default function ProvidersPage() {
                             handleBookProvider(provider);
                           }}
                           disabled={!provider.isAvailable}
-                          className={`px-6 py-3 rounded-xl font-semibold text-sm transition-all ${
+                          className={`px-6 py-3 rounded-xl font-semibold text-sm transition-all cursor-pointer ${
                             provider.isAvailable
                               ? 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white hover:opacity-90 hover:scale-105 shadow-lg hover:shadow-xl'
                               : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed'
@@ -576,7 +449,7 @@ export default function ProvidersPage() {
                             e.stopPropagation();
                             handleViewProfile(provider);
                           }}
-                          className="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors text-sm font-medium"
+                          className="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors text-sm font-medium cursor-pointer"
                         >
                           View Profile
                         </button>
@@ -586,7 +459,7 @@ export default function ProvidersPage() {
                             e.stopPropagation();
                             handleContactProvider(provider);
                           }}
-                          className="px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-sm"
+                          className="px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-sm cursor-pointer"
                         >
                           Contact
                         </button>
@@ -616,6 +489,15 @@ export default function ProvidersPage() {
         onBook={handleBookProvider}
         onContact={handleContactProvider}
       />
+
+      {selectedProvider && (
+        <BookingModal
+          provider={selectedProvider}
+          isOpen={showBookingModal}
+          onClose={() => setShowBookingModal(false)}
+          onBooked={() => setShowBookingModal(false)}
+        />
+      )}
     </div>
   );
 }

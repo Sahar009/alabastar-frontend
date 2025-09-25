@@ -1,13 +1,14 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login, loginWithGoogle } = useAuth();
   const [formData, setFormData] = useState({
     email: "",
@@ -15,6 +16,14 @@ export default function LoginPage() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [returnUrl, setReturnUrl] = useState("/");
+
+  useEffect(() => {
+    const url = searchParams.get('returnUrl');
+    if (url) {
+      setReturnUrl(decodeURIComponent(url));
+    }
+  }, [searchParams]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -27,7 +36,7 @@ export default function LoginPage() {
 
     const success = await login(formData.email, formData.password);
     if (success) {
-      router.push('/');
+      router.push(returnUrl);
     }
     setLoading(false);
   };
@@ -35,7 +44,7 @@ export default function LoginPage() {
   const handleGoogleAuth = async () => {
     const success = await loginWithGoogle();
     if (success) {
-      router.push('/');
+      router.push(returnUrl);
     }
   };
 
@@ -190,5 +199,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen grid place-items-center text-slate-700 dark:text-slate-300">Loading...</div>}>
+      <LoginContent />
+    </Suspense>
   );
 }

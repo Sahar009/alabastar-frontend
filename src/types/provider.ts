@@ -1,6 +1,8 @@
 export interface Provider {
   id: string;
+  providerUserId?: string;
   user: {
+    id?: string;
     fullName: string;
     email: string;
     phone: string;
@@ -23,4 +25,5 @@ export interface Provider {
   isAvailable: boolean;
   estimatedArrival: string;
 }
+
 

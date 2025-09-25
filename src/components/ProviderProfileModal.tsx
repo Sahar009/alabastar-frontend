@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
-import { X, Star, MapPin, Clock, Phone, Mail, MessageCircle, Heart, Share2, Shield } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, Star, MapPin, Clock, Phone, Mail, MessageCircle, Heart, Share2, Shield, Award, Calendar, Zap } from "lucide-react";
 import { Provider } from "../types/provider";
 import Avatar from "./Avatar";
 
@@ -20,8 +20,18 @@ interface ProviderProfileModalProps {
   onContact: (provider: Provider) => void;
 }
 
+type Review = {
+  id: string;
+  userName: string;
+  userAvatar: string;
+  rating: number;
+  comment: string;
+  date: string;
+  service: string;
+};
+
 // Mock reviews data
-const generateMockReviews = () => [
+const generateMockReviews = (): Review[] => [
   {
     id: '1',
     userName: 'Sarah Johnson',
@@ -63,11 +73,64 @@ const generateMockPortfolio = () => [
 
 export default function ProviderProfileModal({ provider, isOpen, onClose, onBook, onContact }: ProviderProfileModalProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'portfolio' | 'reviews'>('overview');
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [portfolioImages, setPortfolioImages] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // Fetch provider details when modal opens
+  useEffect(() => {
+    if (isOpen && provider) {
+      fetchProviderDetails();
+    }
+  }, [isOpen, provider]);
+
+  const fetchProviderDetails = async () => {
+    if (!provider) return;
+    
+    setLoading(true);
+    try {
+      // Try to fetch real data from API
+      // Normalize API base
+      const raw = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const base = raw.endsWith('/api') ? raw : `${raw.replace(/\/$/, '')}/api`;
+      
+      // Fetch reviews
+      try {
+        const reviewsResponse = await fetch(`${base}/providers/${provider.id}/reviews`);
+        if (reviewsResponse.ok) {
+          const reviewsData = await reviewsResponse.json();
+          setReviews(reviewsData.data?.reviews || generateMockReviews());
+        } else {
+          setReviews(generateMockReviews());
+        }
+      } catch (error) {
+        console.log('Using mock reviews:', error);
+        setReviews(generateMockReviews());
+      }
+
+      // Fetch portfolio images
+      try {
+        const portfolioResponse = await fetch(`${base}/providers/${provider.id}/portfolio`);
+        if (portfolioResponse.ok) {
+          const portfolioData = await portfolioResponse.json();
+          setPortfolioImages(portfolioData.data?.images || generateMockPortfolio());
+        } else {
+          setPortfolioImages(generateMockPortfolio());
+        }
+      } catch (error) {
+        console.log('Using mock portfolio:', error);
+        setPortfolioImages(generateMockPortfolio());
+      }
+    } catch (error) {
+      console.error('Error fetching provider details:', error);
+      setReviews(generateMockReviews());
+      setPortfolioImages(generateMockPortfolio());
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!isOpen || !provider) return null;
-
-  const reviews = generateMockReviews();
-  const portfolioImages = generateMockPortfolio();
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-NG', {
@@ -281,25 +344,38 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
           {activeTab === 'portfolio' && (
             <div>
               <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">Portfolio</h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {portfolioImages.map((image, index) => (
-                  <div
-                    key={index}
-                    className="relative group cursor-pointer"
-                  >
-                    <img
-                      src={image}
-                      alt={`Portfolio ${index + 1}`}
-                      className="w-full h-32 object-cover rounded-xl hover:opacity-90 transition-opacity"
-                    />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors rounded-xl flex items-center justify-center">
-                      <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-sm font-medium">
-                        View
-                      </span>
+              {loading ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <div key={i} className="h-32 bg-slate-200 dark:bg-slate-700 rounded-xl animate-pulse"></div>
+                  ))}
+                </div>
+              ) : portfolioImages.length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {portfolioImages.map((image, index) => (
+                    <div
+                      key={index}
+                      className="relative group cursor-pointer"
+                    >
+                      <img
+                        src={image}
+                        alt={`Portfolio ${index + 1}`}
+                        className="w-full h-32 object-cover rounded-xl hover:opacity-90 transition-opacity"
+                      />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors rounded-xl flex items-center justify-center">
+                        <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-sm font-medium">
+                          View
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Calendar className="mx-auto h-12 w-12 text-slate-400 mb-4" />
+                  <p className="text-slate-600 dark:text-slate-400">No portfolio images available</p>
+                </div>
+              )}
             </div>
           )}
 
@@ -320,42 +396,64 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
                 </div>
               </div>
 
-              <div className="space-y-4">
-                {reviews.map((review) => (
-                  <div key={review.id} className="bg-slate-50 dark:bg-slate-700 p-4 rounded-xl">
-                    <div className="flex items-start space-x-3">
-                      <img
-                        src={review.userAvatar}
-                        alt={review.userName}
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <h4 className="font-semibold text-slate-900 dark:text-slate-100">
-                            {review.userName}
-                          </h4>
-                          <div className="flex items-center space-x-1">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`w-4 h-4 ${
-                                  i < review.rating ? 'text-yellow-500 fill-current' : 'text-slate-300'
-                                }`}
-                              />
-                            ))}
-                          </div>
+              {loading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="bg-slate-50 dark:bg-slate-700 p-4 rounded-xl animate-pulse">
+                      <div className="flex items-start space-x-3">
+                        <div className="w-10 h-10 bg-slate-200 dark:bg-slate-600 rounded-full"></div>
+                        <div className="flex-1">
+                          <div className="h-4 bg-slate-200 dark:bg-slate-600 rounded w-1/4 mb-2"></div>
+                          <div className="h-3 bg-slate-200 dark:bg-slate-600 rounded w-1/2 mb-2"></div>
+                          <div className="h-3 bg-slate-200 dark:bg-slate-600 rounded w-3/4"></div>
                         </div>
-                        <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
-                          {review.service} • {review.date}
-                        </p>
-                        <p className="text-slate-700 dark:text-slate-300">
-                          {review.comment}
-                        </p>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : reviews.length > 0 ? (
+                <div className="space-y-4">
+                  {reviews.map((review) => (
+                    <div key={review.id} className="bg-slate-50 dark:bg-slate-700 p-4 rounded-xl">
+                      <div className="flex items-start space-x-3">
+                        <img
+                          src={review.userAvatar}
+                          alt={review.userName}
+                          className="w-10 h-10 rounded-full object-cover"
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <h4 className="font-semibold text-slate-900 dark:text-slate-100">
+                              {review.userName}
+                            </h4>
+                            <div className="flex items-center space-x-1">
+                              {[...Array(5)].map((_, i) => (
+                                <Star
+                                  key={i}
+                                  className={`w-4 h-4 ${
+                                    i < review.rating ? 'text-yellow-500 fill-current' : 'text-slate-300'
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                          <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
+                            {review.service} • {review.date}
+                          </p>
+                          <p className="text-slate-700 dark:text-slate-300">
+                            {review.comment}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Star className="mx-auto h-12 w-12 text-slate-400 mb-4" />
+                  <p className="text-slate-600 dark:text-slate-400">No reviews yet</p>
+                </div>
+              )}
             </div>
           )}
         </div>

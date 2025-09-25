@@ -4,6 +4,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import AppToaster from "../components/Toaster";
 import { AuthProvider } from "../contexts/AuthContext";
+import { ReduxProvider } from "../store/Provider";
 
 const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000').replace(/\/$/, '');
 
@@ -78,12 +79,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`antialiased`}>
-        <AuthProvider>
-          <Navbar />
-          <AppToaster />
-          <main>{children}</main>
-          <Footer />
-        </AuthProvider>
+        <ReduxProvider>
+          <AuthProvider>
+            <Navbar />
+            <AppToaster />
+            <main>{children}</main>
+            <Footer />
+          </AuthProvider>
+        </ReduxProvider>
       </body>
     </html>
   );

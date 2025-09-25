@@ -1,14 +1,15 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import { Eye, EyeOff, Mail, Lock, User, Phone, ArrowRight, Check } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 
-export default function SignupPage() {
+function SignupContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { register, loginWithGoogle } = useAuth();
   const [formData, setFormData] = useState({
     fullName: "",
@@ -21,6 +22,14 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [returnUrl, setReturnUrl] = useState("/");
+
+  useEffect(() => {
+    const url = searchParams.get('returnUrl');
+    if (url) {
+      setReturnUrl(decodeURIComponent(url));
+    }
+  }, [searchParams]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -53,7 +62,7 @@ export default function SignupPage() {
     });
 
     if (success) {
-      router.push('/login');
+      router.push(`/login?returnUrl=${encodeURIComponent(returnUrl)}`);
     }
     setLoading(false);
   };
@@ -61,7 +70,7 @@ export default function SignupPage() {
   const handleGoogleAuth = async () => {
     const success = await loginWithGoogle();
     if (success) {
-      router.push('/');
+      router.push(returnUrl);
     }
   };
 
@@ -308,5 +317,13 @@ export default function SignupPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen grid place-items-center text-slate-700 dark:text-slate-300">Loading...</div>}>
+      <SignupContent />
+    </Suspense>
   );
 }

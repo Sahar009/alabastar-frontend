@@ -18,12 +18,14 @@ export default function Navbar() {
       <div className="backdrop-blur-xl bg-white/60 dark:bg-slate-900/50 border-b border-white/20 dark:border-white/10 supports-[backdrop-filter]:bg-white/40 transition-colors">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
-            <Link href="/" className="flex items-center gap-2">
-              <Image src="/brand/logo-icon.svg" alt="Alabastar" width={32} height={32} priority />
-              <span className="hidden sm:inline text-slate-900 dark:text-slate-100 font-extrabold tracking-tight">ALABASTAR</span>
+            <Link href="/" className="flex items-center gap-3 hover:scale-[1.02] transition-transform">
+              <Image src="/brand/logo-icon.svg" alt="Alabastar" width={40} height={40} priority />
+              <span className="hidden sm:inline text-2xl font-extrabold tracking-tight bg-gradient-to-r from-[#2563EB] to-[#14B8A6] bg-clip-text text-transparent animate-shimmer">
+                ALABASTAR
+              </span>
             </Link>
 
-            <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
+            <nav className="hidden md:flex items-center gap-6 text-base font-semibold">
               <Link href="/" className="text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white transition-colors">Home</Link>
               <Link href="#services" className="text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white transition-colors">Services</Link>
               <Link href="/providers" className="text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white transition-colors">Providers</Link>

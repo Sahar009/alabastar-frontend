@@ -45,11 +45,25 @@ export default function Home() {
     "/images/gardener.png"
   ];
 
+  const heroImages2 = [ 
+    "/images/apply.png",
+  
+  ];
+
   const [activeIdx, setActiveIdx] = useState(0);
   useEffect(() => {
     const id = setInterval(() => setActiveIdx((i) => (i + 1) % heroImages.length), 3000);
     return () => clearInterval(id);
   }, [heroImages.length]);
+
+  // Trusted by avatars (replace with real users/customers)
+  const trustedAvatars = [
+    'https://images.unsplash.com/photo-1611432579402-7037e3e2c1e4?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YmxhY2slMjB3b21hbnxlbnwwfHwwfHx8MA%3D%3D',
+    'https://images.unsplash.com/photo-1694463814421-5eff6fd605c9?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8YmxhY2slMjB1c2VyfGVufDB8fDB8fHww',
+    'https://images.unsplash.com/photo-1507152927179-bc4ebfef7103?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTZ8fGJsYWNrJTIwd29tYW58ZW58MHx8MHx8fDA%3D',
+    'https://orchidhotels.com/wp-content/uploads/2021/03/ORCHID-HOTELS-LOGO-EN.svg',
+    'https://images.unsplash.com/photo-1565884280295-98eb83e41c65?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8YmxhY2slMjBtYW58ZW58MHx8MHx8fDA%3D'
+  ];
 
   // Border palettes that switch when image changes
   const borderPalettes: [string, string][] = [
@@ -152,11 +166,19 @@ export default function Home() {
               </div>
 
               <div className="mt-8 flex items-center gap-6">
-                <div className="flex -space-x-3">
-                  {[1,2,3,4,5].map((i) => (
-                    <Image key={i} src="/vercel.svg" alt="avatar" width={36} height={36} className="rounded-full ring-2 ring-white/80 dark:ring-slate-800 animate-float" style={{ animationDelay: `${i * 0.2}s` }} />
-                  ))}
-                </div>
+              <div className="flex -space-x-3">
+                {trustedAvatars.map((src, i) => (
+                  <img
+                    key={src}
+                    src={src}
+                    alt="trusted user"
+                    width={36}
+                    height={36}
+                    className="h-9 w-9 rounded-full ring-2 ring-white/80 dark:ring-slate-800 animate-float object-cover"
+                    style={{ animationDelay: `${i * 0.2}s` }}
+                  />
+                ))}
+              </div>
                 <p className="text-sm text-slate-600 dark:text-slate-300">Trusted by 10,000+ homeowners and businesses</p>
               </div>
             </div>
@@ -230,7 +252,12 @@ export default function Home() {
       </section>
 
       {/* Why Alabastar */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-20">
+      <section className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-20">
+        <div className="pointer-events-none absolute inset-0 -z-10">
+          <div className="absolute -top-24 left-10 h-56 w-56 rounded-full bg-fuchsia-400/25 blur-3xl"></div>
+          <div className="absolute top-10 right-10 h-64 w-64 rounded-full bg-sky-400/25 blur-3xl"></div>
+          <div className="absolute -bottom-24 left-1/3 h-72 w-72 rounded-full bg-emerald-400/20 blur-3xl"></div>
+        </div>
         <div className="text-center">
           <h3 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-slate-50">Why choose Alabastar</h3>
           <p className="mt-2 text-slate-600 dark:text-slate-300">Professional, secure, and built for speed — from booking to payout.</p>
@@ -245,10 +272,10 @@ export default function Home() {
           },{
             label: 'Support', value: '24/7', accent: 'from-sky-500 to-cyan-500', Icon: Zap
           }].map(({label, value, accent, Icon}, i) => (
-            <div key={i} className="relative overflow-hidden rounded-2xl border border-white/30 dark:border-white/10 bg-white/60 dark:bg-slate-900/50 backdrop-blur-xl p-5 shadow">
-              <div className={`absolute -inset-px opacity-10 bg-gradient-to-r ${accent}`} />
+            <div key={i} className="relative overflow-hidden rounded-2xl border border-white/20 dark:border-white/10 bg-white/40 dark:bg-slate-900/35 backdrop-blur-2xl p-5 shadow-lg">
+              <div className={`absolute -inset-px opacity-20 bg-gradient-to-r ${accent}`} />
               <div className="relative flex items-center gap-3">
-                <div className={`rounded-lg text-white p-2 bg-gradient-to-br ${accent}`}><Icon size={18} /></div>
+                <div className={`rounded-lg text-white p-2 bg-gradient-to-br ${accent} shadow` }><Icon size={18} /></div>
                 <div>
                   <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</p>
                   <p className="text-xl font-extrabold text-slate-900 dark:text-slate-50">{value}</p>
@@ -268,10 +295,10 @@ export default function Home() {
             { title: 'Quality assurance', desc: 'Ratings and reviews keep standards high.', Icon: Star, accent: 'from-indigo-500 to-blue-500' },
             { title: 'Delightful experience', desc: 'Modern design, secure chat, and smooth workflows.', Icon: Sparkles, accent: 'from-rose-500 to-pink-500' },
           ].map(({ title, desc, Icon, accent }, i) => (
-            <div key={i} className="relative overflow-hidden rounded-2xl border border-white/30 dark:border-white/10 bg-white/60 dark:bg-slate-900/50 backdrop-blur-xl p-5 shadow hover:shadow-lg transition-shadow">
-              <div className={`absolute -inset-px opacity-10 bg-gradient-to-r ${accent}`} />
+            <div key={i} className="relative overflow-hidden rounded-2xl border border-white/20 dark:border-white/10 bg-white/40 dark:bg-slate-900/35 backdrop-blur-2xl p-5 shadow-lg hover:shadow-xl transition-shadow">
+              <div className={`absolute -inset-px opacity-20 bg-gradient-to-r ${accent}`} />
               <div className="relative flex items-start gap-4">
-                <div className={`rounded-xl text-white p-2 bg-gradient-to-br ${accent}`}><Icon size={18} /></div>
+                <div className={`rounded-xl text-white p-2 bg-gradient-to-br ${accent} shadow`}><Icon size={18} /></div>
                 <div>
                   <h4 className="font-semibold text-slate-900 dark:text-slate-50">{title}</h4>
                   <p className="text-sm text-slate-600 dark:text-slate-300">{desc}</p>
@@ -285,7 +312,7 @@ export default function Home() {
         <div className="mt-10 relative overflow-hidden rounded-3xl border border-white/30 dark:border-white/10 bg-white/60 dark:bg-slate-900/50 backdrop-blur-xl p-6 shadow">
           <div className="absolute -inset-px opacity-10 bg-gradient-to-r from-[#2563EB] to-[#14B8A6]" />
           <div className="relative flex items-center gap-4">
-            <Image src="/vercel.svg" alt="avatar" width={40} height={40} className="rounded-full ring-2 ring-white/80 dark:ring-slate-800" />
+            <Image src="https://orchidhotels.com/wp-content/uploads/2021/03/ORCHID-HOTELS-LOGO-EN.svg" alt="avatar" width={40} height={40} className="rounded-full ring-2 ring-white/80 dark:ring-slate-800" />
             <p className="text-sm text-slate-700 dark:text-slate-300">
               “We booked an emergency electrician at midnight. He arrived in 20 minutes and fixed it. Payment released after we confirmed. Perfect.”
             </p>
@@ -314,7 +341,15 @@ export default function Home() {
             {/* Gradient ring */}
             <div className="absolute inset-0 rounded-full p-[10px]">
               <div className="absolute inset-0 rounded-full opacity-80" style={{ background: "conic-gradient(#2563EB, #14B8A6, #2563EB)", filter: "blur(2px)" }} />
-              <div className="relative inset-0 h-full w-full rounded-full bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl border border-white/30 dark:border-white/10" />
+              <div className="relative inset-0 h-full w-full rounded-full overflow-hidden border border-white/30 dark:border-white/10">
+                <Image
+                  src={heroImages2[0]}
+                  alt="How it works"
+                  fill
+                  priority
+                  className="object-cover"
+                />
+              </div>
             </div>
 
             {/* Step markers fixed around the ring */}
