@@ -7,6 +7,7 @@ interface BookingUser { id?: string; fullName?: string; email?: string; phone?: 
 interface BookingService { id?: string; title?: string }
 interface ProviderProfileData { User?: BookingUser; name?: string; locationCity?: string; locationState?: string }
 export interface BookingSuccessData {
+  id?: string;
   scheduledAt: string;
   totalAmount?: number | string;
   providerProfile?: ProviderProfileData;

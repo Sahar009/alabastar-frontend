@@ -24,6 +24,34 @@ function SignupContent() {
   const [loading, setLoading] = useState(false);
   const [returnUrl, setReturnUrl] = useState("/");
 
+  // Phone number formatting function
+  const formatPhoneNumber = (value: string) => {
+    // Remove all non-digit characters
+    const cleaned = value.replace(/\D/g, '');
+    
+    // If it starts with 234, format as +234
+    if (cleaned.startsWith('234')) {
+      return '+' + cleaned;
+    }
+    
+    // If it starts with 0, keep as is (Nigerian local format)
+    if (cleaned.startsWith('0')) {
+      return cleaned;
+    }
+    
+    // If it's 11 digits and starts with 8, assume it's missing the 0
+    if (cleaned.length === 11 && cleaned.startsWith('8')) {
+      return '0' + cleaned;
+    }
+    
+    // If it's 10 digits and starts with 8, add 0
+    if (cleaned.length === 10 && cleaned.startsWith('8')) {
+      return '0' + cleaned;
+    }
+    
+    return cleaned;
+  };
+
   useEffect(() => {
     const url = searchParams.get('returnUrl');
     if (url) {
@@ -33,10 +61,20 @@ function SignupContent() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({ 
-      ...prev, 
-      [name]: type === 'checkbox' ? checked : value 
-    }));
+    
+    // Format phone numbers
+    if (name === 'phone') {
+      const formattedValue = formatPhoneNumber(value);
+      setFormData(prev => ({ 
+        ...prev, 
+        [name]: formattedValue
+      }));
+    } else {
+      setFormData(prev => ({ 
+        ...prev, 
+        [name]: type === 'checkbox' ? checked : value 
+      }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,7 +95,7 @@ function SignupContent() {
     const success = await register({
       fullName: formData.fullName,
       email: formData.email,
-      phone: formData.phone,
+      phone: formData.phone.trim() || undefined,
       password: formData.password
     });
 
@@ -150,8 +188,11 @@ function SignupContent() {
                 value={formData.phone}
                 onChange={handleInputChange}
                 className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#2563EB]/50 focus:border-transparent transition-all"
-                placeholder="Enter your phone number"
+                placeholder="08123456789 or +2348123456789"
               />
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                Nigerian format: 08123456789
+              </p>
             </div>
 
             <div>

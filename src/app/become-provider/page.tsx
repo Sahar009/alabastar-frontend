@@ -1,7 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import toast from "react-hot-toast";
-import { Upload, User, Mail, Phone, FileText, Award, Camera, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Upload, User, Mail, Phone, FileText, Award, Camera, X, Plus, Tag, Image } from "lucide-react";
 import type React from "react";
 import LocationPicker from "../../components/LocationPicker";
 
@@ -14,6 +15,7 @@ const NairaIcon = ({ className }: { className?: string }) => (
 );
 
 export default function BecomeProviderPage() {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     // User data
     fullName: "",
@@ -26,10 +28,7 @@ export default function BecomeProviderPage() {
     // Provider profile data
     category: "",
     subcategories: [] as string[],
-    yearsOfExperience: "",
     bio: "",
-    hourlyRate: "",
-    startingPrice: "",
     locationCity: "",
     locationState: "",
     latitude: "",
@@ -42,7 +41,7 @@ export default function BecomeProviderPage() {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
-  const [uploadedFiles, setUploadedFiles] = useState<{url: string, type: string, name: string}[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<{url: string, type: string, name: string, preview?: string}[]>([]);
   const [location, setLocation] = useState({
     city: "",
     state: "",
@@ -50,6 +49,9 @@ export default function BecomeProviderPage() {
     longitude: 0,
     address: ""
   });
+  const [subcategoryInput, setSubcategoryInput] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const categories = [
     { value: 'plumbing', label: 'Plumbing' },
@@ -88,9 +90,43 @@ export default function BecomeProviderPage() {
   };
 
 
+  const formatPhoneNumber = (value: string) => {
+    // Remove all non-digit characters
+    const cleaned = value.replace(/\D/g, '');
+    
+    // If it starts with 234, format as +234
+    if (cleaned.startsWith('234')) {
+      return '+' + cleaned;
+    }
+    
+    // If it starts with 0, keep as is (Nigerian local format)
+    if (cleaned.startsWith('0')) {
+      return cleaned;
+    }
+    
+    // If it's 11 digits and starts with 8, assume it's missing the 0
+    if (cleaned.length === 11 && cleaned.startsWith('8')) {
+      return '0' + cleaned;
+    }
+    
+    // If it's 10 digits and starts with 8, add 0
+    if (cleaned.length === 10 && cleaned.startsWith('8')) {
+      return '0' + cleaned;
+    }
+    
+    return cleaned;
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Format phone numbers
+    if (name === 'phone' || name === 'alternativePhone') {
+      const formattedValue = formatPhoneNumber(value);
+      setFormData(prev => ({ ...prev, [name]: formattedValue }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleLocationSelect = (selectedLocation: {
@@ -117,6 +153,58 @@ export default function BecomeProviderPage() {
         ? prev.subcategories.filter(s => s !== subcategory)
         : [...prev.subcategories, subcategory]
     }));
+  };
+
+  const removeSubcategory = (subcategory: string) => {
+    setFormData(prev => ({
+      ...prev,
+      subcategories: prev.subcategories.filter(s => s !== subcategory)
+    }));
+  };
+
+  const addSubcategory = (subcategory: string) => {
+    if (subcategory.trim() && !formData.subcategories.includes(subcategory.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        subcategories: [...prev.subcategories, subcategory.trim()]
+      }));
+    }
+    setSubcategoryInput("");
+    setShowSuggestions(false);
+  };
+
+  const getFilteredSuggestions = () => {
+    if (!formData.category || !subcategoryInput.trim()) {
+      return subcategoryOptions[formData.category] || [];
+    }
+    
+    const existingSuggestions = subcategoryOptions[formData.category] || [];
+    const filtered = existingSuggestions.filter(suggestion =>
+      suggestion.toLowerCase().includes(subcategoryInput.toLowerCase()) &&
+      !formData.subcategories.includes(suggestion)
+    );
+    
+    // Add the current input as a suggestion if it's not already in the list
+    if (subcategoryInput.trim() && 
+        !existingSuggestions.includes(subcategoryInput.trim()) &&
+        !formData.subcategories.includes(subcategoryInput.trim())) {
+      filtered.unshift(subcategoryInput.trim());
+    }
+    
+    return filtered;
+  };
+
+  const handleSubcategoryInputKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const suggestions = getFilteredSuggestions();
+      if (suggestions.length > 0) {
+        addSubcategory(suggestions[0]);
+      }
+    } else if (e.key === 'Escape') {
+      setShowSuggestions(false);
+      setSubcategoryInput("");
+    }
   };
 
   const handleFileUpload = async (files: FileList) => {
@@ -162,7 +250,8 @@ export default function BecomeProviderPage() {
         const newFiles = data.files.map((file: { url: string; originalName?: string; filename: string }) => ({
           url: file.url,
           type: 'id_card', // Default type, can be changed
-          name: file.originalName || file.filename
+          name: file.originalName || file.filename,
+          preview: file.url // For images, we can use the URL as preview
         }));
         setUploadedFiles(prev => [...prev, ...newFiles]);
         toast.success(`Successfully uploaded ${files.length} file(s)`, { id: 'upload' });
@@ -180,7 +269,8 @@ export default function BecomeProviderPage() {
         const newFiles = Array.from(files).map(file => ({
           url: URL.createObjectURL(file),
           type: 'id_card',
-          name: file.name
+          name: file.name,
+          preview: file.type.startsWith('image/') ? URL.createObjectURL(file) : undefined
         }));
         
         setUploadedFiles(prev => [...prev, ...newFiles]);
@@ -190,11 +280,22 @@ export default function BecomeProviderPage() {
       }
     } finally {
       setUploading(false);
+      // Reset the file input to allow re-uploading the same file
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
   const removeFile = (index: number) => {
-    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+    setUploadedFiles(prev => {
+      const fileToRemove = prev[index];
+      // Clean up object URL to prevent memory leaks
+      if (fileToRemove?.preview && fileToRemove.preview.startsWith('blob:')) {
+        URL.revokeObjectURL(fileToRemove.preview);
+      }
+      return prev.filter((_, i) => i !== index);
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -234,6 +335,27 @@ export default function BecomeProviderPage() {
       
       if (response.ok) {
         toast.success('Registration successful! We&apos;ll review your application and get back to you soon.');
+        
+        // Check if token is provided
+        if (data.data?.token) {
+          // Store token in localStorage
+          localStorage.setItem('token', data.data.token);
+          localStorage.setItem('user', JSON.stringify(data.data.user));
+          localStorage.setItem('providerProfile', JSON.stringify(data.data.providerProfile));
+          
+          // Route to provider dashboard
+          toast.success('Welcome! Redirecting to your dashboard...');
+          setTimeout(() => {
+            router.push('/provider/dashboard');
+          }, 2000);
+        } else {
+          // No token provided, route to sign-in page
+          toast.success('Registration complete! Please sign in to access your dashboard.');
+          setTimeout(() => {
+            router.push('/provider/signin');
+          }, 2000);
+        }
+        
         // Reset form
         setFormData({
           fullName: "",
@@ -244,18 +366,23 @@ export default function BecomeProviderPage() {
           confirmPassword: "",
           category: "",
           subcategories: [],
-          yearsOfExperience: "",
           bio: "",
-          hourlyRate: "",
-          startingPrice: "",
           locationCity: "",
           locationState: "",
           latitude: "",
           longitude: "",
           documents: []
         });
+        // Clean up object URLs before resetting
+        uploadedFiles.forEach(file => {
+          if (file.preview && file.preview.startsWith('blob:')) {
+            URL.revokeObjectURL(file.preview);
+          }
+        });
         setUploadedFiles([]);
         setCurrentStep(1);
+        setSubcategoryInput("");
+        setShowSuggestions(false);
       } else {
         toast.error(data.message || 'Registration failed');
       }
@@ -363,8 +490,11 @@ export default function BecomeProviderPage() {
                     value={formData.phone}
                     onChange={handleInputChange}
                     className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#2563EB]/50 focus:border-transparent"
-                    placeholder="Enter your phone number"
+                    placeholder="08123456789 or +2348123456789"
                   />
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                    format: 08123456789
+                  </p>
                 </div>
 
                 <div>
@@ -378,8 +508,11 @@ export default function BecomeProviderPage() {
                     value={formData.alternativePhone}
                     onChange={handleInputChange}
                     className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#2563EB]/50 focus:border-transparent"
-                    placeholder="Enter alternative phone number (optional)"
+                    placeholder="08123456789 or +2348123456789 (optional)"
                   />
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                    Optional: format: 08123456789 
+                  </p>
                 </div>
 
                 <div>
@@ -440,78 +573,116 @@ export default function BecomeProviderPage() {
                 </select>
               </div>
 
-              {formData.category && subcategoryOptions[formData.category] && (
+              {formData.category && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">
-                    Subcategories (Select all that apply)
+                    <Tag className="inline w-4 h-4 mr-2" />
+                    Subcategories
                   </label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                    {subcategoryOptions[formData.category].map(sub => (
-                      <label key={sub} className="flex items-center space-x-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={formData.subcategories.includes(sub)}
-                          onChange={() => handleSubcategoryChange(sub)}
-                          className="rounded border-slate-300 text-[#2563EB] focus:ring-[#2563EB]/50"
-                        />
-                        <span className="text-sm text-slate-700 dark:text-slate-300">{sub}</span>
-                      </label>
-                    ))}
+                  
+                  {/* Selected subcategories */}
+                  {formData.subcategories.length > 0 && (
+                    <div className="mb-3">
+                      <div className="flex flex-wrap gap-2">
+                        {formData.subcategories.map(sub => (
+                          <span
+                            key={sub}
+                            className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200"
+                          >
+                            {sub}
+                            <button
+                              type="button"
+                              onClick={() => removeSubcategory(sub)}
+                              className="ml-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Input field with suggestions */}
+                  <div className="relative">
+                    <div className="flex">
+                      <input
+                        type="text"
+                        value={subcategoryInput}
+                        onChange={(e) => {
+                          setSubcategoryInput(e.target.value);
+                          setShowSuggestions(true);
+                        }}
+                        onKeyDown={handleSubcategoryInputKeyDown}
+                        onFocus={() => setShowSuggestions(true)}
+                        onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                        placeholder="Type a subcategory or select from suggestions..."
+                        className="flex-1 rounded-l-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#2563EB]/50 focus:border-transparent"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (subcategoryInput.trim()) {
+                            addSubcategory(subcategoryInput);
+                          }
+                        }}
+                        disabled={!subcategoryInput.trim()}
+                        className="px-4 py-3 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white rounded-r-xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {/* Suggestions dropdown */}
+                    {showSuggestions && getFilteredSuggestions().length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                        {getFilteredSuggestions().map((suggestion, index) => (
+                          <button
+                            key={index}
+                            type="button"
+                            onClick={() => addSubcategory(suggestion)}
+                            className="w-full px-4 py-3 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 first:rounded-t-xl last:rounded-b-xl"
+                          >
+                            <div className="flex items-center">
+                              <Tag className="w-4 h-4 mr-2 text-slate-400" />
+                              {suggestion}
+                              {!subcategoryOptions[formData.category]?.includes(suggestion) && (
+                                <span className="ml-auto text-xs text-green-600 dark:text-green-400">
+                                  New
+                                </span>
+                              )}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
+
+                  {/* Predefined suggestions */}
+                  {subcategoryOptions[formData.category] && subcategoryOptions[formData.category].length > 0 && (
+                    <div className="mt-3">
+                      <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">Popular suggestions:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {subcategoryOptions[formData.category]
+                          .filter(sub => !formData.subcategories.includes(sub))
+                          .slice(0, 6)
+                          .map(sub => (
+                            <button
+                              key={sub}
+                              type="button"
+                              onClick={() => addSubcategory(sub)}
+                              className="px-3 py-1 text-sm text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+                            >
+                              {sub}
+                            </button>
+                          ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">
-                    Years of Experience
-                  </label>
-                  <input
-                    type="number"
-                    name="yearsOfExperience"
-                    value={formData.yearsOfExperience}
-                    onChange={handleInputChange}
-                    min="0"
-                    max="50"
-                    className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#2563EB]/50 focus:border-transparent"
-                    placeholder="Years of experience"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">
-                    <NairaIcon className="inline w-4 h-4 mr-2 text-green-600" />
-                    Hourly Rate (₦)
-                  </label>
-                  <input
-                    type="number"
-                    name="hourlyRate"
-                    value={formData.hourlyRate}
-                    onChange={handleInputChange}
-                    min="0"
-                    step="0.01"
-                    className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#2563EB]/50 focus:border-transparent"
-                    placeholder="Hourly rate"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">
-                    <NairaIcon className="inline w-4 h-4 mr-2 text-green-600" />
-                    Starting Price (₦)
-                  </label>
-                  <input
-                    type="number"
-                    name="startingPrice"
-                    value={formData.startingPrice}
-                    onChange={handleInputChange}
-                    min="0"
-                    step="0.01"
-                    className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#2563EB]/50 focus:border-transparent"
-                    placeholder="Starting price"
-                  />
-                </div>
-
                 <div className="md:col-span-2">
                   <LocationPicker
                     onLocationSelect={handleLocationSelect}
@@ -577,6 +748,7 @@ export default function BecomeProviderPage() {
                     : 'border-slate-300 dark:border-slate-600 hover:border-[#2563EB] dark:hover:border-[#2563EB]'
                 }`}>
                   <input
+                    ref={fileInputRef}
                     type="file"
                     multiple
                     accept="image/*,.pdf"
@@ -615,27 +787,48 @@ export default function BecomeProviderPage() {
               {uploadedFiles.length > 0 && (
                 <div>
                   <h3 className="text-lg font-medium text-slate-900 dark:text-slate-50 mb-3">Uploaded Files</h3>
-                  <div className="space-y-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {uploadedFiles.map((file, index) => (
-                      <div key={index} className="flex items-center justify-between bg-slate-50 dark:bg-slate-700 rounded-lg p-3">
-                        <div className="flex items-center space-x-3">
-                          <FileText className="h-5 w-5 text-slate-400" />
-                          <div>
-                            <span className="text-sm text-slate-700 dark:text-slate-300">{file.name}</span>
-                            <p className="text-xs text-slate-500 dark:text-slate-400">
-                              {file.name.toLowerCase().includes('nin') ? 'NIN Card' :
-                               file.name.toLowerCase().includes('license') || file.name.toLowerCase().includes('licence') ? 'Driver&apos;s License' :
-                               file.name.toLowerCase().includes('passport') ? 'National Passport' : 'Identification Document'}
-                            </p>
+                      <div key={index} className="bg-slate-50 dark:bg-slate-700 rounded-lg p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center space-x-3">
+                            {file.preview ? (
+                              <Image className="h-5 w-5 text-green-500" />
+                            ) : (
+                              <FileText className="h-5 w-5 text-slate-400" />
+                            )}
+                            <div>
+                              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{file.name}</span>
+                              <p className="text-xs text-slate-500 dark:text-slate-400">
+                                {file.name.toLowerCase().includes('nin') ? 'NIN Card' :
+                                 file.name.toLowerCase().includes('license') || file.name.toLowerCase().includes('licence') ? 'Driver&apos;s License' :
+                                 file.name.toLowerCase().includes('passport') ? 'National Passport' : 'Identification Document'}
+                              </p>
+                            </div>
                           </div>
+                          <button
+                            type="button"
+                            onClick={() => removeFile(index)}
+                            className="text-red-500 hover:text-red-700 p-1"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => removeFile(index)}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
+                        
+                        {/* Image Preview */}
+                        {file.preview && (
+                          <div className="mt-3">
+                            <img
+                              src={file.preview}
+                              alt={file.name}
+                              className="w-full h-32 object-cover rounded-lg border border-slate-200 dark:border-slate-600"
+                              onError={(e) => {
+                                // Hide image if it fails to load
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

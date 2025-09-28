@@ -26,7 +26,7 @@ export default function Navbar() {
             </Link>
 
             <nav className="hidden md:flex items-center gap-6 text-base font-semibold">
-              <Link href="/" className="text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white transition-colors">Home</Link>
+           
               <Link href="#services" className="text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white transition-colors">Services</Link>
               <Link href="/providers" className="text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white transition-colors">Providers</Link>
               <Link href="#pricing" className="text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white transition-colors">Pricing</Link>
@@ -66,8 +66,9 @@ export default function Navbar() {
                     </div>
                   )}
                 </div>
-              ) : null}
-              <Link href="/become-provider" className="text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white transition-colors">Become Provider</Link>
+              ) : (
+                <Link href="/login" className="text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white transition-colors">Sign In</Link>
+              )}
               <Link href="/providers" className="inline-flex items-center rounded-full bg-gradient-to-r from-[#14B8A6] to-[#2563EB] px-4 py-2 text-white font-semibold shadow-md shadow-teal-500/20 hover:shadow-lg hover:shadow-sky-500/20 transition-all active:scale-[.98]">Book a Service</Link>
             </div>
 
@@ -105,7 +106,6 @@ function MobileMenu({ user, onLogout }: { user: User | null; onLogout: () => voi
       
       {isOpen && (
         <div className="absolute right-0 mt-2 w-64 origin-top-right rounded-2xl border border-white/20 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-xl p-3 space-y-1 z-50">
-          <Link href="/" className="block rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 hover:bg-slate-900/5 dark:hover:bg-white/5" onClick={() => setIsOpen(false)}>Home</Link>
           <Link href="#services" className="block rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 hover:bg-slate-900/5 dark:hover:bg-white/5" onClick={() => setIsOpen(false)}>Services</Link>
           <Link href="/providers" className="block rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 hover:bg-slate-900/5 dark:hover:bg-white/5" onClick={() => setIsOpen(false)}>Providers</Link>
           <Link href="#pricing" className="block rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 hover:bg-slate-900/5 dark:hover:bg-white/5" onClick={() => setIsOpen(false)}>Pricing</Link>
@@ -124,9 +124,9 @@ function MobileMenu({ user, onLogout }: { user: User | null; onLogout: () => voi
               <Link href="/profile" className="block rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 hover:bg-slate-900/5 dark:hover:bg-white/5" onClick={() => setIsOpen(false)}>Profile</Link>
               <button onClick={() => { onLogout(); setIsOpen(false); }} className="w-full text-left rounded-lg px-3 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20">Sign Out</button>
             </>
-          ) : null}
-          
-          <Link href="/become-provider" className="block rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 hover:bg-slate-900/5 dark:hover:bg-white/5" onClick={() => setIsOpen(false)}>Become Provider</Link>
+          ) : (
+            <Link href="/login" className="block rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 hover:bg-slate-900/5 dark:hover:bg-white/5" onClick={() => setIsOpen(false)}>Sign In</Link>
+          )}
           <Link href="/providers" className="block rounded-lg px-3 py-2 text-white text-center bg-gradient-to-r from-[#14B8A6] to-[#2563EB] font-semibold" onClick={() => setIsOpen(false)}>Book a Service</Link>
         </div>
       )}
