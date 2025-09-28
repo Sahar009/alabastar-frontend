@@ -304,7 +304,7 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
               </div>
 
               {/* Pricing */}
-              <div>
+              {/* <div>
                 <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2 sm:mb-3">Pricing</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div className="bg-slate-50 dark:bg-slate-700 p-3 sm:p-4 rounded-xl">
@@ -326,7 +326,7 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
                     </p>
                   </div>
                 </div>
-              </div>
+              </div> */}
 
               {/* Contact Info */}
               <div>

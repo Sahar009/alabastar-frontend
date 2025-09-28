@@ -52,10 +52,6 @@ export default function BookingModal({ provider, isOpen, onClose, onBooked }: Bo
   if (!isOpen) return null;
 
   const handleConfirm = async () => {
-    if (!selectedServiceId) {
-      toast.error('Please select a service');
-      return;
-    }
     if (!selectedSlot) {
       toast.error('Please select a time slot');
       return;
@@ -64,7 +60,7 @@ export default function BookingModal({ provider, isOpen, onClose, onBooked }: Bo
     try {
       const result = await createBooking({
         providerId: provider.providerUserId || provider.user.id || provider.id,
-        serviceId: selectedServiceId,
+        serviceId: selectedServiceId || null, // Make service optional
         scheduledAt: new Date(selectedSlot).toISOString(),
         totalAmount: provider.startingPrice || 0,
         locationCity: provider.locationCity,
@@ -120,23 +116,22 @@ export default function BookingModal({ provider, isOpen, onClose, onBooked }: Bo
         <div className="p-4 space-y-4 overflow-y-auto max-h-[60vh]">
           {/* Service */}
           <div>
-            <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Service</label>
+            <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Service (optional)</label>
             {servicesLoading ? (
               <div className="text-sm text-slate-500">Loading services...</div>
             ) : (
               <select 
                 value={selectedServiceId} 
                 onChange={(e) => setSelectedServiceId(e.target.value)} 
-                className={`w-full p-3 border rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-slate-100 ${
-                  !selectedServiceId ? 'border-red-300 dark:border-red-600' : 'border-slate-200 dark:border-slate-600'
-                }`}
+                className="w-full p-3 border border-slate-200 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-slate-100"
               >
-                <option value="">Select a service</option>
+                <option value="">Select a service (optional)</option>
                 {(servicesData?.data?.services || []).map((s: ServiceOption) => (
                   <option key={s.id} value={s.id}>{s.title} — ₦{s.basePrice}</option>
                 ))}
               </select>
             )}
+            <p className="text-xs text-slate-500 mt-1">You can book without selecting a specific service</p>
           </div>
 
           {/* Date */}
@@ -198,7 +193,7 @@ export default function BookingModal({ provider, isOpen, onClose, onBooked }: Bo
 
         <div className="p-4 border-t border-slate-200 dark:border-slate-700 flex items-center justify-end gap-2">
           <button onClick={onClose} className="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer">Cancel</button>
-          <button disabled={!selectedServiceId || !selectedSlot || creating} onClick={handleConfirm} className={`px-6 py-2 rounded-xl text-white cursor-pointer ${creating ? 'bg-[#2563EB]/60' : 'bg-[#2563EB] hover:bg-[#2563EB]/90'}`}>{creating ? 'Booking...' : 'Confirm Booking'}</button>
+          <button disabled={!selectedSlot || creating} onClick={handleConfirm} className={`px-6 py-2 rounded-xl text-white cursor-pointer ${creating ? 'bg-[#2563EB]/60' : 'bg-[#2563EB] hover:bg-[#2563EB]/90'}`}>{creating ? 'Booking...' : 'Confirm Booking'}</button>
         </div>
       </div>
     </div>

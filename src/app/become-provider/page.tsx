@@ -144,6 +144,9 @@ export default function BecomeProviderPage() {
       latitude: selectedLocation.latitude.toString(),
       longitude: selectedLocation.longitude.toString()
     }));
+    
+    // Show success message
+    toast.success(`Location set to ${selectedLocation.city}, ${selectedLocation.state}`);
   };
 
   const handleSubcategoryChange = (subcategory: string) => {
@@ -394,6 +397,29 @@ export default function BecomeProviderPage() {
   };
 
   const nextStep = () => {
+    // Validate current step before moving to next
+    if (currentStep === 1) {
+      // Check required fields for step 1
+      if (!formData.fullName || !formData.email || !formData.password || !formData.confirmPassword) {
+        toast.error('Please fill in all required fields');
+        return;
+      }
+      if (formData.password !== formData.confirmPassword) {
+        toast.error('Passwords do not match');
+        return;
+      }
+    } else if (currentStep === 2) {
+      // Check required fields for step 2
+      if (!formData.category) {
+        toast.error('Please select a service category');
+        return;
+      }
+      if (!formData.locationCity || !formData.locationState) {
+        toast.error('Please select your location');
+        return;
+      }
+    }
+    
     if (currentStep < 3) setCurrentStep(currentStep + 1);
   };
 
@@ -691,6 +717,20 @@ export default function BecomeProviderPage() {
                     initialLat={parseFloat(formData.latitude) || 0}
                     initialLng={parseFloat(formData.longitude) || 0}
                   />
+                  
+                  {/* Location Status Indicator */}
+                  {formData.locationCity && formData.locationState && (
+                    <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                      <div className="flex items-center space-x-2">
+                        <svg className="w-4 h-4 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                        <span className="text-sm text-green-700 dark:text-green-300 font-medium">
+                          Location set: {formData.locationCity}, {formData.locationState}
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
