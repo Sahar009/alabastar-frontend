@@ -148,6 +148,7 @@ export default function LocationPicker({
     setSelectedLocation(location);
     setSearchQuery(suggestion.display_name);
     setShowSuggestions(false);
+    console.log('LocationPicker: Calling onLocationSelect with:', location);
     onLocationSelect(location);
   };
 
@@ -177,6 +178,7 @@ export default function LocationPicker({
             const location = data.data;
             setSelectedLocation(location);
             setSearchQuery(location.address);
+            console.log('LocationPicker: Calling onLocationSelect with current location:', location);
             onLocationSelect(location);
           } else {
             console.error('Failed to get location details:', data.message);
@@ -208,6 +210,7 @@ export default function LocationPicker({
                 
                 setSelectedLocation(location);
                 setSearchQuery(data.display_name);
+                console.log('LocationPicker: Calling onLocationSelect with fallback location:', location);
                 onLocationSelect(location);
               }
             }
