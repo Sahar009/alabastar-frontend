@@ -266,201 +266,65 @@ export default function ProvidersPage() {
     // Get current location (including any edits)
     const currentLocation = userLocation;
     
-    // Simulate search delay
-    setTimeout(async () => {
-      try {
-        // Enhanced search logic with category/subcategory matching
-        const searchTerm = searchQuery.toLowerCase().trim();
-        const selectedCat = selectedCategory;
+    try {
+      // Fetch real providers from API
+      const raw = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const base = raw.endsWith('/api') ? raw : `${raw.replace(/\/$/, '')}/api`;
+      
+      let apiUrl = '';
+      const searchParams = new URLSearchParams();
+      
+      if (selectedCategory) {
+        // Use category endpoint
+        apiUrl = `${base}/providers/category/${selectedCategory}`;
+        if (searchQuery.trim()) searchParams.append('search', searchQuery.trim());
+        if (currentLocation?.city) searchParams.append('location', currentLocation.city);
+      } else if (searchQuery.trim()) {
+        // Use search endpoint
+        apiUrl = `${base}/providers/search`;
+        searchParams.append('search', searchQuery.trim());
+        if (currentLocation?.city) searchParams.append('location', currentLocation.city);
+      } else {
+        // Default: get all providers (use search endpoint with empty search)
+        apiUrl = `${base}/providers/search`;
+        searchParams.append('search', '');
+        if (currentLocation?.city) searchParams.append('location', currentLocation.city);
+      }
+      
+      const fullUrl = searchParams.toString() ? `${apiUrl}?${searchParams.toString()}` : apiUrl;
+      console.log('Fetching providers from API:', fullUrl);
+      
+      const response = await fetch(fullUrl);
+      const data = await response.json();
+      
+      console.log('API Response:', data);
+      
+      if (data.success && data.data?.providers) {
+        const allProviders: Provider[] = data.data.providers.map((provider: any) => ({
+          id: provider.id,
+          user: {
+            fullName: provider.User?.fullName || 'Provider',
+            email: provider.User?.email || '',
+            phone: provider.User?.phone || '',
+            avatarUrl: provider.User?.avatarUrl || ''
+          },
+          category: provider.category,
+          subcategories: provider.subcategories || [],
+          locationCity: provider.locationCity || currentLocation?.city || 'Lagos',
+          locationState: provider.locationState || currentLocation?.state || 'Lagos',
+          ratingAverage: provider.ratingAverage || 4.5,
+          ratingCount: provider.ratingCount || 0,
+          startingPrice: provider.startingPrice || 5000,
+          hourlyRate: provider.hourlyRate || 2000,
+          bio: provider.bio || `Professional ${provider.category} service provider`,
+          verificationStatus: provider.verificationStatus || 'verified',
+          isAvailable: provider.isAvailable !== false,
+          estimatedArrival: provider.estimatedArrival || '30 mins',
+          yearsOfExperience: provider.yearsOfExperience || 3
+        }));
         
-        // All available providers with diverse categories and subcategories
-        const allProviders: Provider[] = [
-          // Plumbing providers
-          {
-            id: '1',
-            user: { 
-              fullName: 'John Doe', 
-              email: 'john@example.com',
-              phone: '+2348123456789',
-              avatarUrl: '' 
-            },
-            category: 'plumbing',
-            subcategories: ['Pipe Repair', 'Drain Cleaning', 'Water Heater'],
-            locationCity: currentLocation?.city || 'Lagos',
-            locationState: currentLocation?.state || 'Lagos',
-            ratingAverage: 4.8,
-            ratingCount: 23,
-            startingPrice: 5000,
-            hourlyRate: 2000,
-            bio: `Professional plumber with 5 years experience serving ${currentLocation?.address || 'your area'}`,
-            verificationStatus: 'verified',
-            isAvailable: true,
-            estimatedArrival: '15 mins',
-            yearsOfExperience: 5
-          },
-          {
-            id: '4',
-            user: { 
-              fullName: 'David Brown', 
-              email: 'david@example.com',
-              phone: '+2348123456792',
-              avatarUrl: '' 
-            },
-            category: 'plumbing',
-            subcategories: ['Water Heater', 'Toilet Repair', 'Faucet Installation'],
-            locationCity: currentLocation?.city || 'Lagos',
-            locationState: currentLocation?.state || 'Lagos',
-            ratingAverage: 4.6,
-            ratingCount: 32,
-            startingPrice: 6000,
-            hourlyRate: 2500,
-            bio: `Expert plumber specializing in water systems near ${currentLocation?.address || 'your area'}`,
-            verificationStatus: 'verified',
-            isAvailable: true,
-            estimatedArrival: '25 mins',
-            yearsOfExperience: 7
-          },
-          // Electrical providers
-          {
-            id: '2',
-            user: { 
-              fullName: 'Sarah Johnson', 
-              email: 'sarah@example.com',
-              phone: '+2348123456790',
-              avatarUrl: '' 
-            },
-            category: 'electrical',
-            subcategories: ['Wiring', 'Outlet Installation', 'Light Fixtures'],
-            locationCity: currentLocation?.city || 'Lagos',
-            locationState: currentLocation?.state || 'Lagos',
-            ratingAverage: 4.9,
-            ratingCount: 45,
-            startingPrice: 7000,
-            hourlyRate: 3000,
-            bio: `Licensed electrician specializing in home repairs near ${currentLocation?.address || 'your location'}`,
-            verificationStatus: 'verified',
-            isAvailable: true,
-            estimatedArrival: '20 mins',
-            yearsOfExperience: 8
-          },
-          {
-            id: '5',
-            user: { 
-              fullName: 'Lisa Green', 
-              email: 'lisa@example.com',
-              phone: '+2348123456793',
-              avatarUrl: '' 
-            },
-            category: 'electrical',
-            subcategories: ['Light Fixtures', 'Generator', 'Circuit Breaker'],
-            locationCity: currentLocation?.city || 'Lagos',
-            locationState: currentLocation?.state || 'Lagos',
-            ratingAverage: 4.5,
-            ratingCount: 28,
-            startingPrice: 8000,
-            hourlyRate: 3500,
-            bio: `Certified electrician with generator expertise serving ${currentLocation?.address || 'your area'}`,
-            verificationStatus: 'verified',
-            isAvailable: false,
-            estimatedArrival: '35 mins',
-            yearsOfExperience: 6
-          },
-          // Cleaning providers
-          {
-            id: '3',
-            user: { 
-              fullName: 'Mike Wilson', 
-              email: 'mike@example.com',
-              phone: '+2348123456791',
-              avatarUrl: '' 
-            },
-            category: 'cleaning',
-            subcategories: ['House Cleaning', 'Office Cleaning', 'Deep Cleaning'],
-            locationCity: currentLocation?.city || 'Lagos',
-            locationState: currentLocation?.state || 'Lagos',
-            ratingAverage: 4.7,
-            ratingCount: 18,
-            startingPrice: 3000,
-            hourlyRate: 1500,
-            bio: `Professional cleaning services for homes and offices in ${currentLocation?.address || 'your area'}`,
-            verificationStatus: 'verified',
-            isAvailable: false,
-            estimatedArrival: '30 mins',
-            yearsOfExperience: 3
-          },
-          // AC Repair providers
-          {
-            id: '6',
-            user: { 
-              fullName: 'Tony Martinez', 
-              email: 'tony@example.com',
-              phone: '+2348123456794',
-              avatarUrl: '' 
-            },
-            category: 'ac_repair',
-            subcategories: ['AC Installation', 'AC Repair', 'AC Maintenance'],
-            locationCity: currentLocation?.city || 'Lagos',
-            locationState: currentLocation?.state || 'Lagos',
-            ratingAverage: 4.4,
-            ratingCount: 15,
-            startingPrice: 12000,
-            hourlyRate: 4000,
-            bio: `AC specialist with 4 years experience serving ${currentLocation?.address || 'your area'}`,
-            verificationStatus: 'verified',
-            isAvailable: true,
-            estimatedArrival: '40 mins',
-            yearsOfExperience: 4
-          },
-          // Carpentry providers
-          {
-            id: '7',
-            user: { 
-              fullName: 'Robert Kim', 
-              email: 'robert@example.com',
-              phone: '+2348123456795',
-              avatarUrl: '' 
-            },
-            category: 'carpentry',
-            subcategories: ['Furniture Repair', 'Cabinet Making', 'Door Installation'],
-            locationCity: currentLocation?.city || 'Lagos',
-            locationState: currentLocation?.state || 'Lagos',
-            ratingAverage: 4.6,
-            ratingCount: 22,
-            startingPrice: 8000,
-            hourlyRate: 3000,
-            bio: `Skilled carpenter specializing in furniture and cabinets near ${currentLocation?.address || 'your area'}`,
-            verificationStatus: 'verified',
-            isAvailable: true,
-            estimatedArrival: '45 mins',
-            yearsOfExperience: 6
-          }
-        ];
-        
-        // Smart search filtering based on query and category
-        let filteredResults: Provider[] = [];
-        
-        if (selectedCat) {
-          // If category is selected, filter by category first
-          filteredResults = allProviders.filter(provider => provider.category === selectedCat);
-        } else if (searchTerm) {
-          // If search query is provided, search across categories and subcategories
-          filteredResults = allProviders.filter(provider => {
-            const categoryMatch = provider.category.toLowerCase().includes(searchTerm);
-            const subcategoryMatch = provider.subcategories.some(sub => 
-              sub.toLowerCase().includes(searchTerm)
-            );
-            const bioMatch = provider.bio.toLowerCase().includes(searchTerm);
-            
-            return categoryMatch || subcategoryMatch || bioMatch;
-          });
-        } else {
-          // No specific search criteria, return all providers
-          filteredResults = allProviders;
-        }
-        
-        // Apply location-based radius filtering
-        // For demo purposes, simulate radius-based results
-        const radiusFilteredResults = filteredResults.filter((_, index) => {
+        // Apply radius-based filtering (simplified for demo)
+        const radiusFilteredResults = allProviders.filter((_, index) => {
           if (searchRadius <= 5) {
             return index < Math.max(1, Math.floor(Math.random() * 2) + 1);
           } else if (searchRadius <= 10) {
@@ -488,11 +352,21 @@ export default function ProvidersPage() {
         }
         
         setIsSearching(false);
-      } catch (error) {
-        console.error('Search failed:', error);
+      } else {
+        // Fallback to mock data if API fails
+        console.log('API failed, using mock data');
+        setSearchResults([]);
+        setSearchResultsCount(0);
+        setShowNoResultsModal(true);
         setIsSearching(false);
       }
-    }, 2000);
+    } catch (error) {
+      console.error('Search failed:', error);
+      setSearchResults([]);
+      setSearchResultsCount(0);
+      setShowNoResultsModal(true);
+      setIsSearching(false);
+    }
   };
 
   const expandSearchRadius = () => {
