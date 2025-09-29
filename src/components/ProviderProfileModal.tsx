@@ -61,7 +61,7 @@ const generateMockReviews = (): Review[] => [
   }
 ];
 
-// Mock portfolio images
+// Mock product/service images
 const generateMockPortfolio = () => [
   'https://images.unsplash.com/photo-1581578731548-c6a0c3f2f2c0?w=400&h=300&fit=crop',
   'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=400&h=300&fit=crop',
@@ -108,7 +108,7 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
         setReviews(generateMockReviews());
       }
 
-      // Fetch portfolio images
+      // Fetch product/service images
       try {
         const portfolioResponse = await fetch(`${base}/providers/${provider.id}/portfolio`);
         if (portfolioResponse.ok) {
@@ -118,7 +118,7 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
           setPortfolioImages(generateMockPortfolio());
         }
       } catch (error) {
-        console.log('Using mock portfolio:', error);
+        console.log('Using mock product/service images:', error);
         setPortfolioImages(generateMockPortfolio());
       }
     } catch (error) {
@@ -238,12 +238,12 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
               </button>
               
               <div className="flex gap-2">
-                <button
+                {/* <button
                   onClick={() => onContact(provider)}
                   className="flex-1 sm:flex-none px-3 sm:px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-sm flex items-center justify-center"
                 >
                   <MessageCircle className="w-4 h-4" />
-                </button>
+                </button> */}
                 <button className="flex-1 sm:flex-none px-3 sm:px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-sm flex items-center justify-center">
                   <Heart className="w-4 h-4" />
                 </button>
@@ -259,7 +259,7 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
         <div className="flex border-b border-slate-200 dark:border-slate-700 overflow-x-auto">
           {[
             { id: 'overview', label: 'Overview' },
-            { id: 'portfolio', label: 'Portfolio' },
+            { id: 'portfolio', label: 'Product/Services' },
             { id: 'reviews', label: `Reviews (${reviews.length})` }
           ].map((tab) => (
             <button
@@ -329,7 +329,7 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
               </div> */}
 
               {/* Contact Info */}
-              <div>
+              {/* <div>
                 <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2 sm:mb-3">Contact Information</h3>
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2 text-slate-600 dark:text-slate-400">
@@ -341,13 +341,13 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
                     <span className="text-xs sm:text-sm truncate">{provider.user.email}</span>
                   </div>
                 </div>
-              </div>
+              </div> */}
             </div>
           )}
 
           {activeTab === 'portfolio' && (
             <div>
-              <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-slate-100 mb-3 sm:mb-4">Portfolio</h3>
+              <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-slate-100 mb-3 sm:mb-4">Product/Services</h3>
               {loading ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
                   {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -363,7 +363,7 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
                     >
                       <img
                         src={image}
-                        alt={`Portfolio ${index + 1}`}
+                        alt={`Product/Service ${index + 1}`}
                         className="w-full h-24 sm:h-32 object-cover rounded-xl hover:opacity-90 transition-opacity"
                       />
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors rounded-xl flex items-center justify-center">
@@ -377,7 +377,7 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
               ) : (
                 <div className="text-center py-6 sm:py-8">
                   <Calendar className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-slate-400 mb-3 sm:mb-4" />
-                  <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400">No portfolio images available</p>
+                  <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400">No product/service images available</p>
                 </div>
               )}
             </div>

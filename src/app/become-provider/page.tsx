@@ -138,24 +138,20 @@ export default function BecomeProviderPage() {
     longitude: number;
     address: string;
   }) => {
-    console.log('Location selected:', selectedLocation);
-    console.log('Current formData before update:', formData);
+    // Fallback: if city is empty, use state as city
+    const cityToUse = selectedLocation.city || selectedLocation.state;
     
     setLocation(selectedLocation);
-    setFormData(prev => {
-      const updated = {
-        ...prev,
-        locationCity: selectedLocation.city,
-        locationState: selectedLocation.state,
-        latitude: selectedLocation.latitude.toString(),
-        longitude: selectedLocation.longitude.toString()
-      };
-      console.log('Updated formData:', updated);
-      return updated;
-    });
+    setFormData(prev => ({
+      ...prev,
+      locationCity: cityToUse,
+      locationState: selectedLocation.state,
+      latitude: selectedLocation.latitude.toString(),
+      longitude: selectedLocation.longitude.toString()
+    }));
     
     // Show success message
-    toast.success(`Location set to ${selectedLocation.city}, ${selectedLocation.state}`);
+    toast.success(`Location set to ${cityToUse}, ${selectedLocation.state}`);
   };
 
   const handleSubcategoryChange = (subcategory: string) => {
@@ -406,9 +402,6 @@ export default function BecomeProviderPage() {
   };
 
   const nextStep = () => {
-    console.log('nextStep called, currentStep:', currentStep);
-    console.log('Current formData:', formData);
-    
     // Validate current step before moving to next
     if (currentStep === 1) {
       // Check required fields for step 1
@@ -422,18 +415,31 @@ export default function BecomeProviderPage() {
       }
     } else if (currentStep === 2) {
       // Check required fields for step 2
-      console.log('Step 2 validation - category:', formData.category);
-      console.log('Step 2 validation - locationCity:', formData.locationCity);
-      console.log('Step 2 validation - locationState:', formData.locationState);
-      
       if (!formData.category) {
         toast.error('Please select a service category');
         return;
       }
-      if (!formData.locationCity || !formData.locationState) {
-        console.log('Location validation failed - locationCity:', formData.locationCity, 'locationState:', formData.locationState);
+      // Check if we have location data (either city or state with coordinates)
+      // Trim whitespace to handle any hidden characters
+      const trimmedCity = formData.locationCity?.trim() || '';
+      const trimmedState = formData.locationState?.trim() || '';
+      const trimmedLat = formData.latitude?.trim() || '';
+      const trimmedLng = formData.longitude?.trim() || '';
+      
+      const hasLocationData = (trimmedCity && trimmedState) || 
+                             (trimmedState && trimmedLat && trimmedLng);
+      
+      if (!hasLocationData) {
         toast.error('Please select your location');
         return;
+      }
+      
+      // If city is empty but we have state and coordinates, use state as city
+      if (!trimmedCity && trimmedState) {
+        setFormData(prev => ({
+          ...prev,
+          locationCity: trimmedState
+        }));
       }
     }
     
@@ -775,16 +781,6 @@ export default function BecomeProviderPage() {
                     </div>
                   )}
                   
-                  {/* Debug Info */}
-                  <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                    <div className="text-xs text-blue-700 dark:text-blue-300">
-                      <strong>Debug Info:</strong><br/>
-                      locationCity: "{formData.locationCity}"<br/>
-                      locationState: "{formData.locationState}"<br/>
-                      latitude: "{formData.latitude}"<br/>
-                      longitude: "{formData.longitude}"
-                    </div>
-                  </div>
                 </div>
               </div>
 

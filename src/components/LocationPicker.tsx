@@ -137,8 +137,14 @@ export default function LocationPicker({
   };
 
   const handleSuggestionClick = (suggestion: LocationSuggestion) => {
+    // Extract city from display_name if address fields are empty
+    const extractCityFromDisplayName = (displayName: string) => {
+      const parts = displayName.split(',');
+      return parts[0]?.trim() || '';
+    };
+    
     const location = {
-      city: suggestion.city || suggestion.address?.city || '',
+      city: suggestion.city || suggestion.address?.city || extractCityFromDisplayName(suggestion.display_name),
       state: suggestion.state || suggestion.address?.state || '',
       latitude: suggestion.lat,
       longitude: suggestion.lon,
@@ -148,7 +154,6 @@ export default function LocationPicker({
     setSelectedLocation(location);
     setSearchQuery(suggestion.display_name);
     setShowSuggestions(false);
-    console.log('LocationPicker: Calling onLocationSelect with:', location);
     onLocationSelect(location);
   };
 
@@ -178,7 +183,6 @@ export default function LocationPicker({
             const location = data.data;
             setSelectedLocation(location);
             setSearchQuery(location.address);
-            console.log('LocationPicker: Calling onLocationSelect with current location:', location);
             onLocationSelect(location);
           } else {
             console.error('Failed to get location details:', data.message);
@@ -200,8 +204,14 @@ export default function LocationPicker({
             if (response.ok) {
               const data = await response.json();
               if (data.address) {
+                // Extract city from display_name if address fields are empty
+                const extractCityFromDisplayName = (displayName: string) => {
+                  const parts = displayName.split(',');
+                  return parts[0]?.trim() || '';
+                };
+                
                 const location = {
-                  city: data.address.city || data.address.town || data.address.village || '',
+                  city: data.address.city || data.address.town || data.address.village || extractCityFromDisplayName(data.display_name),
                   state: data.address.state || '',
                   latitude,
                   longitude,
@@ -210,7 +220,6 @@ export default function LocationPicker({
                 
                 setSelectedLocation(location);
                 setSearchQuery(data.display_name);
-                console.log('LocationPicker: Calling onLocationSelect with fallback location:', location);
                 onLocationSelect(location);
               }
             }
