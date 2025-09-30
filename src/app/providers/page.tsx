@@ -40,8 +40,17 @@ export default function ProvidersPage() {
   const router = useRouter();
   const { user } = useAuth();
   
+  // Get search parameters from URL
+  const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+  const urlSearch = decodeURIComponent(searchParams.get('search') || '');
+  const urlCategory = decodeURIComponent(searchParams.get('category') || '');
+  const urlLocation = decodeURIComponent(searchParams.get('location') || '');
+  const urlLat = searchParams.get('lat');
+  const urlLng = searchParams.get('lng');
+  const urlAddress = decodeURIComponent(searchParams.get('address') || '');
+  
   // State for the new Uber/Bolt-style flow
-  const [currentStep, setCurrentStep] = useState<'location' | 'search' | 'results'>('location');
+  const [currentStep, setCurrentStep] = useState<'location' | 'search' | 'results'>('search');
   const [userLocation, setUserLocation] = useState<{
     address: string;
     city: string;
@@ -54,8 +63,8 @@ export default function ProvidersPage() {
     country?: string;
   } | null>(null);
   const [isEditingLocation, setIsEditingLocation] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const [searchQuery, setSearchQuery] = useState(urlSearch);
+  const [selectedCategory, setSelectedCategory] = useState(urlCategory);
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<Provider[]>([]);
   const [searchResultsCount, setSearchResultsCount] = useState(0);
@@ -143,8 +152,59 @@ export default function ProvidersPage() {
 
   // Auto-detect user location on component mount
   useEffect(() => {
-    detectUserLocation();
-  }, []);
+    // Wait for component to be mounted and get fresh URL params
+    const currentSearchParams = new URLSearchParams(window.location.search);
+    const currentUrlSearch = decodeURIComponent(currentSearchParams.get('search') || '');
+    const currentUrlCategory = decodeURIComponent(currentSearchParams.get('category') || '');
+    const currentUrlLocation = decodeURIComponent(currentSearchParams.get('location') || '');
+    const currentUrlLat = currentSearchParams.get('lat');
+    const currentUrlLng = currentSearchParams.get('lng');
+    const currentUrlAddress = decodeURIComponent(currentSearchParams.get('address') || '');
+    
+    console.log('useEffect running with URL params:', { 
+      currentUrlSearch, 
+      currentUrlCategory, 
+      currentUrlLocation, 
+      currentUrlLat, 
+      currentUrlLng, 
+      currentUrlAddress 
+    });
+    
+    // If we have location data from URL, use it
+    if (currentUrlLat && currentUrlLng && currentUrlAddress) {
+      console.log('Using URL location data');
+      setUserLocation({
+        address: currentUrlAddress,
+        city: currentUrlLocation,
+        state: currentUrlLocation, // We'll use location as state for now
+        latitude: parseFloat(currentUrlLat),
+        longitude: parseFloat(currentUrlLng)
+      });
+      
+      // Set search state from URL
+      if (currentUrlSearch) {
+        setSearchQuery(currentUrlSearch);
+      }
+      if (currentUrlCategory) {
+        setSelectedCategory(currentUrlCategory);
+      }
+      
+      // If we have search parameters, auto-search immediately
+      if (currentUrlSearch || currentUrlCategory) {
+        console.log('Auto-searching with URL parameters');
+        setCurrentStep('results');
+        // Trigger auto-search immediately without delay
+        setTimeout(() => {
+          console.log('About to call handleSearchSubmit');
+          handleSearchSubmit();
+        }, 100); // Small delay to ensure state is set
+      }
+    } else {
+      console.log('No URL location data, detecting location');
+      // Otherwise detect location normally
+      detectUserLocation();
+    }
+  }, []); // Remove dependencies to prevent re-running
 
   const detectUserLocation = async () => {
     if (!navigator.geolocation) {
@@ -193,7 +253,10 @@ export default function ProvidersPage() {
           country: data.countryName || 'Nigeria'
         });
         
-        setCurrentStep('search');
+        // Only set to search step if we don't have URL parameters
+        if (!urlSearch && !urlCategory) {
+          setCurrentStep('search');
+        }
       } catch (error) {
         console.error('Reverse geocoding failed:', error);
         setUserLocation({
@@ -207,12 +270,18 @@ export default function ProvidersPage() {
           postalCode: '',
           country: 'Nigeria'
         });
-        setCurrentStep('search');
+        
+        // Only set to search step if we don't have URL parameters
+        if (!urlSearch && !urlCategory) {
+          setCurrentStep('search');
+        }
       }
     } catch (error) {
       console.error('Geolocation failed:', error);
-      // Fallback to manual location selection
-      setCurrentStep('search');
+      // Fallback to manual location selection only if no URL parameters
+      if (!urlSearch && !urlCategory) {
+        setCurrentStep('search');
+      }
     }
   };
 
@@ -257,7 +326,12 @@ export default function ProvidersPage() {
   };
 
   const handleSearchSubmit = async () => {
-    if (!searchQuery.trim() && !selectedCategory) return;
+    console.log('handleSearchSubmit called with:', { searchQuery, selectedCategory, userLocation });
+    
+    if (!searchQuery.trim() && !selectedCategory) {
+      console.log('No search query or category, returning');
+      return;
+    }
     
     setIsSearching(true);
     setCurrentStep('results');

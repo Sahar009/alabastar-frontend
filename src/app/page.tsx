@@ -3,14 +3,126 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import type { JSX } from "react";
-import { Wrench, Zap, Truck, Fan, Hammer, PaintRoller, Bug, Shirt, Ruler, Camera, Sparkles, Search, ShieldCheck, Star, Apple, Play, Users, Settings, MapPin, ArrowRight, CheckCircle, Wrench2, Sparkles2, UserPlus } from "lucide-react";
+import { Wrench, Zap, Truck, Fan, Hammer, PaintRoller, Bug, Shirt, Ruler, Camera, Sparkles, Search, ShieldCheck, Star, Apple, Play, Users, Settings, MapPin, ArrowRight, CheckCircle, Wrench2, Sparkles2, UserPlus, Navigation } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import FAQComponent from "@/components/FAQ";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<string | null>(null);
+  
+  // Search and location state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [userLocation, setUserLocation] = useState<{
+    address: string;
+    city: string;
+    state: string;
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+
+  // Auto-detect user location on component mount
+  useEffect(() => {
+    detectUserLocation();
+  }, []);
+
+  const detectUserLocation = async () => {
+    if (!navigator.geolocation) {
+      console.log('Geolocation is not supported by this browser.');
+      return;
+    }
+
+    setIsDetectingLocation(true);
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 300000
+        });
+      });
+
+      const { latitude, longitude } = position.coords;
+      
+      // Reverse geocoding to get full address
+      try {
+        const response = await fetch(
+          `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+        );
+        const data = await response.json();
+        
+        // Build comprehensive address
+        const addressParts = [];
+        if (data.streetNumber) addressParts.push(data.streetNumber);
+        if (data.streetName) addressParts.push(data.streetName);
+        if (data.locality) addressParts.push(data.locality);
+        if (data.principalSubdivision) addressParts.push(data.principalSubdivision);
+        if (data.countryName) addressParts.push(data.countryName);
+        
+        const fullAddress = addressParts.join(', ') || `${data.locality || data.city || 'Unknown'}, ${data.principalSubdivision || data.state || 'Unknown'}, ${data.countryName || 'Nigeria'}`;
+        
+        setUserLocation({
+          address: fullAddress,
+          city: data.locality || data.city || 'Unknown City',
+          state: data.principalSubdivision || data.state || 'Unknown State',
+          latitude,
+          longitude
+        });
+      } catch (error) {
+        console.error('Reverse geocoding failed:', error);
+        setUserLocation({
+          address: 'Current Location',
+          city: 'Unknown City',
+          state: 'Unknown State',
+          latitude,
+          longitude
+        });
+      }
+    } catch (error) {
+      console.error('Geolocation failed:', error);
+    } finally {
+      setIsDetectingLocation(false);
+    }
+  };
+
+  const handleSearch = () => {
+    if (!searchQuery.trim() && !selectedCategory) {
+      toast.error("Please enter a search term or select a service category");
+      return;
+    }
+
+    // Build search parameters
+    const searchParams = new URLSearchParams();
+    
+    if (searchQuery.trim()) {
+      searchParams.append('search', searchQuery.trim());
+    }
+    
+    if (selectedCategory) {
+      searchParams.append('category', selectedCategory);
+    }
+    
+    if (userLocation) {
+      searchParams.append('location', userLocation.city);
+      searchParams.append('lat', userLocation.latitude.toString());
+      searchParams.append('lng', userLocation.longitude.toString());
+      searchParams.append('address', userLocation.address);
+    }
+
+    // Navigate to providers page with search parameters
+    const queryString = searchParams.toString();
+    router.push(`/providers?${queryString}`);
+  };
+
+  const handleCategorySelect = (category: string) => {
+    setSelectedCategory(category);
+    setSearchQuery(""); // Clear search query when category is selected
+  };
 
   const subscribe = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,10 +165,27 @@ export default function Home() {
   ];
 
   const [activeIdx, setActiveIdx] = useState(0);
+  const [bgActiveIdx, setBgActiveIdx] = useState(0);
+  
+  // Background images for slider
+  const backgroundImages = [
+    "/images/apply.png",
+    "/images/plumber.png", 
+    "/images/mechanic.png",
+    "/images/painter.png",
+    "/images/bakery.png",
+    "/images/carpenter.png"
+  ];
+
   useEffect(() => {
     const id = setInterval(() => setActiveIdx((i) => (i + 1) % heroImages.length), 3000);
     return () => clearInterval(id);
   }, [heroImages.length]);
+
+  useEffect(() => {
+    const id = setInterval(() => setBgActiveIdx((i) => (i + 1) % backgroundImages.length), 4000);
+    return () => clearInterval(id);
+  }, [backgroundImages.length]);
 
   // Trusted by avatars (replace with real users/customers)
   const trustedAvatars = [
@@ -124,63 +253,170 @@ export default function Home() {
   return (
     <div className="relative">
       {/* Hero */}
-      <section className="relative overflow-hidden pt-20 sm:pt-28">
-        {/* background mesh */}
-        <Image src="/brand/mesh-bg.svg" alt="bg" fill priority className="object-cover opacity-[0.25] pointer-events-none select-none" />
-        {/* gradient blobs */}
-        <div className="pointer-events-none absolute inset-0 -z-10">
-          <div className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-[#2563EB]/25 blur-3xl animate-blob"></div>
-          <div className="absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-[#14B8A6]/25 blur-3xl animate-blob" style={{ animationDelay: "-6s" }}></div>
+      <section className="relative overflow-hidden pt-20 sm:pt-28 h-[90vh] flex items-center pb-20">
+        {/* Background image slider with fade effect */}
+        <div className="absolute inset-0">
+          {backgroundImages.map((src, i) => (
+            <Image
+              key={i}
+              src={src}
+              alt="Background"
+              fill
+              priority={i === 0}
+              className={`object-cover object-center transition-opacity duration-1000 ${
+                i === bgActiveIdx ? 'opacity-40' : 'opacity-0'
+              }`}
+              style={{ objectFit: 'cover', objectPosition: 'center' }}
+            />
+          ))}
+          <div className="absolute inset-0 bg-black/60"></div>
+        </div>
+        
+        {/* Subtle tech overlay */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-20 left-20 text-white/20 font-mono text-xs">
+            {`const services = {
+  plumbing: "24/7",
+  electrical: "certified", 
+  cleaning: "eco-friendly",
+  carpentry: "skilled"
+}`}
+          </div>
+          <div className="absolute bottom-32 right-32 text-white/20 font-mono text-xs">
+            {`function bookService() {
+  return "instant booking";
+}`}
+          </div>
         </div>
 
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/60 dark:bg-slate-900/50 px-3 py-1 text-xs text-slate-700 dark:text-slate-200 backdrop-blur-xl animate-shimmer" style={{ backgroundImage: "linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.5), rgba(255,255,255,0))" }}>
-                <span className="h-2 w-2 rounded-full bg-[#14B8A6]"></span>
-                Verified providers • 24/7 support • Secure payments
-              </div>
-              <h1 className="mt-4 text-4xl sm:text-6xl font-extrabold leading-tight text-slate-900 dark:text-slate-50">
-                Find trusted services near you
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-[#2563EB] to-[#14B8A6]">Fast. Safe. Guaranteed.</span>
-        </h1>
-              <p className="mt-4 text-lg text-slate-600 dark:text-slate-300">
-                Book plumbers, electricians, cleaners and more. Secure payments with verified providers.
-              </p>
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full">
+          <div className="max-w-4xl">
+            {/* Main heading */}
+            <h1 className="text-4xl sm:text-6xl font-extrabold leading-tight text-white mb-6">
+              Connect with trusted
+              <br />
+              service providers
+            </h1>
+            
+            <p className="text-xl text-white/90 mb-8 max-w-2xl">
+              Book skilled professionals for plumbing, electrical work, cleaning, carpentry and more. 
+              Secure payments, verified providers, instant booking.
+            </p>
 
-              {/* Search bar */}
-              <div className="mt-6 w-full max-w-lg">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Search for services or providers..."
-                    className="w-full rounded-xl border border-slate-300/70 dark:border-white/10 bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl px-4 py-3 pr-12 text-sm outline-none focus:ring-2 focus:ring-[#2563EB]/40"
-                  />
-                  <Search size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
+            {/* Search bar */}
+            <div className="mb-8 w-full max-w-2xl">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search for services or providers..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  className="w-full rounded-xl bg-white/90 backdrop-blur-xl px-6 py-4 pr-16 text-lg outline-none focus:ring-2 focus:ring-white/50 shadow-lg"
+                />
+                <button 
+                  onClick={handleSearch}
+                  disabled={isDetectingLocation}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-gray-800 hover:bg-gray-700 disabled:bg-gray-600 rounded-lg p-3 transition-colors"
+                >
+                  {isDetectingLocation ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Search size={20} className="text-white" />
+                  )}
+                </button>
+              </div>
+              
+              {/* Location indicator */}
+              {userLocation && (
+                <div className="mt-2 flex items-center gap-2 text-white/80 text-sm">
+                  <MapPin size={16} />
+                  <span>Searching near: {userLocation.address}</span>
                 </div>
-              </div>
+              )}
+            </div>
 
-              {/* Action buttons */}
-              <div className="mt-6 flex flex-col sm:flex-row gap-4">
-                <Link 
-                  href="/providers" 
-                  className="group flex-1 sm:flex-none rounded-xl bg-gradient-to-r from-[#2563EB] to-[#14B8A6] px-6 py-4 text-white font-semibold shadow-lg shadow-sky-500/25 hover:shadow-xl hover:shadow-sky-500/40 hover:scale-105 transition-all duration-300 cursor-pointer flex items-center justify-center space-x-2"
-                >
-                  <Search className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" />
-                  <span>Book a Provider</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
-                </Link>
-                <Link 
-                  href="/become-provider" 
-                  className="group flex-1 sm:flex-none rounded-xl border-2 border-slate-300/70 dark:border-white/10 bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl px-6 py-4 text-slate-700 dark:text-slate-200 font-semibold hover:bg-white/90 dark:hover:bg-slate-900/80 hover:border-[#2563EB]/50 dark:hover:border-[#14B8A6]/50 hover:scale-105 hover:shadow-lg hover:shadow-slate-500/20 transition-all duration-300 cursor-pointer flex items-center justify-center space-x-2"
-                >
-                  <UserPlus className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-                  <span>Become a Provider</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
-                </Link>
-              </div>
+            {/* Service category buttons */}
+            <div className="mb-8 flex flex-wrap gap-4">
+              <button 
+                onClick={() => handleCategorySelect('plumbing')}
+                className={`flex items-center gap-2 px-6 py-3 rounded-3xl transition-all duration-300 hover:scale-105 shadow-lg ${
+                  selectedCategory === 'plumbing' 
+                    ? 'bg-gradient-to-r from-[#1d4ed8] to-[#0f766e] text-white' 
+                    : 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] hover:from-[#1d4ed8] hover:to-[#0f766e] text-white'
+                }`}
+              >
+                <span>Plumbing</span>
+                <ArrowRight size={16} />
+              </button>
+              <button 
+                onClick={() => handleCategorySelect('electrical')}
+                className={`flex items-center gap-2 px-6 py-3 rounded-3xl transition-all duration-300 hover:scale-105 shadow-lg ${
+                  selectedCategory === 'electrical' 
+                    ? 'bg-gradient-to-r from-[#1d4ed8] to-[#0f766e] text-white' 
+                    : 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] hover:from-[#1d4ed8] hover:to-[#0f766e] text-white'
+                }`}
+              >
+                <span>Electrical</span>
+                <ArrowRight size={16} />
+              </button>
+              <button 
+                onClick={() => handleCategorySelect('cleaning')}
+                className={`flex items-center gap-2 px-6 py-3 rounded-3xl transition-all duration-300 hover:scale-105 shadow-lg ${
+                  selectedCategory === 'cleaning' 
+                    ? 'bg-gradient-to-r from-[#1d4ed8] to-[#0f766e] text-white' 
+                    : 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] hover:from-[#1d4ed8] hover:to-[#0f766e] text-white'
+                }`}
+              >
+                <span>Cleaning</span>
+                <ArrowRight size={16} />
+              </button>
+              <button 
+                onClick={() => handleCategorySelect('carpentry')}
+                className={`flex items-center gap-2 px-6 py-3 rounded-3xl transition-all duration-300 hover:scale-105 shadow-lg ${
+                  selectedCategory === 'carpentry' 
+                    ? 'bg-gradient-to-r from-[#1d4ed8] to-[#0f766e] text-white' 
+                    : 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] hover:from-[#1d4ed8] hover:to-[#0f766e] text-white'
+                }`}
+              >
+                <span>Carpentry</span>
+                <ArrowRight size={16} />
+              </button>
+              <button 
+                onClick={() => handleCategorySelect('painting')}
+                className={`flex items-center gap-2 px-6 py-3 rounded-3xl transition-all duration-300 hover:scale-105 shadow-lg relative ${
+                  selectedCategory === 'painting' 
+                    ? 'bg-gradient-to-r from-[#1d4ed8] to-[#0f766e] text-white' 
+                    : 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] hover:from-[#1d4ed8] hover:to-[#0f766e] text-white'
+                }`}
+              >
+                <span>Painting</span>
+                <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">NEW</span>
+              </button>
+            </div>
 
-              <div className="mt-8 flex items-center gap-6">
+            {/* Action buttons */}
+            <div className="mb-8 flex flex-col sm:flex-row gap-4">
+              <Link 
+                href="/providers" 
+                className="group flex-1 sm:flex-none rounded-xl bg-gradient-to-r from-[#2563EB] to-[#14B8A6] px-6 py-4 text-white font-semibold shadow-lg shadow-sky-500/25 hover:shadow-xl hover:shadow-sky-500/40 hover:scale-105 transition-all duration-300 cursor-pointer flex items-center justify-center space-x-2"
+              >
+                <Search className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" />
+                <span>Book a Provider</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+              </Link>
+              <Link 
+                href="/become-provider" 
+                className="group flex-1 sm:flex-none rounded-xl border-2 border-white/30 bg-white/20 backdrop-blur-xl px-6 py-4 text-white font-semibold hover:bg-white/30 hover:border-white/50 hover:scale-105 hover:shadow-lg hover:shadow-white/20 transition-all duration-300 cursor-pointer flex items-center justify-center space-x-2"
+              >
+                <UserPlus className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+                <span>Become a Provider</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+              </Link>
+            </div>
+
+            {/* Trusted by section */}
+            <div className="mt-8 flex items-center gap-6">
               <div className="flex -space-x-3">
                 {trustedAvatars.map((src, i) => (
                   <img
@@ -194,75 +430,22 @@ export default function Home() {
                   />
                 ))}
               </div>
-                <p className="text-sm text-slate-600 dark:text-slate-300">Trusted by 10,000+ homeowners and businesses</p>
-              </div>
-            </div>
-
-            <div className="relative flex items-center justify-center">
-              {/* Circular frame with animated conic gradient border */}
-              <div className="relative h-80 w-80 sm:h-96 sm:w-96 rounded-full p-[3px]">
-                <div
-                  className="absolute -inset-0 rounded-full animate-rotate-slow blur-[2px] opacity-80"
-                  style={{
-                    background: `conic-gradient(${c1}, ${c2}, ${c1})`,
-                    transition: 'background 700ms ease'
-                  }}
-                />
-                <div className="relative h-full w-full rounded-full overflow-hidden border border-white/30 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl">
-                  {heroImages.map((src, i) => (
-   <Image
-                      key={i}
-                      src={src}
-                      alt="hero"
-                      fill
-                      sizes="(max-width: 768px) 320px, 384px"
-                      className={`object-cover transition-opacity duration-700 ${i === activeIdx ? 'opacity-100' : 'opacity-0'}`}
-                      priority={i === 0}
-                    />
-                  ))}
-      </div>
-   
-                {/* Floating icons */}
-                <span
-                  className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full p-2 bg-white/80 dark:bg-slate-900/70 backdrop-blur-xl border border-white/40 dark:border-white/10 shadow animate-float"
-                  style={{ animationDelay: '0s' }}
-                  aria-hidden
-                >
-                  <Wrench size={18} style={{ color: c1 }} />
-                </span>
-                <span
-                  className="absolute top-1/2 -right-3 -translate-y-1/2 rounded-full p-2 bg-white/80 dark:bg-slate-900/70 backdrop-blur-xl border border-white/40 dark:border-white/10 shadow animate-float"
-                  style={{ animationDelay: '.2s' }}
-                  aria-hidden
-                >
-                  <Zap size={18} style={{ color: c2 }} />
-                </span>
-                <span
-                  className="absolute -bottom-3 left-1/2 -translate-x-1/2 rounded-full p-2 bg-white/80 dark:bg-slate-900/70 backdrop-blur-xl border border-white/40 dark:border-white/10 shadow animate-float"
-                  style={{ animationDelay: '.4s' }}
-                  aria-hidden
-                >
-                  <Sparkles size={18} style={{ color: c1 }} />
-                </span>
-                <span
-                  className="absolute top-1/2 -left-3 -translate-y-1/2 rounded-full p-2 bg-white/80 dark:bg-slate-900/70 backdrop-blur-xl border border-white/40 dark:border-white/10 shadow animate-float"
-                  style={{ animationDelay: '.6s' }}
-                  aria-hidden
-                >
-                  <Truck size={18} style={{ color: c2 }} />
-                </span>
-              </div>
-              <div className="absolute -bottom-6 -left-6 h-24 w-24 rounded-2xl bg-gradient-to-br from-[#2563EB] to-[#14B8A6] blur-2xl opacity-40"></div>
-
-              {/* Description panel (desktop) */}
-              <div className="hidden sm:block absolute -right-10 bottom-4 w-64 rounded-2xl border border-white/30 dark:border-white/10 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl shadow-lg p-4">
-                <p className="text-xs font-semibold text-transparent bg-clip-text bg-gradient-to-r" style={{ backgroundImage: `linear-gradient(90deg, ${c1}, ${c2})` }}>{heroTitles[activeIdx]}</p>
-                {heroDescriptions.map((txt, i) => (
-                  <p key={i} className={`mt-1 text-sm text-slate-700 dark:text-slate-300 transition-opacity duration-500 ${i === activeIdx ? 'opacity-100' : 'opacity-0 absolute'}`}>{txt}</p>
-                ))}
-              </div>
+              <p className="text-sm text-white/80">Trusted by 10,000+ homeowners and businesses</p>
             </div>
           </div>
+        </div>
+
+        {/* Background slider indicators */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
+          {backgroundImages.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setBgActiveIdx(i)}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                i === bgActiveIdx ? 'bg-white' : 'bg-white/40'
+              }`}
+            />
+          ))}
         </div>
       </section>
 
