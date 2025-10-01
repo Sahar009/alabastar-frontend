@@ -243,9 +243,16 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
               
               <div className="flex-1 min-w-0">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
-                  <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 truncate">
-                    {provider.businessName || provider.user.fullName}
-                  </h2>
+                  <div className="flex flex-col">
+                    <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 truncate">
+                      {provider.businessName || 'Business Name'}
+                    </h2>
+                    {provider.user?.fullName && (
+                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                        by {provider.user.fullName}
+                      </p>
+                    )}
+                  </div>
                   {provider.verificationStatus === 'verified' && (
                     <div className="flex items-center space-x-1 bg-green-100 dark:bg-green-900/20 px-2 py-1 rounded-full w-fit">
                       <Shield className="w-3 h-3 sm:w-4 sm:h-4 text-green-600 flex-shrink-0" />

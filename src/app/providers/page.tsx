@@ -1001,8 +1001,13 @@ export default function ProvidersPage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
                             <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 truncate">
-                              {provider.businessName || provider.user?.fullName || 'Provider'}
+                              {provider.businessName || 'Business Name'}
                             </h3>
+                            {provider.user?.fullName && provider.businessName && (
+                              <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                                by {provider.user.fullName}
+                              </p>
+                            )}
                             <div className="flex items-center gap-2">
                               {(() => {
                                 const IconComponent = getCategoryIcon(provider.category);

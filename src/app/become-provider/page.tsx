@@ -56,6 +56,9 @@ export default function BecomeProviderPage() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [registrationFee, setRegistrationFee] = useState(5000); // Default fee
+  const [paymentData, setPaymentData] = useState<any>(null);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const brandImageInputRef = useRef<HTMLInputElement>(null);
 
@@ -332,6 +335,12 @@ export default function BecomeProviderPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // If we're on step 4 and payment is initialized, redirect to Paystack
+    if (currentStep === 4 && paymentData) {
+      window.location.href = paymentData.authorization_url;
+      return;
+    }
+    
     if (formData.password !== formData.confirmPassword) {
       toast.error('Passwords do not match');
       return;
@@ -352,95 +361,8 @@ export default function BecomeProviderPage() {
       return;
     }
 
-    setLoading(true);
-    try {
-      const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const response = await fetch(`${base}/api/providers/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          documents: uploadedFiles.map(file => ({
-            type: file.type,
-            url: file.url
-          })),
-          brandImages: uploadedBrandImages.map(file => ({
-            type: file.type,
-            url: file.url
-          }))
-        })
-      });
-
-      const data = await response.json();
-      
-      if (response.ok) {
-        toast.success('Registration successful! We&apos;ll review your application and get back to you soon.');
-        
-        // Check if token is provided
-        if (data.data?.token) {
-          // Store token in localStorage
-          localStorage.setItem('token', data.data.token);
-          localStorage.setItem('user', JSON.stringify(data.data.user));
-          localStorage.setItem('providerProfile', JSON.stringify(data.data.providerProfile));
-          
-          // Route to provider dashboard
-          toast.success('Welcome! Redirecting to your dashboard...');
-          setTimeout(() => {
-            router.push('/provider/dashboard');
-          }, 2000);
-        } else {
-          // No token provided, route to sign-in page
-          toast.success('Registration complete! Please sign in to access your dashboard.');
-          setTimeout(() => {
-            router.push('/provider/signin');
-          }, 2000);
-        }
-        
-        // Reset form
-        setFormData({
-          fullName: "",
-          email: "",
-          phone: "",
-          alternativePhone: "",
-          password: "",
-          confirmPassword: "",
-          businessName: "",
-          category: "",
-          subcategories: [],
-          bio: "",
-          locationCity: "",
-          locationState: "",
-          latitude: "",
-          longitude: "",
-          documents: [],
-          brandImages: []
-        });
-        // Clean up object URLs before resetting
-        uploadedFiles.forEach(file => {
-          if (file.preview && file.preview.startsWith('blob:')) {
-            URL.revokeObjectURL(file.preview);
-          }
-        });
-        uploadedBrandImages.forEach(file => {
-          if (file.preview && file.preview.startsWith('blob:')) {
-            URL.revokeObjectURL(file.preview);
-          }
-        });
-        setUploadedFiles([]);
-        setUploadedBrandImages([]);
-        setCurrentStep(1);
-        setSubcategoryInput("");
-        setShowSuggestions(false);
-      } else {
-        // Display the exact response from backend
-        console.error('Registration failed:', data);
-        toast.error(JSON.stringify(data, null, 2));
-      }
-    } catch {
-      toast.error('Network error. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+    // If we reach here, it means we need to initialize payment
+    await initializePayment();
   };
 
   const nextStep = () => {
@@ -483,13 +405,66 @@ export default function BecomeProviderPage() {
           locationCity: trimmedState
         }));
       }
+    } else if (currentStep === 3) {
+      // Check required fields for step 3
+      if (uploadedFiles.length === 0) {
+        toast.error('Please upload at least one document');
+        return;
+      }
+      if (uploadedBrandImages.length === 0) {
+        toast.error('Please upload at least one brand image');
+        return;
+      }
     }
     
-    if (currentStep < 3) setCurrentStep(currentStep + 1);
+    if (currentStep < 4) setCurrentStep(currentStep + 1);
   };
 
   const prevStep = () => {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
+  };
+
+  const initializePayment = async () => {
+    setIsProcessingPayment(true);
+    try {
+      // Initialize payment first with provider data
+      const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${base}/api/providers/initialize-payment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...formData,
+          documents: uploadedFiles.map(file => ({
+            type: file.type,
+            url: file.url
+          })),
+          brandImages: uploadedBrandImages.map(file => ({
+            type: file.type,
+            url: file.url
+          }))
+        })
+      });
+
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        setPaymentData(data.data);
+        toast.success('Payment initialized successfully! Redirecting to Paystack...');
+        
+        // Auto-redirect to Paystack checkout
+        setTimeout(() => {
+          window.location.href = data.data.authorization_url;
+        }, 1500); // Small delay to show the toast
+      } else {
+        console.error('Payment initialization failed:', data);
+        toast.error(data.message || 'Failed to initialize payment. Please try again.');
+      }
+    } catch (error) {
+      console.error('Payment initialization error:', error);
+      toast.error('Network error. Please try again.');
+    } finally {
+      setIsProcessingPayment(false);
+    }
   };
 
   return (
@@ -503,7 +478,7 @@ export default function BecomeProviderPage() {
         {/* Progress indicator */}
         <div className="mb-8">
           <div className="flex items-center justify-center space-x-4">
-            {[1, 2, 3].map((step) => (
+            {[1, 2, 3, 4].map((step) => (
               <div key={step} className="flex items-center">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
                   currentStep >= step 
@@ -512,7 +487,7 @@ export default function BecomeProviderPage() {
                 }`}>
                   {step}
                 </div>
-                {step < 3 && (
+                {step < 4 && (
                   <div className={`w-16 h-1 mx-2 ${
                     currentStep > step 
                       ? 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6]' 
@@ -524,9 +499,10 @@ export default function BecomeProviderPage() {
           </div>
           <div className="flex justify-center mt-2">
             <p className="text-sm text-slate-600 dark:text-slate-400">
-              Step {currentStep} of 3: {
+              Step {currentStep} of 4: {
                 currentStep === 1 ? 'Personal Information' :
-                currentStep === 2 ? 'Service Details' : 'Documents & Verification'
+                currentStep === 2 ? 'Service Details' : 
+                currentStep === 3 ? 'Documents & Verification' : 'Payment'
               }
             </p>
           </div>
@@ -1130,6 +1106,96 @@ export default function BecomeProviderPage() {
             </div>
           )}
 
+          {currentStep === 4 && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Payment</h2>
+              
+              <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 border border-green-200 dark:border-green-800 rounded-2xl p-6">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center">
+                    <NairaIcon className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Registration Fee</h3>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">Complete your provider registration</p>
+                  </div>
+                </div>
+                
+                <div className="bg-white dark:bg-slate-800 rounded-xl p-4 mb-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-600 dark:text-slate-400">Registration Fee</span>
+                    <span className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                      {new Intl.NumberFormat('en-NG', {
+                        style: 'currency',
+                        currency: 'NGN',
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0
+                      }).format(registrationFee)}
+                    </span>
+                  </div>
+                  <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                    One-time payment to activate your provider account
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2 text-sm text-slate-600 dark:text-slate-400">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span>Secure payment via Paystack</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-slate-600 dark:text-slate-400">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span>Instant account activation after payment</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-slate-600 dark:text-slate-400">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span>Priority listing in search results</span>
+                  </div>
+                </div>
+              </div>
+
+              {!paymentData ? (
+                <button
+                  type="button"
+                  onClick={initializePayment}
+                  disabled={isProcessingPayment}
+                  className="w-full py-4 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white rounded-xl font-semibold text-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                >
+                  {isProcessingPayment ? (
+                    <div className="flex items-center justify-center space-x-2">
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Processing...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center space-x-2">
+                      <NairaIcon className="w-6 h-6" />
+                      <span>Pay Registration Fee</span>
+                    </div>
+                  )}
+                </button>
+              ) : (
+                <div className="text-center space-y-4">
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+                    <div className="flex items-center justify-center space-x-2 mb-2">
+                      <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                      <span className="text-blue-800 dark:text-blue-200 font-medium">Redirecting to Paystack...</span>
+                    </div>
+                    <p className="text-blue-700 dark:text-blue-300 text-sm">
+                      Please complete your payment on the secure Paystack checkout page.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => window.location.href = paymentData.authorization_url}
+                    className="w-full py-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold text-lg hover:opacity-90 transition-opacity shadow-lg hover:shadow-xl"
+                  >
+                    Complete Payment on Paystack
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="flex justify-between mt-8">
             {currentStep > 1 && (
               <button
@@ -1142,7 +1208,7 @@ export default function BecomeProviderPage() {
             )}
             
             <div className="ml-auto">
-              {currentStep < 3 ? (
+              {currentStep < 4 ? (
                 <button
                   type="button"
                   onClick={nextStep}
@@ -1153,10 +1219,10 @@ export default function BecomeProviderPage() {
               ) : (
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || !paymentData}
                   className="px-8 py-3 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50"
                 >
-                  {loading ? 'Submitting...' : 'Submit Application'}
+                  {loading ? 'Submitting...' : 'Complete Registration'}
                 </button>
               )}
             </div>
