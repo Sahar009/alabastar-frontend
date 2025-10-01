@@ -9,6 +9,7 @@ export interface Provider {
     alternativePhone?: string;
     avatarUrl?: string;
   };
+  businessName?: string;
   category: string;
   subcategories: string[];
   yearsOfExperience: number;
@@ -24,6 +25,7 @@ export interface Provider {
   verificationStatus: string;
   isAvailable: boolean;
   estimatedArrival: string;
+  brandImages?: any[];
 }
 
 

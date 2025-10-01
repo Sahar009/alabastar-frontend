@@ -108,17 +108,22 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
         setReviews(generateMockReviews());
       }
 
-      // Fetch product/service images
+      // Fetch brand images
       try {
-        const portfolioResponse = await fetch(`${base}/providers/${provider.id}/portfolio`);
+        const portfolioResponse = await fetch(`${base}/providers/${provider.id}/brand-images`);
         if (portfolioResponse.ok) {
           const portfolioData = await portfolioResponse.json();
-          setPortfolioImages(portfolioData.data?.images || generateMockPortfolio());
+          const brandImages = portfolioData.data?.brandImages || [];
+          if (brandImages.length > 0) {
+            setPortfolioImages(brandImages.map((img: any) => img.url || img));
+          } else {
+            setPortfolioImages(generateMockPortfolio());
+          }
         } else {
           setPortfolioImages(generateMockPortfolio());
         }
       } catch (error) {
-        console.log('Using mock product/service images:', error);
+        console.log('Using mock brand images:', error);
         setPortfolioImages(generateMockPortfolio());
       }
     } catch (error) {
@@ -181,9 +186,9 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
             {/* Avatar and Basic Info */}
             <div className="flex flex-col sm:flex-row sm:items-start gap-4 flex-1">
               <Avatar
-                src={provider.user.avatarUrl}
-                alt={provider.user.fullName}
-                fallback={provider.user.fullName}
+                src={provider.brandImages && provider.brandImages.length > 0 ? (provider.brandImages[0].url || provider.brandImages[0]) : (provider.user.avatarUrl || '')}
+                alt={provider.businessName || provider.user.fullName}
+                fallback={provider.businessName || provider.user.fullName}
                 size="xl"
                 showVerification={true}
                 isVerified={provider.verificationStatus === 'verified'}
@@ -194,7 +199,7 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
               <div className="flex-1 min-w-0">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
                   <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 truncate">
-                    {provider.user.fullName}
+                    {provider.businessName || provider.user.fullName}
                   </h2>
                   {provider.verificationStatus === 'verified' && (
                     <div className="flex items-center space-x-1 bg-green-100 dark:bg-green-900/20 px-2 py-1 rounded-full w-fit">
@@ -259,7 +264,7 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
         <div className="flex border-b border-slate-200 dark:border-slate-700 overflow-x-auto">
           {[
             { id: 'overview', label: 'Overview' },
-            { id: 'portfolio', label: 'Product/Services' },
+            { id: 'portfolio', label: 'Brand Images' },
             { id: 'reviews', label: `Reviews (${reviews.length})` }
           ].map((tab) => (
             <button
@@ -347,7 +352,7 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
 
           {activeTab === 'portfolio' && (
             <div>
-              <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-slate-100 mb-3 sm:mb-4">Product/Services</h3>
+              <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-slate-100 mb-3 sm:mb-4">Brand Images</h3>
               {loading ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
                   {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -363,7 +368,7 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
                     >
                       <img
                         src={image}
-                        alt={`Product/Service ${index + 1}`}
+                        alt={`Brand Image ${index + 1}`}
                         className="w-full h-24 sm:h-32 object-cover rounded-xl hover:opacity-90 transition-opacity"
                       />
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors rounded-xl flex items-center justify-center">
@@ -377,7 +382,7 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
               ) : (
                 <div className="text-center py-6 sm:py-8">
                   <Calendar className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-slate-400 mb-3 sm:mb-4" />
-                  <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400">No product/service images available</p>
+                  <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400">No brand images available</p>
                 </div>
               )}
             </div>

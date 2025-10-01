@@ -26,6 +26,7 @@ export default function BecomeProviderPage() {
     confirmPassword: "",
     
     // Provider profile data
+    businessName: "",
     category: "",
     subcategories: [] as string[],
     bio: "",
@@ -35,13 +36,15 @@ export default function BecomeProviderPage() {
     longitude: "",
     
     // Document data
-    documents: [] as File[]
+    documents: [] as File[],
+    brandImages: [] as File[]
   });
 
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [uploadedFiles, setUploadedFiles] = useState<{url: string, type: string, name: string, preview?: string}[]>([]);
+  const [uploadedBrandImages, setUploadedBrandImages] = useState<{url: string, type: string, name: string, preview?: string}[]>([]);
   const [location, setLocation] = useState({
     city: "",
     state: "",
@@ -54,6 +57,7 @@ export default function BecomeProviderPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const brandImageInputRef = useRef<HTMLInputElement>(null);
 
   const categories = [
     { value: 'plumbing', label: 'Plumbing' },
@@ -215,7 +219,7 @@ export default function BecomeProviderPage() {
     }
   };
 
-  const handleFileUpload = async (files: FileList) => {
+  const handleFileUpload = async (files: FileList, isBrandImage = false) => {
     if (!files || files.length === 0) {
       toast.error('Please select files to upload');
       return;
@@ -223,7 +227,9 @@ export default function BecomeProviderPage() {
 
     // Validate file types and sizes
     const maxSize = 10 * 1024 * 1024; // 10MB
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+    const allowedTypes = isBrandImage 
+      ? ['image/jpeg', 'image/jpg', 'image/png'] 
+      : ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
     
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
@@ -232,22 +238,26 @@ export default function BecomeProviderPage() {
         return;
       }
       if (!allowedTypes.includes(file.type)) {
-        toast.error(`File ${file.name} has an unsupported format. Please use JPG, PNG, or PDF.`);
+        toast.error(`File ${file.name} has an unsupported format. Please use JPG, PNG${isBrandImage ? '' : ', or PDF'}.`);
         return;
       }
     }
 
     const formData = new FormData();
     Array.from(files).forEach(file => {
-      formData.append('documents', file);
+      formData.append(isBrandImage ? 'brandImages' : 'documents', file);
     });
 
     try {
       setUploading(true);
-      toast.loading('Uploading files...', { id: 'upload' });
+      toast.loading(`Uploading ${isBrandImage ? 'brand images' : 'files'}...`, { id: 'upload' });
       
       const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const response = await fetch(`${base}/api/providers/documents/upload`, {
+      const endpoint = isBrandImage 
+        ? `${base}/api/providers/brand-images/upload`
+        : `${base}/api/providers/documents/upload`;
+      
+      const response = await fetch(endpoint, {
         method: 'POST',
         body: formData
       });
@@ -257,12 +267,18 @@ export default function BecomeProviderPage() {
       if (response.ok && data.success) {
         const newFiles = data.files.map((file: { url: string; originalName?: string; filename: string }) => ({
           url: file.url,
-          type: 'id_card', // Default type, can be changed
+          type: isBrandImage ? 'brand_image' : 'id_card',
           name: file.originalName || file.filename,
-          preview: file.url // For images, we can use the URL as preview
+          preview: file.url
         }));
-        setUploadedFiles(prev => [...prev, ...newFiles]);
-        toast.success(`Successfully uploaded ${files.length} file(s)`, { id: 'upload' });
+        
+        if (isBrandImage) {
+          setUploadedBrandImages(prev => [...prev, ...newFiles]);
+        } else {
+          setUploadedFiles(prev => [...prev, ...newFiles]);
+        }
+        
+        toast.success(`Successfully uploaded ${files.length} ${isBrandImage ? 'brand image(s)' : 'file(s)'}`, { id: 'upload' });
       } else {
         console.error('Upload failed:', data);
         toast.error(data.message || 'File upload failed. Please try again.', { id: 'upload' });
@@ -276,12 +292,17 @@ export default function BecomeProviderPage() {
         
         const newFiles = Array.from(files).map(file => ({
           url: URL.createObjectURL(file),
-          type: 'id_card',
+          type: isBrandImage ? 'brand_image' : 'id_card',
           name: file.name,
           preview: file.type.startsWith('image/') ? URL.createObjectURL(file) : undefined
         }));
         
-        setUploadedFiles(prev => [...prev, ...newFiles]);
+        if (isBrandImage) {
+          setUploadedBrandImages(prev => [...prev, ...newFiles]);
+        } else {
+          setUploadedFiles(prev => [...prev, ...newFiles]);
+        }
+        
         toast.success(`Files added locally (${files.length} file(s)). Note: Backend upload required for final submission.`, { id: 'upload' });
       } else {
         toast.error('Network error. Please check your connection and try again.', { id: 'upload' });
@@ -289,14 +310,16 @@ export default function BecomeProviderPage() {
     } finally {
       setUploading(false);
       // Reset the file input to allow re-uploading the same file
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+      const inputRef = isBrandImage ? brandImageInputRef : fileInputRef;
+      if (inputRef.current) {
+        inputRef.current.value = '';
       }
     }
   };
 
-  const removeFile = (index: number) => {
-    setUploadedFiles(prev => {
+  const removeFile = (index: number, isBrandImage = false) => {
+    const setter = isBrandImage ? setUploadedBrandImages : setUploadedFiles;
+    setter(prev => {
       const fileToRemove = prev[index];
       // Clean up object URL to prevent memory leaks
       if (fileToRemove?.preview && fileToRemove.preview.startsWith('blob:')) {
@@ -324,6 +347,11 @@ export default function BecomeProviderPage() {
       return;
     }
 
+    if (uploadedBrandImages.length === 0) {
+      toast.error('Please upload at least one brand image');
+      return;
+    }
+
     setLoading(true);
     try {
       const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -333,6 +361,10 @@ export default function BecomeProviderPage() {
         body: JSON.stringify({
           ...formData,
           documents: uploadedFiles.map(file => ({
+            type: file.type,
+            url: file.url
+          })),
+          brandImages: uploadedBrandImages.map(file => ({
             type: file.type,
             url: file.url
           }))
@@ -372,6 +404,7 @@ export default function BecomeProviderPage() {
           alternativePhone: "",
           password: "",
           confirmPassword: "",
+          businessName: "",
           category: "",
           subcategories: [],
           bio: "",
@@ -379,7 +412,8 @@ export default function BecomeProviderPage() {
           locationState: "",
           latitude: "",
           longitude: "",
-          documents: []
+          documents: [],
+          brandImages: []
         });
         // Clean up object URLs before resetting
         uploadedFiles.forEach(file => {
@@ -387,12 +421,20 @@ export default function BecomeProviderPage() {
             URL.revokeObjectURL(file.preview);
           }
         });
+        uploadedBrandImages.forEach(file => {
+          if (file.preview && file.preview.startsWith('blob:')) {
+            URL.revokeObjectURL(file.preview);
+          }
+        });
         setUploadedFiles([]);
+        setUploadedBrandImages([]);
         setCurrentStep(1);
         setSubcategoryInput("");
         setShowSuggestions(false);
       } else {
-        toast.error(data.message || 'Registration failed');
+        // Display the exact response from backend
+        console.error('Registration failed:', data);
+        toast.error(JSON.stringify(data, null, 2));
       }
     } catch {
       toast.error('Network error. Please try again.');
@@ -405,7 +447,7 @@ export default function BecomeProviderPage() {
     // Validate current step before moving to next
     if (currentStep === 1) {
       // Check required fields for step 1
-      if (!formData.fullName || !formData.email || !formData.password || !formData.confirmPassword) {
+      if (!formData.fullName || !formData.businessName || !formData.email || !formData.password || !formData.confirmPassword) {
         toast.error('Please fill in all required fields');
         return;
       }
@@ -509,6 +551,22 @@ export default function BecomeProviderPage() {
                     required
                     className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#2563EB]/50 focus:border-transparent"
                     placeholder="Enter your full name"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">
+                    <Award className="inline w-4 h-4 mr-2" />
+                    Business Name *
+                  </label>
+                  <input
+                    type="text"
+                    name="businessName"
+                    value={formData.businessName}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#2563EB]/50 focus:border-transparent"
+                    placeholder="Enter your business name"
                   />
                 </div>
 
@@ -876,7 +934,7 @@ export default function BecomeProviderPage() {
 
               {uploadedFiles.length > 0 && (
                 <div>
-                  <h3 className="text-lg font-medium text-slate-900 dark:text-slate-50 mb-3">Uploaded Files</h3>
+                  <h3 className="text-lg font-medium text-slate-900 dark:text-slate-50 mb-3">Uploaded Documents</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {uploadedFiles.map((file, index) => (
                       <div key={index} className="bg-slate-50 dark:bg-slate-700 rounded-lg p-4">
@@ -898,7 +956,7 @@ export default function BecomeProviderPage() {
                           </div>
                           <button
                             type="button"
-                            onClick={() => removeFile(index)}
+                            onClick={() => removeFile(index, false)}
                             className="text-red-500 hover:text-red-700 p-1"
                           >
                             <X className="h-4 w-4" />
@@ -929,6 +987,130 @@ export default function BecomeProviderPage() {
                       </svg>
                       <span className="text-sm text-green-700 dark:text-green-300 font-medium">
                         Document uploaded successfully! Your application will be reviewed.
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Brand Images Upload Section */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">
+                  <Camera className="inline w-4 h-4 mr-2" />
+                  Upload Brand Images *
+                </label>
+                <div className="mb-3 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl">
+                  <div className="flex items-start space-x-2">
+                    <div className="flex-shrink-0">
+                      <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-1">
+                        Brand Images Required
+                      </h4>
+                      <p className="text-sm text-blue-700 dark:text-blue-300">
+                        Upload <strong>at least 2-3 images</strong> showcasing your work, business, or services:
+                      </p>
+                      <ul className="mt-2 text-sm text-blue-700 dark:text-blue-300 space-y-1">
+                        <li>• <strong>Work samples</strong> (before/after photos)</li>
+                        <li>• <strong>Business logo</strong> or signage</li>
+                        <li>• <strong>Tools/equipment</strong> you use</li>
+                        <li>• <strong>Team photos</strong> (if applicable)</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+                <div className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors group ${
+                  uploading 
+                    ? 'border-blue-400 bg-blue-50 dark:bg-blue-900/20' 
+                    : 'border-slate-300 dark:border-slate-600 hover:border-[#2563EB] dark:hover:border-[#2563EB]'
+                }`}>
+                  <input
+                    ref={brandImageInputRef}
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        handleFileUpload(e.target.files, true);
+                      }
+                    }}
+                    className="hidden"
+                    id="brand-image-upload"
+                    disabled={uploading}
+                  />
+                  <label htmlFor="brand-image-upload" className={`cursor-pointer block ${uploading ? 'cursor-not-allowed' : ''}`}>
+                    {uploading ? (
+                      <div className="animate-spin mx-auto h-12 w-12 border-4 border-[#2563EB] border-t-transparent rounded-full"></div>
+                    ) : (
+                      <Camera className="mx-auto h-12 w-12 text-slate-400 group-hover:text-[#2563EB] transition-colors" />
+                    )}
+                    <p className={`mt-2 text-sm transition-colors ${
+                      uploading 
+                        ? 'text-blue-600 dark:text-blue-400' 
+                        : 'text-slate-600 dark:text-slate-400 group-hover:text-[#2563EB]'
+                    }`}>
+                      {uploading ? 'Uploading brand images...' : 'Click to upload your brand images'}
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-500">
+                      PNG, JPG up to 10MB each
+                    </p>
+                    <div className="mt-2 text-xs text-blue-600 dark:text-blue-400">
+                      Required: At least 2-3 brand images
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {uploadedBrandImages.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-medium text-slate-900 dark:text-slate-50 mb-3">Uploaded Brand Images</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {uploadedBrandImages.map((file, index) => (
+                      <div key={index} className="bg-slate-50 dark:bg-slate-700 rounded-lg p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center space-x-3">
+                            <Image className="h-5 w-5 text-green-500" />
+                            <div>
+                              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{file.name}</span>
+                              <p className="text-xs text-slate-500 dark:text-slate-400">Brand Image</p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeFile(index, true)}
+                            className="text-red-500 hover:text-red-700 p-1"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                        
+                        {/* Image Preview */}
+                        {file.preview && (
+                          <div className="mt-3">
+                            <img
+                              src={file.preview}
+                              alt={file.name}
+                              className="w-full h-32 object-cover rounded-lg border border-slate-200 dark:border-slate-600"
+                              onError={(e) => {
+                                // Hide image if it fails to load
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                    <div className="flex items-center space-x-2">
+                      <svg className="w-4 h-4 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      <span className="text-sm text-green-700 dark:text-green-300 font-medium">
+                        Brand images uploaded successfully! These will showcase your business.
                       </span>
                     </div>
                   </div>

@@ -382,6 +382,7 @@ export default function ProvidersPage() {
             phone: provider.User?.phone || '',
             avatarUrl: provider.User?.avatarUrl || ''
           },
+          businessName: provider.businessName || provider.User?.fullName || 'Business',
           category: provider.category,
           subcategories: provider.subcategories || [],
           locationCity: provider.locationCity || currentLocation?.city || 'Lagos',
@@ -394,7 +395,8 @@ export default function ProvidersPage() {
           verificationStatus: provider.verificationStatus || 'verified',
           isAvailable: provider.isAvailable !== false,
           estimatedArrival: provider.estimatedArrival || '30 mins',
-          yearsOfExperience: provider.yearsOfExperience || 3
+          yearsOfExperience: provider.yearsOfExperience || 3,
+          brandImages: provider.brandImages || []
         }));
         
         // Apply radius-based filtering (simplified for demo)
@@ -985,9 +987,9 @@ export default function ProvidersPage() {
                       <div className="flex flex-col sm:flex-row sm:items-start gap-4 flex-1">
                         <div className="flex-shrink-0">
                           <Avatar
-                            src={provider.user?.avatarUrl || ''}
-                            alt={provider.user?.fullName || 'Provider'}
-                            fallback={provider.user?.fullName || 'P'}
+                            src={provider.brandImages && provider.brandImages.length > 0 ? (provider.brandImages[0].url || provider.brandImages[0]) : (provider.user?.avatarUrl || '')}
+                            alt={provider.businessName || provider.user?.fullName || 'Provider'}
+                            fallback={provider.businessName || provider.user?.fullName || 'P'}
                             size="lg"
                             showVerification={true}
                             isVerified={provider.verificationStatus === 'verified'}
@@ -999,7 +1001,7 @@ export default function ProvidersPage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
                             <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 truncate">
-                              {provider.user?.fullName || 'Provider'}
+                              {provider.businessName || provider.user?.fullName || 'Provider'}
                             </h3>
                             <div className="flex items-center gap-2">
                               {(() => {
@@ -1030,138 +1032,74 @@ export default function ProvidersPage() {
                             </div>
                           </div>
                           
-                          {/* Product/Services Images - Circular Design */}
+                          {/* Brand Images - Grid Cards */}
                           <div className="mb-3">
                             <div className="flex items-center space-x-2 mb-2">
                               <div className="w-2 h-2 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-full"></div>
-                              <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Product/Services</span>
+                              <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Brand Images</span>
                             </div>
-                            <div className="flex -space-x-2">
+                            <div className="grid grid-cols-3 gap-2">
                               {(() => {
-                                // Get work-related images based on provider category
-                                const getWorkImages = (category: string) => {
-                                  const imageSets = {
-                                    plumbing: [
-                                      'https://images.unsplash.com/photo-1581578731548-c6a0c3f2f2c0?w=60&h=60&fit=crop&crop=center', // Plumbing work
-                                      'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=60&h=60&fit=crop&crop=center', // Pipe repair
-                                      'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=60&h=60&fit=crop&crop=center', // Water heater
-                                      'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=60&h=60&fit=crop&crop=center' // Drain cleaning
-                                    ],
-                                    electrical: [
-                                      'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=60&h=60&fit=crop&crop=center', // Electrical work
-                                      'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=60&h=60&fit=crop&crop=center', // Wiring
-                                      'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=60&h=60&fit=crop&crop=center', // Light fixtures
-                                      'https://images.unsplash.com/photo-1581578731548-c6a0c3f2f2c0?w=60&h=60&fit=crop&crop=center' // Electrical panel
-                                    ],
-                                    cleaning: [
-                                      'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=60&h=60&fit=crop&crop=center', // House cleaning
-                                      'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=60&h=60&fit=crop&crop=center', // Office cleaning
-                                      'https://images.unsplash.com/photo-1581578731548-c6a0c3f2f2c0?w=60&h=60&fit=crop&crop=center', // Window cleaning
-                                      'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=60&h=60&fit=crop&crop=center' // Deep cleaning
-                                    ],
-                                    moving: [
-                                      'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=60&h=60&fit=crop&crop=center', // Moving boxes
-                                      'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=60&h=60&fit=crop&crop=center', // Moving truck
-                                      'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=60&h=60&fit=crop&crop=center', // Packing
-                                      'https://images.unsplash.com/photo-1581578731548-c6a0c3f2f2c0?w=60&h=60&fit=crop&crop=center' // Furniture moving
-                                    ],
-                                    ac_repair: [
-                                      'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=60&h=60&fit=crop&crop=center', // AC unit
-                                      'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=60&h=60&fit=crop&crop=center', // AC repair
-                                      'https://images.unsplash.com/photo-1581578731548-c6a0c3f2f2c0?w=60&h=60&fit=crop&crop=center', // HVAC work
-                                      'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=60&h=60&fit=crop&crop=center' // Air conditioning
-                                    ],
-                                    carpentry: [
-                                      'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=60&h=60&fit=crop&crop=center', // Woodworking
-                                      'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=60&h=60&fit=crop&crop=center', // Cabinet making
-                                      'https://images.unsplash.com/photo-1581578731548-c6a0c3f2f2c0?w=60&h=60&fit=crop&crop=center', // Furniture repair
-                                      'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=60&h=60&fit=crop&crop=center' // Custom carpentry
-                                    ],
-                                    painting: [
-                                      'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=60&h=60&fit=crop&crop=center', // House painting
-                                      'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=60&h=60&fit=crop&crop=center', // Interior painting
-                                      'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=60&h=60&fit=crop&crop=center', // Exterior painting
-                                      'https://images.unsplash.com/photo-1581578731548-c6a0c3f2f2c0?w=60&h=60&fit=crop&crop=center' // Wall painting
-                                    ],
-                                    pest_control: [
-                                      'https://images.unsplash.com/photo-1581578731548-c6a0c3f2f2c0?w=60&h=60&fit=crop&crop=center', // Pest control
-                                      'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=60&h=60&fit=crop&crop=center', // Termite treatment
-                                      'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=60&h=60&fit=crop&crop=center', // Rodent control
-                                      'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=60&h=60&fit=crop&crop=center' // Insect control
-                                    ],
-                                    laundry: [
-                                      'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=60&h=60&fit=crop&crop=center', // Laundry service
-                                      'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=60&h=60&fit=crop&crop=center', // Dry cleaning
-                                      'https://images.unsplash.com/photo-1581578731548-c6a0c3f2f2c0?w=60&h=60&fit=crop&crop=center', // Ironing
-                                      'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=60&h=60&fit=crop&crop=center' // Fabric care
-                                    ],
-                                    tiling: [
-                                      'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=60&h=60&fit=crop&crop=center', // Tile installation
-                                      'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=60&h=60&fit=crop&crop=center', // Bathroom tiling
-                                      'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=60&h=60&fit=crop&crop=center', // Kitchen tiling
-                                      'https://images.unsplash.com/photo-1581578731548-c6a0c3f2f2c0?w=60&h=60&fit=crop&crop=center' // Floor tiling
-                                    ],
-                                    cctv: [
-                                      'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=60&h=60&fit=crop&crop=center', // CCTV installation
-                                      'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=60&h=60&fit=crop&crop=center', // Security cameras
-                                      'https://images.unsplash.com/photo-1581578731548-c6a0c3f2f2c0?w=60&h=60&fit=crop&crop=center', // Surveillance system
-                                      'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=60&h=60&fit=crop&crop=center' // Security setup
-                                    ],
-                                    gardening: [
-                                      'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=60&h=60&fit=crop&crop=center', // Garden maintenance
-                                      'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=60&h=60&fit=crop&crop=center', // Landscaping
-                                      'https://images.unsplash.com/photo-1581578731548-c6a0c3f2f2c0?w=60&h=60&fit=crop&crop=center', // Plant care
-                                      'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=60&h=60&fit=crop&crop=center' // Lawn care
-                                    ],
-                                    appliance_repair: [
-                                      'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=60&h=60&fit=crop&crop=center', // Appliance repair
-                                      'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=60&h=60&fit=crop&crop=center', // Refrigerator repair
-                                      'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=60&h=60&fit=crop&crop=center', // Washing machine
-                                      'https://images.unsplash.com/photo-1581578731548-c6a0c3f2f2c0?w=60&h=60&fit=crop&crop=center' // Oven repair
-                                    ],
-                                    locksmith: [
-                                      'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=60&h=60&fit=crop&crop=center', // Lock installation
-                                      'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=60&h=60&fit=crop&crop=center', // Key making
-                                      'https://images.unsplash.com/photo-1581578731548-c6a0c3f2f2c0?w=60&h=60&fit=crop&crop=center', // Lock repair
-                                      'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=60&h=60&fit=crop&crop=center' // Security locks
-                                    ],
-                                    carpet_cleaning: [
-                                      'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=60&h=60&fit=crop&crop=center', // Carpet cleaning
-                                      'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=60&h=60&fit=crop&crop=center', // Deep cleaning
-                                      'https://images.unsplash.com/photo-1581578731548-c6a0c3f2f2c0?w=60&h=60&fit=crop&crop=center', // Upholstery cleaning
-                                      'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=60&h=60&fit=crop&crop=center' // Rug cleaning
-                                    ]
-                                  };
-                                  return imageSets[category as keyof typeof imageSets] || imageSets.plumbing;
-                                };
+                                // Use real brand images if available, otherwise fallback to mock images
+                                const brandImages = provider.brandImages && provider.brandImages.length > 0 
+                                  ? provider.brandImages.slice(0, 3).map((img: any) => img.url || img)
+                                  : (() => {
+                                      // Fallback to mock images based on provider category
+                                      const getWorkImages = (category: string) => {
+                                        const imageSets = {
+                                          plumbing: [
+                                            'https://images.unsplash.com/photo-1581578731548-c6a0c3f2f2c0?w=80&h=80&fit=crop&crop=center',
+                                            'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=80&h=80&fit=crop&crop=center',
+                                            'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=80&h=80&fit=crop&crop=center'
+                                          ],
+                                          electrical: [
+                                            'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=80&h=80&fit=crop&crop=center',
+                                            'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=80&h=80&fit=crop&crop=center',
+                                            'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=80&h=80&fit=crop&crop=center'
+                                          ],
+                                          cleaning: [
+                                            'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=80&h=80&fit=crop&crop=center',
+                                            'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=80&h=80&fit=crop&crop=center',
+                                            'https://images.unsplash.com/photo-1581578731548-c6a0c3f2f2c0?w=80&h=80&fit=crop&crop=center'
+                                          ]
+                                        };
+                                        return imageSets[category as keyof typeof imageSets] || imageSets.plumbing;
+                                      };
+                                      return getWorkImages(provider.category).slice(0, 3);
+                                    })();
                                 
-                                const workImages = getWorkImages(provider.category).slice(0, 3);
                                 return (
                                   <>
-                                    {workImages.map((image, index) => (
+                                    {brandImages.map((image, index) => (
                                       <div
                                         key={index}
                                         className="relative group cursor-pointer"
                                       >
-                                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 border-white dark:border-slate-800 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-110">
+                                        <div className="w-full h-16 sm:h-20 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-600 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105">
                                           <img
                                             src={image}
-                                            alt={`Product/Service ${index + 1}`}
+                                            alt={`Brand Image ${index + 1}`}
                                             className="w-full h-full object-cover"
+                                            onError={(e) => {
+                                              // Hide image if it fails to load
+                                              e.currentTarget.style.display = 'none';
+                                            }}
                                           />
                                         </div>
                                         {/* Hover overlay */}
-                                        <div className="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors rounded-lg flex items-center justify-center">
                                           <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                             <div className="w-2 h-2 bg-white rounded-full"></div>
                                           </div>
                                         </div>
                                       </div>
                                     ))}
-                                    {/* More indicator */}
-                                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 border-2 border-white dark:border-slate-800 shadow-md flex items-center justify-center">
-                                      <span className="text-xs font-bold text-slate-600 dark:text-slate-400">+2</span>
-                                    </div>
+                                    {/* More indicator if there are more images */}
+                                    {(provider.brandImages && provider.brandImages.length > 3) && (
+                                      <div className="w-full h-16 sm:h-20 rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 border border-slate-200 dark:border-slate-600 shadow-sm flex items-center justify-center">
+                                        <span className="text-xs font-bold text-slate-600 dark:text-slate-400">+{provider.brandImages.length - 3}</span>
+                                      </div>
+                                    )}
                                   </>
                                 );
                               })()}

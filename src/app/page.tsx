@@ -169,12 +169,14 @@ export default function Home() {
   
   // Background images for slider
   const backgroundImages = [
-    "/images/apply.png",
-    "/images/plumber.png", 
-    "/images/mechanic.png",
-    "/images/painter.png",
-    "/images/bakery.png",
-    "/images/carpenter.png"
+    "/images/slider1.jpg",
+    "/images/slider2.jpg", 
+    "/images/slider3.jpg",
+    "/images/slider4.jpg",
+    "/images/slider5.jpg",
+    "/images/slider6.jpg",
+    "/images/slider7.jpg",
+    "/images/slider8.jpg"
   ];
 
   useEffect(() => {
@@ -253,7 +255,7 @@ export default function Home() {
   return (
     <div className="relative">
       {/* Hero */}
-      <section className="relative overflow-hidden pt-20 sm:pt-28 h-[90vh] flex items-center pb-20">
+      <section className="relative overflow-hidden pt-32 sm:pt-40 h-[90vh] flex items-center pb-30">
         {/* Background image slider with fade effect */}
         <div className="absolute inset-0">
           {backgroundImages.map((src, i) => (
@@ -264,12 +266,12 @@ export default function Home() {
               fill
               priority={i === 0}
               className={`object-cover object-center transition-opacity duration-1000 ${
-                i === bgActiveIdx ? 'opacity-40' : 'opacity-0'
+                i === bgActiveIdx ? 'opacity-100' : 'opacity-0'
               }`}
               style={{ objectFit: 'cover', objectPosition: 'center' }}
             />
           ))}
-          <div className="absolute inset-0 bg-black/60"></div>
+          <div className="absolute inset-0 bg-black/50"></div>
         </div>
         
         {/* Subtle tech overlay */}
