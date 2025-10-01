@@ -122,6 +122,20 @@ export default function Home() {
   const handleCategorySelect = (category: string) => {
     setSelectedCategory(category);
     setSearchQuery(""); // Clear search query when category is selected
+    
+    // Navigate to providers page with selected category
+    const searchParams = new URLSearchParams();
+    searchParams.append('category', category);
+    
+    if (userLocation) {
+      searchParams.append('location', userLocation.city);
+      searchParams.append('lat', userLocation.latitude.toString());
+      searchParams.append('lng', userLocation.longitude.toString());
+      searchParams.append('address', userLocation.address);
+    }
+
+    const queryString = searchParams.toString();
+    router.push(`/providers?${queryString}`);
   };
 
   const subscribe = async (e: React.FormEvent) => {
@@ -255,7 +269,7 @@ export default function Home() {
   return (
     <div className="relative">
       {/* Hero */}
-      <section className="relative overflow-hidden pt-32 sm:pt-40 h-[90vh] flex items-center pb-30">
+      <section className="relative overflow-hidden pt-20 sm:pt-24 md:pt-32 lg:pt-40 min-h-screen flex items-center">
         {/* Background image slider with fade effect */}
         <div className="absolute inset-0">
           {backgroundImages.map((src, i) => (
@@ -274,8 +288,8 @@ export default function Home() {
           <div className="absolute inset-0 bg-black/50"></div>
         </div>
         
-        {/* Subtle tech overlay */}
-        <div className="absolute inset-0 opacity-10">
+        {/* Subtle tech overlay - Hidden on mobile, visible on larger screens */}
+        <div className="absolute inset-0 opacity-10 hidden lg:block">
           <div className="absolute top-20 left-20 text-white/20 font-mono text-xs">
             {`const services = {
   plumbing: "24/7",
@@ -291,22 +305,23 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full">
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full py-8 sm:py-12 lg:py-16">
           <div className="max-w-4xl">
-            {/* Main heading */}
-            <h1 className="text-4xl sm:text-6xl font-extrabold leading-tight text-white mb-6">
-              Connect with trusted
-              <br />
-              service providers
+            {/* Main heading - Responsive typography */}
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold leading-tight text-white mb-4 sm:mb-6">
+              <span className="block">Connect with</span>
+              <span className="block">trusted service</span>
+              <span className="block">providers</span>
             </h1>
             
-            <p className="text-xl text-white/90 mb-8 max-w-2xl">
+            {/* Subtitle - Responsive text */}
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/90 mb-6 sm:mb-8 max-w-2xl leading-relaxed">
               Book skilled professionals for plumbing, electrical work, cleaning, carpentry and more. 
               Secure payments, verified providers, instant booking.
             </p>
 
-            {/* Search bar */}
-            <div className="mb-8 w-full max-w-2xl">
+            {/* Search bar - Responsive design */}
+            <div className="mb-6 sm:mb-8 w-full max-w-2xl">
               <div className="relative">
                 <input
                   type="text"
@@ -314,136 +329,139 @@ export default function Home() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                  className="w-full rounded-xl bg-white/90 backdrop-blur-xl px-6 py-4 pr-16 text-lg outline-none focus:ring-2 focus:ring-white/50 shadow-lg"
+                  className="w-full rounded-xl bg-white/90 backdrop-blur-xl px-4 sm:px-6 py-3 sm:py-4 pr-12 sm:pr-16 text-sm sm:text-base lg:text-lg outline-none focus:ring-2 focus:ring-white/50 shadow-lg"
                 />
                 <button 
                   onClick={handleSearch}
                   disabled={isDetectingLocation}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-gray-800 hover:bg-gray-700 disabled:bg-gray-600 rounded-lg p-3 transition-colors"
+                  className="absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 bg-gray-800 hover:bg-gray-700 disabled:bg-gray-600 rounded-lg p-2 sm:p-3 transition-colors"
                 >
                   {isDetectingLocation ? (
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
-                    <Search size={20} className="text-white" />
+                    <Search size={16} className="sm:w-5 sm:h-5 text-white" />
                   )}
                 </button>
               </div>
               
-              {/* Location indicator */}
+              {/* Location indicator - Responsive */}
               {userLocation && (
-                <div className="mt-2 flex items-center gap-2 text-white/80 text-sm">
-                  <MapPin size={16} />
-                  <span>Searching near: {userLocation.address}</span>
+                <div className="mt-2 flex items-center gap-2 text-white/80 text-xs sm:text-sm">
+                  <MapPin size={14} className="sm:w-4 sm:h-4" />
+                  <span className="truncate">Searching near: {userLocation.address}</span>
                 </div>
               )}
             </div>
 
-            {/* Service category buttons */}
-            <div className="mb-8 flex flex-wrap gap-4">
-              <button 
-                onClick={() => handleCategorySelect('plumbing')}
-                className={`flex items-center gap-2 px-6 py-3 rounded-3xl transition-all duration-300 hover:scale-105 shadow-lg ${
-                  selectedCategory === 'plumbing' 
-                    ? 'bg-gradient-to-r from-[#1d4ed8] to-[#0f766e] text-white' 
-                    : 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] hover:from-[#1d4ed8] hover:to-[#0f766e] text-white'
-                }`}
-              >
-                <span>Plumbing</span>
-                <ArrowRight size={16} />
-              </button>
-              <button 
-                onClick={() => handleCategorySelect('electrical')}
-                className={`flex items-center gap-2 px-6 py-3 rounded-3xl transition-all duration-300 hover:scale-105 shadow-lg ${
-                  selectedCategory === 'electrical' 
-                    ? 'bg-gradient-to-r from-[#1d4ed8] to-[#0f766e] text-white' 
-                    : 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] hover:from-[#1d4ed8] hover:to-[#0f766e] text-white'
-                }`}
-              >
-                <span>Electrical</span>
-                <ArrowRight size={16} />
-              </button>
-              <button 
-                onClick={() => handleCategorySelect('cleaning')}
-                className={`flex items-center gap-2 px-6 py-3 rounded-3xl transition-all duration-300 hover:scale-105 shadow-lg ${
-                  selectedCategory === 'cleaning' 
-                    ? 'bg-gradient-to-r from-[#1d4ed8] to-[#0f766e] text-white' 
-                    : 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] hover:from-[#1d4ed8] hover:to-[#0f766e] text-white'
-                }`}
-              >
-                <span>Cleaning</span>
-                <ArrowRight size={16} />
-              </button>
-              <button 
-                onClick={() => handleCategorySelect('carpentry')}
-                className={`flex items-center gap-2 px-6 py-3 rounded-3xl transition-all duration-300 hover:scale-105 shadow-lg ${
-                  selectedCategory === 'carpentry' 
-                    ? 'bg-gradient-to-r from-[#1d4ed8] to-[#0f766e] text-white' 
-                    : 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] hover:from-[#1d4ed8] hover:to-[#0f766e] text-white'
-                }`}
-              >
-                <span>Carpentry</span>
-                <ArrowRight size={16} />
-              </button>
-              <button 
-                onClick={() => handleCategorySelect('painting')}
-                className={`flex items-center gap-2 px-6 py-3 rounded-3xl transition-all duration-300 hover:scale-105 shadow-lg relative ${
-                  selectedCategory === 'painting' 
-                    ? 'bg-gradient-to-r from-[#1d4ed8] to-[#0f766e] text-white' 
-                    : 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] hover:from-[#1d4ed8] hover:to-[#0f766e] text-white'
-                }`}
-              >
-                <span>Painting</span>
-                <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">NEW</span>
-              </button>
+            {/* Service category buttons - Horizontal scroll on mobile */}
+            <div className="mb-6 sm:mb-8">
+              <div className="flex sm:flex-wrap gap-2 sm:gap-4 overflow-x-auto pb-2 sm:pb-0 scrollbar-hide">
+                <button 
+                  onClick={() => handleCategorySelect('plumbing')}
+                  className={`flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 rounded-2xl sm:rounded-3xl transition-all duration-300 hover:scale-105 shadow-lg text-xs sm:text-sm font-medium whitespace-nowrap flex-shrink-0 ${
+                    selectedCategory === 'plumbing' 
+                      ? 'bg-gradient-to-r from-[#1d4ed8] to-[#0f766e] text-white' 
+                      : 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] hover:from-[#1d4ed8] hover:to-[#0f766e] text-white'
+                  }`}
+                >
+                  <span>Plumbing</span>
+                  <ArrowRight size={12} className="sm:w-4 sm:h-4" />
+                </button>
+                <button 
+                  onClick={() => handleCategorySelect('electrical')}
+                  className={`flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 rounded-2xl sm:rounded-3xl transition-all duration-300 hover:scale-105 shadow-lg text-xs sm:text-sm font-medium whitespace-nowrap flex-shrink-0 ${
+                    selectedCategory === 'electrical' 
+                      ? 'bg-gradient-to-r from-[#1d4ed8] to-[#0f766e] text-white' 
+                      : 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] hover:from-[#1d4ed8] hover:to-[#0f766e] text-white'
+                  }`}
+                >
+                  <span>Electrical</span>
+                  <ArrowRight size={12} className="sm:w-4 sm:h-4" />
+                </button>
+                <button 
+                  onClick={() => handleCategorySelect('cleaning')}
+                  className={`flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 rounded-2xl sm:rounded-3xl transition-all duration-300 hover:scale-105 shadow-lg text-xs sm:text-sm font-medium whitespace-nowrap flex-shrink-0 ${
+                    selectedCategory === 'cleaning' 
+                      ? 'bg-gradient-to-r from-[#1d4ed8] to-[#0f766e] text-white' 
+                      : 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] hover:from-[#1d4ed8] hover:to-[#0f766e] text-white'
+                  }`}
+                >
+                  <span>Cleaning</span>
+                  <ArrowRight size={12} className="sm:w-4 sm:h-4" />
+                </button>
+                <button 
+                  onClick={() => handleCategorySelect('carpentry')}
+                  className={`flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 rounded-2xl sm:rounded-3xl transition-all duration-300 hover:scale-105 shadow-lg text-xs sm:text-sm font-medium whitespace-nowrap flex-shrink-0 ${
+                    selectedCategory === 'carpentry' 
+                      ? 'bg-gradient-to-r from-[#1d4ed8] to-[#0f766e] text-white' 
+                      : 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] hover:from-[#1d4ed8] hover:to-[#0f766e] text-white'
+                  }`}
+                >
+                  <span>Carpentry</span>
+                  <ArrowRight size={12} className="sm:w-4 sm:h-4" />
+                </button>
+                <button 
+                  onClick={() => handleCategorySelect('lesson teacher')}
+                  className={`flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 rounded-2xl sm:rounded-3xl transition-all duration-300 hover:scale-105 shadow-lg text-xs sm:text-sm font-medium whitespace-nowrap flex-shrink-0 relative ${
+                    selectedCategory === 'Lesson Teacher' 
+                      ? 'bg-gradient-to-r from-[#1d4ed8] to-[#0f766e] text-white' 
+                      : 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] hover:from-[#1d4ed8] hover:to-[#0f766e] text-white'
+                  }`}
+                >
+                  <span>Lesson Teacher</span>
+                  <ArrowRight size={12} className="sm:w-4 sm:h-4" />
+                  <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs px-1 sm:px-2 py-0.5 rounded-full">NEW</span>
+                </button>
+              </div>
             </div>
 
-            {/* Action buttons */}
-            <div className="mb-8 flex flex-col sm:flex-row gap-4">
+            {/* Action buttons - Responsive layout */}
+            <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row gap-3 sm:gap-4">
               <Link 
                 href="/providers" 
-                className="group flex-1 sm:flex-none rounded-xl bg-gradient-to-r from-[#2563EB] to-[#14B8A6] px-6 py-4 text-white font-semibold shadow-lg shadow-sky-500/25 hover:shadow-xl hover:shadow-sky-500/40 hover:scale-105 transition-all duration-300 cursor-pointer flex items-center justify-center space-x-2"
+                className="group flex-1 sm:flex-none rounded-xl border-2 border-white/30 bg-white/20 backdrop-blur-xl px-4 sm:px-6 py-3 sm:py-4 text-white font-semibold hover:bg-white/30 hover:border-white/50 hover:scale-105 hover:shadow-lg hover:shadow-white/20 transition-all duration-300 cursor-pointer flex items-center justify-center space-x-2 text-sm sm:text-base"
               >
-                <Search className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" />
+                <Search className="w-4 h-4 sm:w-5 sm:h-5 group-hover:rotate-12 transition-transform duration-300" />
                 <span>Book a Provider</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+                <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform duration-300" />
               </Link>
               <Link 
                 href="/become-provider" 
-                className="group flex-1 sm:flex-none rounded-xl border-2 border-white/30 bg-white/20 backdrop-blur-xl px-6 py-4 text-white font-semibold hover:bg-white/30 hover:border-white/50 hover:scale-105 hover:shadow-lg hover:shadow-white/20 transition-all duration-300 cursor-pointer flex items-center justify-center space-x-2"
+                className="group flex-1 sm:flex-none rounded-xl border-2 border-white/30 bg-white/20 backdrop-blur-xl px-4 sm:px-6 py-3 sm:py-4 text-white font-semibold hover:bg-white/30 hover:border-white/50 hover:scale-105 hover:shadow-lg hover:shadow-white/20 transition-all duration-300 cursor-pointer flex items-center justify-center space-x-2 text-sm sm:text-base"
               >
-                <UserPlus className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+                <UserPlus className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform duration-300" />
                 <span>Become a Provider</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+                <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform duration-300" />
               </Link>
             </div>
 
-            {/* Trusted by section */}
-            <div className="mt-8 flex items-center gap-6">
-              <div className="flex -space-x-3">
+            {/* Trusted by section - Responsive */}
+            <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+              <div className="flex -space-x-2 sm:-space-x-3">
                 {trustedAvatars.map((src, i) => (
                   <img
                     key={src}
                     src={src}
                     alt="trusted user"
-                    width={36}
-                    height={36}
-                    className="h-9 w-9 rounded-full ring-2 ring-white/80 dark:ring-slate-800 animate-float object-cover"
+                    width={32}
+                    height={32}
+                    className="h-6 w-6 sm:h-8 sm:w-8 lg:h-9 lg:w-9 rounded-full ring-2 ring-white/80 dark:ring-slate-800 animate-float object-cover"
                     style={{ animationDelay: `${i * 0.2}s` }}
                   />
                 ))}
               </div>
-              <p className="text-sm text-white/80">Trusted by 10,000+ homeowners and businesses</p>
+              <p className="text-xs sm:text-sm text-white/80 text-center sm:text-left">Trusted by 10,000+ homeowners and businesses</p>
             </div>
           </div>
         </div>
 
-        {/* Background slider indicators */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
+        {/* Background slider indicators - Responsive */}
+        <div className="absolute bottom-4 sm:bottom-6 lg:bottom-8 left-1/2 -translate-x-1/2 flex gap-1 sm:gap-2">
           {backgroundImages.map((_, i) => (
             <button
               key={i}
               onClick={() => setBgActiveIdx(i)}
-              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+              className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full transition-all duration-300 ${
                 i === bgActiveIdx ? 'bg-white' : 'bg-white/40'
               }`}
             />

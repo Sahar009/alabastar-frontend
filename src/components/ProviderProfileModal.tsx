@@ -87,12 +87,16 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
   const fetchProviderDetails = async () => {
     if (!provider) return;
     
+    console.log('Provider object:', provider);
+    console.log('Provider brandImages:', provider.brandImages);
+    
     setLoading(true);
     try {
       // Try to fetch real data from API
       // Normalize API base
       const raw = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       const base = raw.endsWith('/api') ? raw : `${raw.replace(/\/$/, '')}/api`;
+      console.log('API base URL:', base);
       
       // Fetch reviews
       try {
@@ -110,21 +114,54 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
 
       // Fetch brand images
       try {
-        const portfolioResponse = await fetch(`${base}/providers/${provider.id}/brand-images`);
-        if (portfolioResponse.ok) {
-          const portfolioData = await portfolioResponse.json();
-          const brandImages = portfolioData.data?.brandImages || [];
+        console.log('Fetching brand images for provider:', provider.id);
+        const brandImagesUrl = `${base}/providers/${provider.id}/documents?type=brand_image`;
+        console.log('Brand images URL:', brandImagesUrl);
+        const brandImagesResponse = await fetch(brandImagesUrl);
+        console.log('Brand images response status:', brandImagesResponse.status);
+        
+        if (brandImagesResponse.ok) {
+          const brandImagesData = await brandImagesResponse.json();
+          console.log('Brand images data:', brandImagesData);
+          const brandImages = brandImagesData.data?.documents || [];
+          console.log('Brand images array:', brandImages);
+          
           if (brandImages.length > 0) {
-            setPortfolioImages(brandImages.map((img: any) => img.url || img));
+            const imageUrls = brandImages.map((doc: any) => doc.url);
+            console.log('Setting portfolio images to:', imageUrls);
+            setPortfolioImages(imageUrls);
           } else {
-            setPortfolioImages(generateMockPortfolio());
+            console.log('No brand images from API, trying provider data');
+            // Try to get brand images from provider data if available
+            if (provider.brandImages && provider.brandImages.length > 0) {
+              console.log('Using provider brand images:', provider.brandImages);
+              setPortfolioImages(provider.brandImages.map((img: any) => img.url || img));
+            } else {
+              console.log('Using mock images');
+              setPortfolioImages(generateMockPortfolio());
+            }
           }
         } else {
-          setPortfolioImages(generateMockPortfolio());
+          console.log('API request failed, status:', brandImagesResponse.status);
+          // Fallback to provider's brand images if API fails
+          if (provider.brandImages && provider.brandImages.length > 0) {
+            console.log('Using provider brand images as fallback:', provider.brandImages);
+            setPortfolioImages(provider.brandImages.map((img: any) => img.url || img));
+          } else {
+            console.log('Using mock images as fallback');
+            setPortfolioImages(generateMockPortfolio());
+          }
         }
       } catch (error) {
-        console.log('Using mock brand images:', error);
-        setPortfolioImages(generateMockPortfolio());
+        console.log('Error fetching brand images:', error);
+        // Fallback to provider's brand images if API fails
+        if (provider.brandImages && provider.brandImages.length > 0) {
+          console.log('Using provider brand images after error:', provider.brandImages);
+          setPortfolioImages(provider.brandImages.map((img: any) => img.url || img));
+        } else {
+          console.log('Using mock images after error');
+          setPortfolioImages(generateMockPortfolio());
+        }
       }
     } catch (error) {
       console.error('Error fetching provider details:', error);
@@ -132,6 +169,14 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
       setPortfolioImages(generateMockPortfolio());
     } finally {
       setLoading(false);
+      
+      // Temporary test - if no images found, try to use provider's brand images directly
+      if (portfolioImages.length === 0 && provider.brandImages && provider.brandImages.length > 0) {
+        console.log('No images in portfolioImages, trying direct provider brand images');
+        const directImages = provider.brandImages.map((img: any) => img.url || img);
+        console.log('Direct images:', directImages);
+        setPortfolioImages(directImages);
+      }
     }
   };
 
@@ -360,29 +405,44 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
                   ))}
                 </div>
               ) : portfolioImages.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
-                  {portfolioImages.map((image, index) => (
-                    <div
-                      key={index}
-                      className="relative group cursor-pointer"
-                    >
-                      <img
-                        src={image}
-                        alt={`Brand Image ${index + 1}`}
-                        className="w-full h-24 sm:h-32 object-cover rounded-xl hover:opacity-90 transition-opacity"
-                      />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors rounded-xl flex items-center justify-center">
-                        <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-xs sm:text-sm font-medium">
-                          View
-                        </span>
+                <div>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
+                    Found {portfolioImages.length} brand images
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+                    {portfolioImages.map((image, index) => (
+                      <div
+                        key={index}
+                        className="relative group cursor-pointer"
+                      >
+                        <img
+                          src={image}
+                          alt={`Brand Image ${index + 1}`}
+                          className="w-full h-24 sm:h-32 object-cover rounded-xl hover:opacity-90 transition-opacity"
+                          onError={(e) => {
+                            console.log('Image failed to load:', image);
+                            e.currentTarget.style.display = 'none';
+                          }}
+                          onLoad={() => {
+                            console.log('Image loaded successfully:', image);
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors rounded-xl flex items-center justify-center">
+                          <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-xs sm:text-sm font-medium">
+                            View
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               ) : (
                 <div className="text-center py-6 sm:py-8">
                   <Calendar className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-slate-400 mb-3 sm:mb-4" />
                   <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400">No brand images available</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-500 mt-2">
+                    Portfolio images count: {portfolioImages.length}
+                  </p>
                 </div>
               )}
             </div>
@@ -396,7 +456,7 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
                   <div className="flex items-center space-x-1">
                     <Star className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500 fill-current flex-shrink-0" />
                     <span className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
-                      {provider.ratingAverage.toFixed(1)}
+                      {Number(provider.ratingAverage || 0).toFixed(1)}
                     </span>
                   </div>
                   <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
