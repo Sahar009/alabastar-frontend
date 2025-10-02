@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
+import ImageSlider from "../../components/ImageSlider";
 
 function LoginContent() {
   const router = useRouter();
@@ -48,15 +49,81 @@ function LoginContent() {
     }
   };
 
+  // Slider data for login page
+  const sliderImages = [
+    '/images/slider1.jpg',
+    '/images/slider2.jpg',
+    '/images/slider3.jpg',
+    '/images/slider4.jpg',
+    '/images/slider5.jpg',
+    '/images/slider6.jpg',
+    '/images/slider7.jpg',
+    '/images/slider8.jpg'
+  ];
+
+  const sliderTexts = [
+    {
+      title: "Welcome Back",
+      subtitle: "Continue Your Journey",
+      description: "Access your account and continue discovering amazing services from verified professionals."
+    },
+    {
+      title: "Your Dashboard",
+      subtitle: "Manage Everything",
+      description: "Track your bookings, manage your profile, and access all your service history in one place."
+    },
+    {
+      title: "Quick Access",
+      subtitle: "Book Services Instantly",
+      description: "With your account, you can quickly book services, save favorites, and get personalized recommendations."
+    },
+    {
+      title: "Secure Login",
+      subtitle: "Your Data is Safe",
+      description: "We use industry-standard security measures to protect your personal information and account data."
+    },
+    {
+      title: "Stay Connected",
+      subtitle: "Never Miss Updates",
+      description: "Get notified about booking confirmations, service updates, and special offers from your favorite providers."
+    },
+    {
+      title: "Easy Management",
+      subtitle: "Control Your Experience",
+      description: "Manage your preferences, update your profile, and customize your service discovery experience."
+    },
+    {
+      title: "Trusted Platform",
+      subtitle: "Reliable Service",
+      description: "Join thousands of satisfied customers who trust Alabastar for all their service needs."
+    },
+    {
+      title: "Ready to Continue?",
+      subtitle: "Sign In Now",
+      description: "Access your account and continue enjoying seamless service experiences with Alabastar."
+    }
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen flex">
+      {/* Left Side - Image Slider (60% width on desktop) */}
+      <div className="hidden lg:flex lg:w-3/5 relative">
+        <ImageSlider 
+          images={sliderImages} 
+          texts={sliderTexts}
+          autoSlideInterval={6000}
+        />
+      </div>
+
+      {/* Right Side - Login Form (40% width on desktop, full width on mobile) */}
+      <div className="w-full lg:w-2/5 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+        <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
-          <Link href="/" className="inline-flex items-center gap-2 mb-6">
+          {/* <Link href="/" className="inline-flex items-center gap-2 mb-6">
             <Image src="/brand/logo-icon.svg" alt="Alabastar" width={40} height={40} priority />
             <span className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">ALABASTAR</span>
-          </Link>
+          </Link> */}
           <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
             Welcome back
           </h2>
@@ -196,6 +263,7 @@ function LoginContent() {
               Join as a provider
             </Link>
           </p>
+        </div>
         </div>
       </div>
     </div>

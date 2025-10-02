@@ -108,22 +108,22 @@ export default function ProvidersPage() {
   const [createBooking] = useCreateBookingMutation();
 
   const categories = [
-    { value: '', label: 'All Services', icon: Wrench },
-    { value: 'plumbing', label: 'Plumbing', icon: Droplets },
-    { value: 'electrical', label: 'Electrical', icon: ZapIcon },
-    { value: 'cleaning', label: 'Cleaning', icon: Sparkles },
-    { value: 'moving', label: 'Moving', icon: Package },
-    { value: 'ac_repair', label: 'AC Repair', icon: Snowflake },
-    { value: 'carpentry', label: 'Carpentry', icon: Hammer },
-    { value: 'painting', label: 'Painting', icon: Palette },
-    { value: 'pest_control', label: 'Pest Control', icon: Bug },
-    { value: 'laundry', label: 'Laundry', icon: Shirt },
-    { value: 'tiling', label: 'Tiling', icon: Square },
-    { value: 'cctv', label: 'CCTV', icon: Video },
-    { value: 'gardening', label: 'Gardening', icon: Sprout },
-    { value: 'appliance_repair', label: 'Appliance Repair', icon: Settings },
-    { value: 'locksmith', label: 'Locksmith', icon: Key },
-    { value: 'carpet_cleaning', label: 'Carpet Cleaning', icon: Sofa }
+    { value: '', label: 'All Services', image: '/images/tool.jpg' },
+    { value: 'plumbing', label: 'Plumbing', image: '/images/plumber2d.png' },
+    { value: 'electrical', label: 'Electrical', image: '/images/mechanic2d.png' },
+    { value: 'cleaning', label: 'Cleaning', image: '/images/cleaner2d.png' },
+    { value: 'moving', label: 'Moving', image: '/images/mover2d.png' },
+    { value: 'ac_repair', label: 'AC Repair', image: '/images/ac2d.png' },
+    { value: 'carpentry', label: 'Carpentry', image: '/images/carpenter2d.png' },
+    { value: 'painting', label: 'Painting', image: '/images/paint2d.png' },
+    { value: 'pest_control', label: 'Pest Control', image: '/images/pest2d.png' },
+    { value: 'laundry', label: 'Laundry', image: '/images/laundry2d.png' },
+    { value: 'tiling', label: 'Tiling', image: '/images/tiler2d.png' },
+    { value: 'cctv', label: 'CCTV', image: '/images/cctv2d.png' },
+    { value: 'gardening', label: 'Gardening', image: '/images/gardener2d.png' },
+    { value: 'appliance_repair', label: 'Appliance Repair', image: '/images/mechanic2d.png' },
+    { value: 'locksmith', label: 'Locksmith', image: '/images/mechanic2d.png' },
+    { value: 'carpet_cleaning', label: 'Carpet Cleaning', image: '/images/cleaner2d.png' }
   ];
 
   // Search suggestions data
@@ -473,8 +473,8 @@ export default function ProvidersPage() {
   };
 
   const getCategoryIcon = (category: string) => {
-    const cat = categories.find(c => c.value === category);
-    return cat ? cat.icon : Wrench;
+    // Return a default icon since we're using images now
+    return Wrench;
   };
 
   const formatPrice = (price: number) => {
@@ -588,7 +588,7 @@ export default function ProvidersPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
       {/* Header */}
       <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border-b border-white/20 dark:border-white/10 sticky top-0 z-40">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
                 <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Find Product/Service Providers</h1>
@@ -623,45 +623,63 @@ export default function ProvidersPage() {
               </div>
             </div>
             
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       
 
-          {/* Search Section */}
-          <div className="bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 p-6 mb-6">
-            {/* Header with Icon */}
-            <div className="flex items-center space-x-3 mb-5">
-              <div className="w-10 h-10 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-xl flex items-center justify-center shadow-lg">
-                <Search className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                  What product/service do you need?
+          {/* Enhanced Search Section */}
+          <div className="bg-gradient-to-br from-white via-slate-50 to-blue-50 dark:from-slate-800 dark:via-slate-900 dark:to-blue-900/20 rounded-3xl shadow-2xl border border-slate-200/50 dark:border-slate-700/50 p-8 mb-8 relative overflow-hidden">
+            {/* Background Pattern */}
+            <div className="absolute inset-0 opacity-5 dark:opacity-10">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-[#2563EB] to-[#14B8A6] rounded-full blur-3xl transform translate-x-32 -translate-y-32"></div>
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-[#14B8A6] to-[#2563EB] rounded-full blur-2xl transform -translate-x-24 translate-y-24"></div>
+            </div>
+            
+            {/* Header with Enhanced Design */}
+            <div className="relative z-10">
+              <div className="flex items-center space-x-4 mb-6">
+                <div className="relative">
+                  <div className="w-14 h-14 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-2xl flex items-center justify-center shadow-xl">
+                    <Search className="w-7 h-7 text-white" />
+                  </div>
+                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
+                    <Sparkles className="w-3 h-3 text-white" />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+                    Find Your Perfect Service Provider
                 </h2>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                 Who/what you need might be few seconds away
+                  <p className="text-slate-600 dark:text-slate-400 text-base">
+                    Discover skilled professionals ready to help you in minutes
                 </p>
               </div>
             </div>
             
-            {/* Location Context - Compact */}
+            {/* Enhanced Location Context */}
             {userLocation && (
-              <div className="mb-4 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+              <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/20 dark:via-indigo-900/20 dark:to-purple-900/20 rounded-2xl border border-blue-200/50 dark:border-blue-800/50 shadow-lg">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2 text-sm">
-                    <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                      <MapPin className="w-3 h-3 text-white" />
+                  <div className="flex items-center space-x-3">
+                    <div className="relative">
+                      <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                        <MapPin className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                        <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                      </div>
                     </div>
                     <div>
-                      <span className="text-slate-600 dark:text-slate-400">Searching near:</span>
-                      <span className="font-medium text-slate-900 dark:text-slate-100 ml-1">
+                      <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Searching near:</p>
+                      <p className="text-base font-semibold text-slate-900 dark:text-slate-100">
                         {userLocation.address}
-                      </span>
+                      </p>
                     </div>
                   </div>
                   {isEditingLocation && (
                     <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse"></div>
-                      <span className="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded-full text-xs font-medium">
+                      <div className="w-3 h-3 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full animate-pulse"></div>
+                      <span className="px-3 py-1.5 bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 text-amber-700 dark:text-amber-300 rounded-full text-sm font-medium shadow-sm">
                         Editing location
                       </span>
                     </div>
@@ -670,21 +688,25 @@ export default function ProvidersPage() {
               </div>
             )}
             
-            {/* Search Input - Compact with Autocomplete */}
-            <div className="mb-4">
+            {/* Enhanced Search Input */}
+            <div className="mb-6">
               <div className="relative group">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4 group-focus-within:text-[#2563EB] transition-colors" />
+                <div className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10">
+                  <div className="w-6 h-6 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-lg flex items-center justify-center shadow-lg">
+                    <Search className="w-3 h-3 text-white" />
+                  </div>
+                </div>
                 <input
                   type="text"
-                  placeholder="Type service name (e.g., plumber, electrician...)"
+                  placeholder="What service do you need? (e.g., plumber, electrician, cleaner...)"
                   value={searchQuery}
                   onChange={handleSearchInputChange}
                   onFocus={handleSearchInputFocus}
                   onBlur={handleSearchInputBlur}
-                  className={`w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 transition-all text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-0 ${
+                  className={`w-full pl-14 pr-12 py-4 border-2 border-slate-200 dark:border-slate-600 rounded-2xl bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm text-slate-900 dark:text-slate-100 transition-all text-base placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-0 shadow-lg hover:shadow-xl ${
                     isInputFocused 
-                      ? 'border-b-4 border-b-[#2563EB] border-t-slate-200 dark:border-t-slate-600 border-l-slate-200 dark:border-l-slate-600 border-r-slate-200 dark:border-r-slate-600' 
-                      : ''
+                      ? 'border-[#2563EB] shadow-xl shadow-[#2563EB]/20 bg-white dark:bg-slate-700' 
+                      : 'hover:border-slate-300 dark:hover:border-slate-500'
                   }`}
                 />
                 {searchQuery && (
@@ -694,110 +716,147 @@ export default function ProvidersPage() {
                       setShowSuggestions(false);
                       setSearchSuggestions([]);
                     }}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-slate-100 dark:bg-slate-600 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-all hover:bg-slate-200 dark:hover:bg-slate-500"
                   >
                     <X className="w-4 h-4" />
               </button>
                 )}
               
-                {/* Search Suggestions Dropdown */}
+                {/* Enhanced Search Suggestions Dropdown */}
                 {showSuggestions && searchSuggestions.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl shadow-lg z-50 max-h-60 overflow-y-auto">
-                    {searchSuggestions.map((suggestion, index) => (
-              <button
-                        key={index}
-                        onClick={() => handleSuggestionClick(suggestion)}
-                        className="w-full px-4 py-3 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors first:rounded-t-xl last:rounded-b-xl flex items-center space-x-3"
-              >
-                        <Search className="w-4 h-4 text-slate-400" />
-                        <span>{suggestion}</span>
-              </button>
-                    ))}
-            </div>
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl border border-slate-200/50 dark:border-slate-600/50 rounded-2xl shadow-2xl z-50 max-h-72 overflow-y-auto">
+                    <div className="p-2">
+                      {searchSuggestions.map((suggestion, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleSuggestionClick(suggestion)}
+                          className="w-full px-4 py-3 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-gradient-to-r hover:from-[#2563EB]/10 hover:to-[#14B8A6]/10 dark:hover:from-[#2563EB]/20 dark:hover:to-[#14B8A6]/20 transition-all rounded-xl flex items-center space-x-3 group"
+                        >
+                          <div className="w-8 h-8 bg-gradient-to-r from-[#2563EB]/20 to-[#14B8A6]/20 rounded-lg flex items-center justify-center group-hover:from-[#2563EB]/30 group-hover:to-[#14B8A6]/30 transition-all">
+                            <Search className="w-3 h-3 text-[#2563EB]" />
+                          </div>
+                          <span className="font-medium">{suggestion}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 )}
-        </div>
-      </div>
+              </div>
+            </div>
 
-            {/* Category Selection - Compact */}
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                  Popular Services
-                </h3>
-                <div className="flex items-center space-x-1 text-xs text-slate-500 dark:text-slate-400">
-                  <Sparkles className="w-3 h-3" />
-                  <span>Choose</span>
+            {/* Enhanced Category Selection */}
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
+                    <Sparkles className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                      Popular Services
+                    </h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                      Choose from our most requested services
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2 px-3 py-1.5 bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 rounded-full">
+                  <div className="w-2 h-2 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-full animate-pulse"></div>
+                  <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Tap to select</span>
                 </div>
               </div>
               
-              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
                 {categories.slice(1).map(cat => (
                   <button
                     key={cat.value}
                     onClick={() => setSelectedCategory(cat.value)}
-                    className={`group relative flex flex-col items-center space-y-1 p-2 rounded-xl text-xs font-medium transition-all duration-300 hover:scale-105 ${
+                    className={`group relative flex flex-col items-center space-y-3 p-4 rounded-2xl text-xs font-medium transition-all duration-300 hover:scale-105 ${
                       selectedCategory === cat.value
-                        ? 'bg-gradient-to-br from-[#2563EB] to-[#14B8A6] text-white shadow-lg shadow-[#2563EB]/25'
-                        : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-gradient-to-br hover:from-slate-50 hover:to-slate-100 dark:hover:from-slate-600 dark:hover:to-slate-500 hover:text-slate-900 dark:hover:text-slate-100 border border-slate-200 dark:border-slate-600 hover:border-[#2563EB]/30 hover:shadow-md'
+                        ? 'bg-gradient-to-br from-[#2563EB] to-[#14B8A6] text-white shadow-2xl shadow-[#2563EB]/30 transform scale-105'
+                        : 'bg-white/80 dark:bg-slate-700/80 text-slate-600 dark:text-slate-300 hover:bg-gradient-to-br hover:from-slate-50 hover:to-slate-100 dark:hover:from-slate-600 dark:hover:to-slate-500 hover:text-slate-900 dark:hover:text-slate-100 border border-slate-200/50 dark:border-slate-600/50 hover:border-[#2563EB]/30 hover:shadow-xl backdrop-blur-sm'
                     }`}
                   >
-                    {/* Icon with enhanced styling */}
-                    <div className={`relative ${selectedCategory === cat.value ? 'animate-pulse' : ''}`}>
-                      <cat.icon className={`w-4 h-4 transition-all duration-300 ${
-                        selectedCategory === cat.value 
-                          ? 'text-white drop-shadow-sm' 
-                          : 'text-slate-500 dark:text-slate-400 group-hover:text-[#2563EB] group-hover:scale-110'
-                      }`} />
+                    {/* Enhanced Image Container */}
+                    <div className={`relative w-14 h-14 rounded-2xl overflow-hidden transition-all duration-300 shadow-lg ${
+                      selectedCategory === cat.value ? 'animate-pulse shadow-xl' : 'group-hover:scale-110'
+                    }`}>
+                      <img
+                        src={cat.image}
+                        alt={cat.label}
+                        className="w-full h-full object-cover transition-all duration-300"
+                      />
                       {selectedCategory === cat.value && (
-                        <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-white rounded-full flex items-center justify-center">
-                          <div className="w-1 h-1 bg-[#2563EB] rounded-full"></div>
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#2563EB]/20 to-[#14B8A6]/20"></div>
+                      )}
+                      {selectedCategory === cat.value && (
+                        <div className="absolute -top-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-lg">
+                          <div className="w-2 h-2 bg-[#2563EB] rounded-full animate-pulse"></div>
                         </div>
                       )}
                     </div>
                     
-                    {/* Label with better typography */}
-                    <span className={`text-center leading-tight transition-colors duration-300 text-xs ${
+                    {/* Enhanced Label */}
+                    <span className={`text-center leading-tight transition-colors duration-300 text-xs font-semibold ${
                       selectedCategory === cat.value 
-                        ? 'text-white font-semibold' 
+                        ? 'text-white font-bold' 
                         : 'text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-100'
                     }`}>
                       {cat.label}
                     </span>
                     
-                    {/* Hover effect overlay */}
+                    {/* Enhanced Hover Effect */}
                     {!selectedCategory || selectedCategory !== cat.value ? (
-                      <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#2563EB]/5 to-[#14B8A6]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#2563EB]/5 to-[#14B8A6]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                     ) : null}
                   </button>
                 ))}
               </div>
               
-              {/* Selected category indicator - Compact */}
+              {/* Enhanced Selected Category Indicator */}
               {selectedCategory && (
-                <div className="mt-3 flex items-center justify-center">
-                  <div className="bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white px-3 py-1.5 rounded-full text-xs font-medium shadow-lg flex items-center space-x-2">
-                    <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
+                <div className="mt-6 flex items-center justify-center">
+                  <div className="bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white px-6 py-3 rounded-2xl text-sm font-semibold shadow-xl flex items-center space-x-3">
+                    <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
                     <span>Selected: {getCategoryLabel(selectedCategory)}</span>
                     <button
                       onClick={() => setSelectedCategory('')}
-                      className="ml-1 hover:bg-white/20 rounded-full p-0.5 transition-colors"
+                      className="ml-2 hover:bg-white/20 rounded-full p-1 transition-colors"
                     >
-                      <X className="w-2.5 h-2.5" />
+                      <X className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Search Button */}
+            {/* Enhanced Search Button */}
+            <div className="relative">
             <button
               onClick={handleSearchSubmit}
               disabled={(!searchQuery.trim() && !selectedCategory) || isEditingLocation}
-              className="w-full py-4 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white rounded-xl font-semibold text-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
-            >
-              {isEditingLocation ? 'Save Location First' : 'Search for Services'}
+                className={`w-full py-5 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white rounded-2xl font-bold text-lg hover:opacity-90 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1 flex items-center justify-center space-x-3 ${
+                  (!searchQuery.trim() && !selectedCategory) || isEditingLocation 
+                    ? 'cursor-not-allowed' 
+                    : 'cursor-pointer'
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center">
+                    <Search className="w-4 h-4 text-white" />
+                  </div>
+                  <span>
+                    {isEditingLocation ? 'Save Location First' : 'Find Service Providers'}
+                  </span>
+                  <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                </div>
             </button>
-              </div>
+              
+              {/* Button Glow Effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-2xl blur-lg opacity-30 -z-10"></div>
+            </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -808,7 +867,7 @@ export default function ProvidersPage() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
         {/* Header */}
         <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border-b border-white/20 dark:border-white/10 sticky top-0 z-40">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <button
@@ -833,7 +892,7 @@ export default function ProvidersPage() {
           </div>
               </div>
 
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           {isSearching ? (
             <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl p-12 text-center">
               <div className="mb-6">
@@ -975,101 +1034,146 @@ export default function ProvidersPage() {
                 </div>
               )}
 
-              {/* Providers List */}
-              <div className="space-y-4">
+              {/* Providers List - 2 per row on larger screens */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {searchResults.length > 0 ? (
                   searchResults.map((provider) => (
                   <div
                     key={provider.id}
-                    className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 p-4 sm:p-6 transition-all hover:shadow-xl hover:scale-[1.01]"
+                    className="group bg-white dark:bg-slate-800 rounded-3xl shadow-xl border border-slate-200/50 dark:border-slate-700/50 p-6 sm:p-8 transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1 relative overflow-hidden"
                   >
-                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-                      <div className="flex flex-col sm:flex-row sm:items-start gap-4 flex-1">
-                        <div className="flex-shrink-0">
+                    {/* Background gradient overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#2563EB]/5 to-[#14B8A6]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl"></div>
+                    
+                    {/* Content */}
+                    <div className="relative z-10">
+                      <div className="flex flex-row items-stretch gap-6 h-full">
+                        {/* Avatar - 30% width, full height */}
+                        <div className="w-[30%] flex-shrink-0">
+                          <div className="h-full flex items-center justify-center p-2">
+                            <div className="w-full h-full max-w-none max-h-none">
                           <Avatar
-                            src={provider.brandImages && provider.brandImages.length > 0 ? (provider.brandImages[0].url || provider.brandImages[0]) : (provider.user?.avatarUrl || '')}
-                            alt={provider.businessName || provider.user?.fullName || 'Provider'}
-                            fallback={provider.businessName || provider.user?.fullName || 'P'}
-                            size="lg"
+                                src={provider.brandImages && provider.brandImages.length > 0 ? (provider.brandImages[0].url || provider.brandImages[0]) : (provider.user?.avatarUrl || '')}
+                                alt={provider.businessName || provider.user?.fullName || 'Provider'}
+                                fallback={provider.businessName || provider.user?.fullName || 'P'}
+                                size="xl"
                             showVerification={true}
                             isVerified={provider.verificationStatus === 'verified'}
                             showAvailability={true}
                             isAvailable={provider.isAvailable}
+                                className="w-full h-full rounded-2xl object-cover"
                           />
+                            </div>
+                          </div>
                         </div>
                         
-                        <div className="flex-1 min-w-0">
-                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
-                            <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 truncate">
-                              {provider.businessName || 'Business Name'}
+                        {/* Content - 70% width */}
+                        <div className="flex-1 min-w-0 flex flex-col justify-between">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-3">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                              <h3 className="text-lg sm:text-lg font-bold bg-gradient-to-r from-[#2563EB] to-[#14B8A6] bg-clip-text text-transparent truncate">
+                                {provider.businessName || 'Business Name'}
                             </h3>
-                            {provider.user?.fullName && provider.businessName && (
-                              <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                                by {provider.user.fullName}
-                              </p>
-                            )}
-                            <div className="flex items-center gap-2">
-                              {(() => {
-                                const IconComponent = getCategoryIcon(provider.category);
-                                return <IconComponent className="w-5 h-5 sm:w-6 sm:h-6 text-[#14B8A6] flex-shrink-0" />;
-                              })()}
-                              <span className="text-sm text-slate-600 dark:text-slate-400 font-medium">
+                              {/* {provider.user?.fullName && provider.businessName && (
+                                <p className="text-sm text-slate-500 dark:text-slate-400 truncate">
+                                  by {provider.user.fullName}
+                                </p>
+                              )} */}
+                            </div>
+                            <div className="flex items-center gap-2 bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 px-3 py-1.5 rounded-full">
+                              <img
+                                src={categories.find(cat => cat.value === provider.category)?.image || '/images/tool.jpg'}
+                                alt={getCategoryLabel(provider.category)}
+                                className="w-5 h-5 object-cover rounded"
+                              />
+                              <span className="text-sm text-slate-700 dark:text-slate-300 font-medium">
                                 {getCategoryLabel(provider.category)}
                               </span>
                             </div>
                           </div>
                           
-                          {/* Mobile-first responsive info grid */}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4 text-sm text-slate-600 dark:text-slate-400 mb-3">
-                            <div className="flex items-center space-x-1">
-                              <MapPin className="w-4 h-4 flex-shrink-0" />
-                              <span className="truncate">{provider.locationCity}, {provider.locationState}</span>
+                          {/* Enhanced Info Cards */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                            {/* Location Card */}
+                            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
+                              <div className="flex items-center space-x-2">
+                                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                  <MapPin className="w-4 h-4 text-white" />
                             </div>
-                            {/* <div className="flex items-center space-x-1">
-                              <Award className="w-4 h-4 flex-shrink-0" />
-                              <span>{provider.yearsOfExperience} years exp</span>
-                            </div> */}
-                            <div className="flex items-center space-x-1 sm:col-span-2 lg:col-span-1">
-                              <Clock className="w-4 h-4 flex-shrink-0" />
-                              <span className={provider.isAvailable ? 'text-green-600' : 'text-orange-600'}>
-                                {provider.isAvailable ? `Available - ${provider.estimatedArrival}` : 'Busy'}
-                              </span>
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-1">Location</p>
+                                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
+                                    {provider.locationCity}, {provider.locationState}
+                                  </p>
+                                </div>
                             </div>
                           </div>
                           
-                          {/* Brand Images - Grid Cards */}
-                          <div className="mb-3">
-                            <div className="flex items-center space-x-2 mb-2">
-                              <div className="w-2 h-2 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-full"></div>
-                              <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Brand Images</span>
+                            {/* Availability Card */}
+                            <div className={`rounded-xl p-4 border ${
+                              provider.isAvailable 
+                                ? 'bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800'
+                                : 'bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border-orange-200 dark:border-orange-800'
+                            }`}>
+                              <div className="flex items-center space-x-2">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                  provider.isAvailable ? 'bg-green-500' : 'bg-orange-500'
+                                }`}>
+                                  <Clock className="w-4 h-4 text-white" />
                             </div>
-                            <div className="grid grid-cols-3 gap-2">
+                                <div className="min-w-0 flex-1">
+                                  <p className={`text-xs font-medium mb-1 ${
+                                    provider.isAvailable 
+                                      ? 'text-green-700 dark:text-green-300' 
+                                      : 'text-orange-700 dark:text-orange-300'
+                                  }`}>
+                                    Status
+                                  </p>
+                                  <p className={`text-sm font-semibold truncate ${
+                                    provider.isAvailable 
+                                      ? 'text-green-800 dark:text-green-200' 
+                                      : 'text-orange-800 dark:text-orange-200'
+                                  }`}>
+                                    {provider.isAvailable ? `Available - ${provider.estimatedArrival}` : 'Currently Busy'}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Brand Images - Enhanced Grid Cards */}
+                          <div className="mb-6">
+                            <div className="flex items-center space-x-2 mb-3">
+                              <div className="w-2 h-2 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-full animate-pulse"></div>
+                              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Brand Images</span>
+                            </div>
+                            <div className="grid grid-cols-3 gap-3">
                               {(() => {
                                 // Use real brand images if available, otherwise fallback to mock images
                                 const brandImages = provider.brandImages && provider.brandImages.length > 0 
                                   ? provider.brandImages.slice(0, 3).map((img: any) => img.url || img)
                                   : (() => {
                                       // Fallback to mock images based on provider category
-                                      const getWorkImages = (category: string) => {
-                                        const imageSets = {
-                                          plumbing: [
+                                const getWorkImages = (category: string) => {
+                                  const imageSets = {
+                                    plumbing: [
                                             'https://images.unsplash.com/photo-1517646287270-a5a9ca602e5c?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8cGx1bWJpbmd8ZW58MHx8MHx8fDA%3D',
                                             'https://images.unsplash.com/photo-1538474705339-e87de81450e8?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8cGx1bWJpbmd8ZW58MHx8MHx8fDA%3D',
                                             'https://images.unsplash.com/photo-1542013936693-884638332954?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8cGx1bWJpbmd8ZW58MHx8MHx8fDA%3D'
-                                          ],
-                                          electrical: [
+                                    ],
+                                    electrical: [
                                             'https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8ZWxlY3RyaWNhbHxlbnwwfHwwfHx8MA%3D%3D',
                                             'https://images.unsplash.com/photo-1566417110090-6b15a06ec800?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fGVsZWN0cmljYWx8ZW58MHx8MHx8fDA%3D',
                                             'https://images.unsplash.com/photo-1530240852689-f7a9c6d9f6c7?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTV8fGVsZWN0cmljYWx8ZW58MHx8MHx8fDA%3D'
-                                          ],
-                                          cleaning: [
+                                    ],
+                                    cleaning: [
                                             'https://images.unsplash.com/photo-1550963295-019d8a8a61c5?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTR8fGNsZWFuZXJ8ZW58MHx8MHx8fDA%3D',
                                             'https://images.unsplash.com/photo-1529220502050-f15e570c634e?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTV8fGNsZWFuZXJ8ZW58MHx8MHx8fDA%3D',
                                             'https://images.unsplash.com/photo-1610141160723-d2d346e73766?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fGNsZWFuZXJ8ZW58MHx8MHx8fDA%3D'
-                                          ]
-                                        };
-                                        return imageSets[category as keyof typeof imageSets] || imageSets.plumbing;
-                                      };
+                                    ]
+                                  };
+                                  return imageSets[category as keyof typeof imageSets] || imageSets.plumbing;
+                                };
                                       return getWorkImages(provider.category).slice(0, 3);
                                     })();
                                 
@@ -1080,7 +1184,7 @@ export default function ProvidersPage() {
                                         key={index}
                                         className="relative group cursor-pointer"
                                       >
-                                        <div className="w-full h-16 sm:h-20 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-600 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105">
+                                        <div className="w-full h-20 sm:h-24 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-600 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 group/image">
                                           <img
                                             src={image}
                                             alt={`Brand Image ${index + 1}`}
@@ -1091,18 +1195,25 @@ export default function ProvidersPage() {
                                             }}
                                           />
                                         </div>
-                                        {/* Hover overlay */}
-                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors rounded-lg flex items-center justify-center">
-                                          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                            <div className="w-2 h-2 bg-white rounded-full"></div>
+                                        {/* Enhanced hover overlay */}
+                                        <div className="absolute inset-0 bg-gradient-to-br from-[#2563EB]/0 to-[#14B8A6]/0 group-hover:from-[#2563EB]/20 group-hover:to-[#14B8A6]/20 transition-all duration-300 rounded-xl flex items-center justify-center">
+                                          <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:scale-110">
+                                            <div className="w-8 h-8 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
+                                              <div className="w-3 h-3 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-full"></div>
+                                            </div>
                                           </div>
                                         </div>
                                       </div>
                                     ))}
                                     {/* More indicator if there are more images */}
                                     {(provider.brandImages && provider.brandImages.length > 3) && (
-                                      <div className="w-full h-16 sm:h-20 rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 border border-slate-200 dark:border-slate-600 shadow-sm flex items-center justify-center">
-                                        <span className="text-xs font-bold text-slate-600 dark:text-slate-400">+{provider.brandImages.length - 3}</span>
+                                      <div className="w-full h-20 sm:h-24 rounded-lg bg-gradient-to-br from-[#2563EB]/10 to-[#14B8A6]/10 dark:from-[#2563EB]/20 dark:to-[#14B8A6]/20 border border-[#2563EB]/30 dark:border-[#14B8A6]/30 shadow-md flex items-center justify-center group cursor-pointer hover:scale-105 transition-all duration-300">
+                                        <div className="text-center">
+                                          <div className="w-6 h-6 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-full flex items-center justify-center mx-auto mb-1">
+                                            <span className="text-white font-bold text-xs">+</span>
+                                    </div>
+                                          <span className="text-xs font-bold text-[#2563EB] dark:text-[#14B8A6]">{provider.brandImages.length - 3} more</span>
+                                        </div>
                                       </div>
                                     )}
                                   </>
@@ -1111,15 +1222,18 @@ export default function ProvidersPage() {
                             </div>
                           </div>
 
-                          {/* Rating and Price - Responsive */}
-                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-3">
-                            <div className="flex items-center space-x-1 bg-yellow-50 dark:bg-yellow-900/20 px-3 py-1 rounded-full w-fit">
-                              <Star className="w-4 h-4 text-yellow-500 fill-current flex-shrink-0" />
-                              <span className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                          {/* Enhanced Rating Section */}
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 mb-6">
+                            <div className="flex items-center space-x-2 bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 px-4 py-2 rounded-full w-fit border border-yellow-200 dark:border-yellow-800">
+                              <div className="flex items-center space-x-1">
+                                <Star className="w-5 h-5 text-yellow-500 fill-current flex-shrink-0" />
+                                <span className="text-lg font-bold text-slate-900 dark:text-slate-100">
                                 {Number(provider.ratingAverage || 0).toFixed(1)}
                               </span>
-                              <span className="text-xs text-slate-500 dark:text-slate-400">
-                                ({provider.ratingCount} reviews)
+                              </div>
+                              <div className="w-px h-4 bg-yellow-300 dark:bg-yellow-700"></div>
+                              <span className="text-sm text-slate-600 dark:text-slate-400 font-medium">
+                                {provider.ratingCount} reviews
                               </span>
                             </div>
                             
@@ -1131,35 +1245,51 @@ export default function ProvidersPage() {
                             </div> */}
                           </div>
                           
-                          {/* {provider.bio && (
-                            <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">
-                              {provider.bio}
-                            </p>
-                          )} */}
+                          {/* Provider Description */}
+                          {provider.bio && (
+                            <div className="mb-4">
+                              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                                {(() => {
+                                  const words = provider.bio.split(' ');
+                                  if (words.length <= 20) {
+                                    return provider.bio;
+                                  }
+                                  return words.slice(0, 20).join(' ') + '...';
+                                })()}
+                              </p>
+                            </div>
+                          )}
                         </div>
                       </div>
                       
-                      {/* Action Buttons - Responsive */}
-                      <div className="flex flex-col sm:flex-row lg:flex-col gap-2 sm:gap-3 lg:gap-2 w-full sm:w-auto lg:w-auto">
+                      {/* Enhanced Action Buttons - Spacious for 2-column */}
+                      <div className="flex flex-col gap-3">
                         <button
                           onClick={() => handleBookProvider(provider)}
                           disabled={!provider.isAvailable}
-                          className={`px-4 sm:px-6 py-3 rounded-xl font-semibold text-sm transition-all cursor-pointer w-full sm:w-auto lg:w-auto ${
+                          className={`px-6 py-4 rounded-xl font-bold text-sm transition-all duration-300 cursor-pointer w-full shadow-lg hover:shadow-xl ${
                             provider.isAvailable
-                              ? 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white hover:opacity-90 hover:scale-105 shadow-lg hover:shadow-xl'
+                              ? 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white hover:opacity-90 hover:scale-105 hover:-translate-y-0.5'
                               : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed'
                           }`}
                         >
-                          {provider.isAvailable ? 'Book Now' : 'Unavailable'}
+                          {provider.isAvailable ? (
+                            <div className="flex items-center justify-center space-x-2">
+                              <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                              <span>Book Now</span>
+                            </div>
+                          ) : (
+                            'Unavailable'
+                          )}
                         </button>
                         
-                        <div className="flex gap-2 sm:gap-3 lg:flex-col lg:gap-2">
                           <button
                             onClick={() => handleViewProfile(provider)}
-                            className="px-3 sm:px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors text-sm font-medium cursor-pointer flex-1 sm:flex-none lg:flex-none"
+                          className="px-6 py-3 bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 text-slate-700 dark:text-slate-300 rounded-xl hover:from-slate-200 hover:to-slate-300 dark:hover:from-slate-600 dark:hover:to-slate-500 transition-all duration-300 text-sm font-semibold cursor-pointer w-full shadow-md hover:shadow-lg hover:scale-105"
                           >
                             View Profile
                           </button>
+                      </div>
                           
                           {/* <button
                             onClick={() => handleContactProvider(provider)}
@@ -1169,8 +1299,8 @@ export default function ProvidersPage() {
                           </button> */}
                         </div>
                       </div>
-                    </div>
-                  </div>
+                  
+                
                 ))
                 ) : (
                   <div className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 p-8 text-center">
@@ -1303,12 +1433,6 @@ export default function ProvidersPage() {
               setShowBookingModal(false);
               setSelectedProvider(null);
             }}
-            onSubmit={(bookingData) => {
-              console.log('Booking submitted:', bookingData);
-              // Handle booking submission here
-              setShowBookingModal(false);
-              setSelectedProvider(null);
-            }}
           />
         )}
 
@@ -1323,6 +1447,7 @@ export default function ProvidersPage() {
               setSelectedProvider(profileProvider);
               setShowBookingModal(true);
             }}
+            onContact={handleContactProvider}
           />
         )}
     </div>

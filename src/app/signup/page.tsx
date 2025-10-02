@@ -6,6 +6,7 @@ import Image from "next/image";
 import toast from "react-hot-toast";
 import { Eye, EyeOff, Mail, Lock, User, Phone, ArrowRight, Check } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
+import ImageSlider from "../../components/ImageSlider";
 
 function SignupContent() {
   const router = useRouter();
@@ -119,15 +120,81 @@ function SignupContent() {
     { text: 'Contains number', met: /\d/.test(formData.password) }
   ];
 
+  // Slider data for signup page
+  const sliderImages = [
+    '/images/slider1.jpg',
+    '/images/slider2.jpg',
+    '/images/slider3.jpg',
+    '/images/slider4.jpg',
+    '/images/slider5.jpg',
+    '/images/slider6.jpg',
+    '/images/slider7.jpg',
+    '/images/slider8.jpg'
+  ];
+
+  const sliderTexts = [
+    {
+      title: "Welcome to Alabastar",
+      subtitle: "Your Trusted Service Partner",
+      description: "Connect with verified professionals for all your home and business needs. From repairs to renovations, we've got you covered."
+    },
+    {
+      title: "Quality Services",
+      subtitle: "Verified Professionals",
+      description: "Every service provider on our platform is thoroughly vetted and verified. Quality and reliability are our top priorities."
+    },
+    {
+      title: "Easy Booking",
+      subtitle: "Book in Minutes",
+      description: "Find, compare, and book services in just a few clicks. No more endless searching for the right professional."
+    },
+    {
+      title: "Secure Payments",
+      subtitle: "Safe & Protected",
+      description: "Your payments are secure and protected. Pay only when you're satisfied with the service provided."
+    },
+    {
+      title: "24/7 Support",
+      subtitle: "Always Here for You",
+      description: "Our customer support team is available around the clock to help you with any questions or concerns."
+    },
+    {
+      title: "Real Reviews",
+      subtitle: "Honest Feedback",
+      description: "Read genuine reviews from real customers to make informed decisions about your service providers."
+    },
+    {
+      title: "Instant Quotes",
+      subtitle: "Get Prices Fast",
+      description: "Receive instant quotes from multiple providers. Compare prices and choose the best option for your budget."
+    },
+    {
+      title: "Join Our Community",
+      subtitle: "Be Part of Something Great",
+      description: "Join thousands of satisfied customers who trust Alabastar for all their service needs."
+    }
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen flex">
+      {/* Left Side - Image Slider (60% width on desktop) */}
+      <div className="hidden lg:flex lg:w-3/5 relative">
+        <ImageSlider 
+          images={sliderImages} 
+          texts={sliderTexts}
+          autoSlideInterval={6000}
+        />
+      </div>
+
+      {/* Right Side - Signup Form (40% width on desktop, full width on mobile) */}
+      <div className="w-full lg:w-2/5 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+        <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
-          <Link href="/" className="inline-flex items-center gap-2 mb-6">
+          {/* <Link href="/" className="inline-flex items-center gap-2 mb-6">
             <Image src="/brand/logo-icon.svg" alt="Alabastar" width={40} height={40} priority />
             <span className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">ALABASTAR</span>
-          </Link>
+          </Link> */}
           <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
             Create your account
           </h2>
@@ -355,6 +422,7 @@ function SignupContent() {
               Join as a provider
             </Link>
           </p>
+        </div>
         </div>
       </div>
     </div>

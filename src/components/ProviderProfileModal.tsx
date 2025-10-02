@@ -222,13 +222,13 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
         <div className="relative p-4 sm:p-6 border-b border-slate-200 dark:border-slate-700">
           <button
             onClick={onClose}
-            className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+            className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors z-10"
           >
             <X className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
           
-          <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-            {/* Avatar and Basic Info */}
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* Left Section - Avatar and Basic Info */}
             <div className="flex flex-col sm:flex-row sm:items-start gap-4 flex-1">
               <Avatar
                 src={provider.brandImages && provider.brandImages.length > 0 ? (provider.brandImages[0].url || provider.brandImages[0]) : (provider.user.avatarUrl || '')}
@@ -280,8 +280,8 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
               </div>
             </div>
             
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-col gap-2 sm:gap-2 w-full sm:w-auto">
+            {/* Right Section - Action Buttons */}
+            <div className="flex flex-col sm:flex-row lg:flex-col gap-2 sm:gap-2 w-full sm:w-auto lg:w-auto">
               <button
                 onClick={() => onBook(provider)}
                 disabled={!provider.isAvailable}
@@ -295,12 +295,6 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
               </button>
               
               <div className="flex gap-2">
-                {/* <button
-                  onClick={() => onContact(provider)}
-                  className="flex-1 sm:flex-none px-3 sm:px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-sm flex items-center justify-center"
-                >
-                  <MessageCircle className="w-4 h-4" />
-                </button> */}
                 <button className="flex-1 sm:flex-none px-3 sm:px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-sm flex items-center justify-center">
                   <Heart className="w-4 h-4" />
                 </button>
@@ -312,150 +306,167 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex border-b border-slate-200 dark:border-slate-700 overflow-x-auto">
-          {[
-            { id: 'overview', label: 'Overview' },
-            { id: 'portfolio', label: 'Brand Images' },
-            { id: 'reviews', label: `Reviews (${reviews.length})` }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as 'overview' | 'portfolio' | 'reviews')}
-              className={`px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
-                activeTab === tab.id
-                  ? 'text-[#2563EB] border-b-2 border-[#2563EB]'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Content */}
-        <div className="p-4 sm:p-6 overflow-y-auto max-h-[50vh] sm:max-h-[60vh]">
-          {activeTab === 'overview' && (
-            <div className="space-y-4 sm:space-y-6">
-              {/* Bio */}
-              <div>
-                <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2 sm:mb-3">About</h3>
-                <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 leading-relaxed">
-                  {provider.bio}
-                </p>
-              </div>
-
-              {/* Services */}
-              <div>
-                <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2 sm:mb-3">Services</h3>
-                <div className="flex flex-wrap gap-2">
-                  {provider.subcategories.map((service, index) => (
-                    <span
-                      key={index}
-                      className="px-2 sm:px-3 py-1 bg-gradient-to-r from-[#2563EB]/10 to-[#14B8A6]/10 text-[#2563EB] text-xs sm:text-sm font-medium rounded-full border border-[#2563EB]/20"
-                    >
-                      {service}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Pricing */}
-              {/* <div>
-                <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2 sm:mb-3">Pricing</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                  <div className="bg-slate-50 dark:bg-slate-700 p-3 sm:p-4 rounded-xl">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <NairaIcon className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 flex-shrink-0" />
-                      <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">Starting Price</span>
-                    </div>
-                    <p className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
-                      {formatPrice(provider.startingPrice)}
-                    </p>
-                  </div>
-                  <div className="bg-slate-50 dark:bg-slate-700 p-3 sm:p-4 rounded-xl">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <NairaIcon className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 flex-shrink-0" />
-                      <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">Hourly Rate</span>
-                    </div>
-                    <p className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
-                      {formatPrice(provider.hourlyRate)}
-                    </p>
-                  </div>
-                </div>
-              </div> */}
-
-              {/* Contact Info */}
-              {/* <div>
-                <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2 sm:mb-3">Contact Information</h3>
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2 text-slate-600 dark:text-slate-400">
-                    <Phone className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                    <span className="text-xs sm:text-sm truncate">{provider.user.phone}</span>
-                  </div>
-                  <div className="flex items-center space-x-2 text-slate-600 dark:text-slate-400">
-                    <Mail className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                    <span className="text-xs sm:text-sm truncate">{provider.user.email}</span>
-                  </div>
-                </div>
-              </div> */}
+        {/* Brand Images Preview Section */}
+        {provider.brandImages && provider.brandImages.length > 0 && (
+          <div className="px-4 sm:px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+            <div className="flex items-center space-x-2 mb-3">
+              <div className="w-3 h-3 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-full animate-pulse"></div>
+              <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">Brand Portfolio</h3>
             </div>
-          )}
-
-          {activeTab === 'portfolio' && (
-            <div>
-              <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-slate-100 mb-3 sm:mb-4">Brand Images</h3>
-              {loading ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
-                  {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <div key={i} className="h-24 sm:h-32 bg-slate-200 dark:bg-slate-700 rounded-xl animate-pulse"></div>
-                  ))}
-                </div>
-              ) : portfolioImages.length > 0 ? (
-                <div>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
-                    Found {portfolioImages.length} brand images
-                  </p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
-                    {portfolioImages.map((image, index) => (
-                      <div
-                        key={index}
-                        className="relative group cursor-pointer"
-                      >
-                        <img
-                          src={image}
-                          alt={`Brand Image ${index + 1}`}
-                          className="w-full h-24 sm:h-32 object-cover rounded-xl hover:opacity-90 transition-opacity"
-                          onError={(e) => {
-                            console.log('Image failed to load:', image);
-                            e.currentTarget.style.display = 'none';
-                          }}
-                          onLoad={() => {
-                            console.log('Image loaded successfully:', image);
-                          }}
-                        />
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors rounded-xl flex items-center justify-center">
-                          <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-xs sm:text-sm font-medium">
-                            View
-                          </span>
-                        </div>
+            
+            <div className="grid grid-cols-4 gap-2">
+              {provider.brandImages.slice(0, 4).map((image, index) => (
+                <div
+                  key={index}
+                  className="relative group"
+                >
+                  <div className="w-full h-16 sm:h-20 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-600 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105">
+                    <img
+                      src={image.url || image}
+                      alt={`Brand Image ${index + 1}`}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                  {/* Hover overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#2563EB]/0 to-[#14B8A6]/0 group-hover:from-[#2563EB]/20 group-hover:to-[#14B8A6]/20 transition-all duration-300 rounded-lg flex items-center justify-center">
+                    <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:scale-110">
+                      <div className="w-6 h-6 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
+                        <div className="w-2 h-2 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-full"></div>
                       </div>
-                    ))}
+                    </div>
                   </div>
                 </div>
-              ) : (
-                <div className="text-center py-6 sm:py-8">
-                  <Calendar className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-slate-400 mb-3 sm:mb-4" />
-                  <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400">No brand images available</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-500 mt-2">
-                    Portfolio images count: {portfolioImages.length}
-                  </p>
+              ))}
+              
+              {/* More indicator */}
+              {provider.brandImages.length > 4 && (
+                <div 
+                  className="w-full h-16 sm:h-20 rounded-lg bg-gradient-to-br from-[#2563EB]/10 to-[#14B8A6]/10 dark:from-[#2563EB]/20 dark:to-[#14B8A6]/20 border border-[#2563EB]/30 dark:border-[#14B8A6]/30 shadow-md flex items-center justify-center group hover:scale-105 transition-all duration-300"
+                >
+                  <div className="text-center">
+                    <div className="w-6 h-6 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-full flex items-center justify-center mx-auto mb-1">
+                      <span className="text-white font-bold text-xs">+</span>
+                    </div>
+                    <span className="text-xs font-bold text-[#2563EB] dark:text-[#14B8A6]">{provider.brandImages.length - 4} more</span>
+                  </div>
                 </div>
               )}
             </div>
-          )}
+          </div>
+        )}
 
-          {activeTab === 'reviews' && (
+        {/* Content */}
+        <div className="p-4 sm:p-6 overflow-y-auto max-h-[50vh] sm:max-h-[60vh]">
+          <div className="space-y-4 sm:space-y-6">
+            {/* Bio */}
+            <div>
+              <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2 sm:mb-3">About</h3>
+              <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 leading-relaxed">
+                {provider.bio}
+              </p>
+            </div>
+
+            {/* Brand Images - Using same logic from providers page */}
+            <div>
+              <div className="flex items-center space-x-2 mb-3">
+                <div className="w-3 h-3 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-full animate-pulse"></div>
+                <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-slate-100">Brand Images</h3>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-3">
+                {(() => {
+                  // Use real brand images if available, otherwise fallback to mock images
+                  const brandImages = provider.brandImages && provider.brandImages.length > 0 
+                    ? provider.brandImages.slice(0, 3).map((img: any) => img.url || img)
+                    : (() => {
+                        // Fallback to mock images based on provider category
+                        const getWorkImages = (category: string) => {
+                          const imageSets = {
+                            plumbing: [
+                              'https://images.unsplash.com/photo-1517646287270-a5a9ca602e5c?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8cGx1bWJpbmd8ZW58MHx8MHx8fDA%3D',
+                              'https://images.unsplash.com/photo-1538474705339-e87de81450e8?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8cGx1bWJpbmd8ZW58MHx8MHx8fDA%3D',
+                              'https://images.unsplash.com/photo-1542013936693-884638332954?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8cGx1bWJpbmd8ZW58MHx8MHx8fDA%3D'
+                            ],
+                            electrical: [
+                              'https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8ZWxlY3RyaWNhbHxlbnwwfHwwfHx8MA%3D%3D',
+                              'https://images.unsplash.com/photo-1566417110090-6b15a06ec800?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fGVsZWN0cmljYWx8ZW58MHx8MHx8fDA%3D',
+                              'https://images.unsplash.com/photo-1530240852689-f7a9c6d9f6c7?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTV8fGVsZWN0cmljYWx8ZW58MHx8MHx8fDA%3D'
+                            ],
+                            cleaning: [
+                              'https://images.unsplash.com/photo-1550963295-019d8a8a61c5?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTR8fGNsZWFuZXJ8ZW58MHx8MHx8fDA%3D',
+                              'https://images.unsplash.com/photo-1529220502050-f15e570c634e?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTV8fGNsZWFuZXJ8ZW58MHx8MHx8fDA%3D',
+                              'https://images.unsplash.com/photo-1610141160723-d2d346e73766?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fGNsZWFuZXJ8ZW58MHx8MHx8fDA%3D'
+                            ]
+                          };
+                          return imageSets[category as keyof typeof imageSets] || imageSets.plumbing;
+                        };
+                        return getWorkImages(provider.category).slice(0, 3);
+                      })();
+                  
+                  return (
+                    <>
+                      {brandImages.map((image, index) => (
+                        <div
+                          key={index}
+                          className="relative group cursor-pointer"
+                        >
+                          <div className="w-full h-20 sm:h-24 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-600 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group/image">
+                            <img
+                              src={image}
+                              alt={`Brand Image ${index + 1}`}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                // Hide image if it fails to load
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          </div>
+                          {/* Enhanced hover overlay */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-[#2563EB]/0 to-[#14B8A6]/0 group-hover:from-[#2563EB]/20 group-hover:to-[#14B8A6]/20 transition-all duration-300 rounded-xl flex items-center justify-center">
+                            <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:scale-110">
+                              <div className="w-8 h-8 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
+                                <div className="w-3 h-3 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-full"></div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      {/* More indicator if there are more images */}
+                      {(provider.brandImages && provider.brandImages.length > 3) && (
+                        <div className="w-full h-20 sm:h-24 rounded-xl bg-gradient-to-br from-[#2563EB]/10 to-[#14B8A6]/10 dark:from-[#2563EB]/20 dark:to-[#14B8A6]/20 border border-[#2563EB]/30 dark:border-[#14B8A6]/30 shadow-lg flex items-center justify-center group cursor-pointer hover:scale-105 transition-all duration-300">
+                          <div className="text-center">
+                            <div className="w-8 h-8 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-full flex items-center justify-center mx-auto mb-1">
+                              <span className="text-white font-bold text-sm">+</span>
+                            </div>
+                            <span className="text-xs font-bold text-[#2563EB] dark:text-[#14B8A6]">{provider.brandImages.length - 3} more</span>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+
+            {/* Services */}
+            <div>
+              <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2 sm:mb-3">Services</h3>
+              <div className="flex flex-wrap gap-2">
+                {provider.subcategories.map((service, index) => (
+                  <span
+                    key={index}
+                    className="px-2 sm:px-3 py-1 bg-gradient-to-r from-[#2563EB]/10 to-[#14B8A6]/10 text-[#2563EB] text-xs sm:text-sm font-medium rounded-full border border-[#2563EB]/20"
+                  >
+                    {service}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Reviews Section */}
             <div>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
                 <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-slate-100">Reviews</h3>
@@ -531,7 +542,7 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
                 </div>
               )}
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>

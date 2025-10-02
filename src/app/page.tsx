@@ -356,62 +356,62 @@ export default function Home() {
             {/* Service category buttons - Horizontal scroll on mobile */}
             <div className="mb-6 sm:mb-8">
               <div className="flex sm:flex-wrap gap-2 sm:gap-4 overflow-x-auto pb-2 sm:pb-0 scrollbar-hide">
-                <button 
-                  onClick={() => handleCategorySelect('plumbing')}
+              <button 
+                onClick={() => handleCategorySelect('plumbing')}
                   className={`flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 rounded-2xl sm:rounded-3xl transition-all duration-300 hover:scale-105 shadow-lg text-xs sm:text-sm font-medium whitespace-nowrap flex-shrink-0 ${
-                    selectedCategory === 'plumbing' 
-                      ? 'bg-gradient-to-r from-[#1d4ed8] to-[#0f766e] text-white' 
-                      : 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] hover:from-[#1d4ed8] hover:to-[#0f766e] text-white'
-                  }`}
-                >
-                  <span>Plumbing</span>
+                  selectedCategory === 'plumbing' 
+                    ? 'bg-gradient-to-r from-[#1d4ed8] to-[#0f766e] text-white' 
+                    : 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] hover:from-[#1d4ed8] hover:to-[#0f766e] text-white'
+                }`}
+              >
+                <span>Plumbing</span>
                   <ArrowRight size={12} className="sm:w-4 sm:h-4" />
-                </button>
-                <button 
-                  onClick={() => handleCategorySelect('electrical')}
+              </button>
+              <button 
+                onClick={() => handleCategorySelect('electrical')}
                   className={`flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 rounded-2xl sm:rounded-3xl transition-all duration-300 hover:scale-105 shadow-lg text-xs sm:text-sm font-medium whitespace-nowrap flex-shrink-0 ${
-                    selectedCategory === 'electrical' 
-                      ? 'bg-gradient-to-r from-[#1d4ed8] to-[#0f766e] text-white' 
-                      : 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] hover:from-[#1d4ed8] hover:to-[#0f766e] text-white'
-                  }`}
-                >
-                  <span>Electrical</span>
+                  selectedCategory === 'electrical' 
+                    ? 'bg-gradient-to-r from-[#1d4ed8] to-[#0f766e] text-white' 
+                    : 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] hover:from-[#1d4ed8] hover:to-[#0f766e] text-white'
+                }`}
+              >
+                <span>Electrical</span>
                   <ArrowRight size={12} className="sm:w-4 sm:h-4" />
-                </button>
-                <button 
-                  onClick={() => handleCategorySelect('cleaning')}
+              </button>
+              <button 
+                onClick={() => handleCategorySelect('cleaning')}
                   className={`flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 rounded-2xl sm:rounded-3xl transition-all duration-300 hover:scale-105 shadow-lg text-xs sm:text-sm font-medium whitespace-nowrap flex-shrink-0 ${
-                    selectedCategory === 'cleaning' 
-                      ? 'bg-gradient-to-r from-[#1d4ed8] to-[#0f766e] text-white' 
-                      : 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] hover:from-[#1d4ed8] hover:to-[#0f766e] text-white'
-                  }`}
-                >
-                  <span>Cleaning</span>
+                  selectedCategory === 'cleaning' 
+                    ? 'bg-gradient-to-r from-[#1d4ed8] to-[#0f766e] text-white' 
+                    : 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] hover:from-[#1d4ed8] hover:to-[#0f766e] text-white'
+                }`}
+              >
+                <span>Cleaning</span>
                   <ArrowRight size={12} className="sm:w-4 sm:h-4" />
-                </button>
-                <button 
-                  onClick={() => handleCategorySelect('carpentry')}
+              </button>
+              <button 
+                onClick={() => handleCategorySelect('carpentry')}
                   className={`flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 rounded-2xl sm:rounded-3xl transition-all duration-300 hover:scale-105 shadow-lg text-xs sm:text-sm font-medium whitespace-nowrap flex-shrink-0 ${
-                    selectedCategory === 'carpentry' 
-                      ? 'bg-gradient-to-r from-[#1d4ed8] to-[#0f766e] text-white' 
-                      : 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] hover:from-[#1d4ed8] hover:to-[#0f766e] text-white'
-                  }`}
-                >
-                  <span>Carpentry</span>
+                  selectedCategory === 'carpentry' 
+                    ? 'bg-gradient-to-r from-[#1d4ed8] to-[#0f766e] text-white' 
+                    : 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] hover:from-[#1d4ed8] hover:to-[#0f766e] text-white'
+                }`}
+              >
+                <span>Carpentry</span>
                   <ArrowRight size={12} className="sm:w-4 sm:h-4" />
-                </button>
-                <button 
+              </button>
+              <button 
                   onClick={() => handleCategorySelect('lesson teacher')}
                   className={`flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 rounded-2xl sm:rounded-3xl transition-all duration-300 hover:scale-105 shadow-lg text-xs sm:text-sm font-medium whitespace-nowrap flex-shrink-0 relative ${
                     selectedCategory === 'Lesson Teacher' 
-                      ? 'bg-gradient-to-r from-[#1d4ed8] to-[#0f766e] text-white' 
-                      : 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] hover:from-[#1d4ed8] hover:to-[#0f766e] text-white'
-                  }`}
-                >
+                    ? 'bg-gradient-to-r from-[#1d4ed8] to-[#0f766e] text-white' 
+                    : 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] hover:from-[#1d4ed8] hover:to-[#0f766e] text-white'
+                }`}
+              >
                   <span>Lesson Teacher</span>
                   <ArrowRight size={12} className="sm:w-4 sm:h-4" />
                   <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs px-1 sm:px-2 py-0.5 rounded-full">NEW</span>
-                </button>
+              </button>
               </div>
             </div>
 
@@ -471,46 +471,107 @@ export default function Home() {
 
    
 
-      {/* Scrolling marquee of categories */}
-      <section className="relative mt-20 overflow-hidden">
+      {/* Manual Scroll Categories */}
+      <section className="relative mt-20">
         <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent to-slate-900/5 dark:to-slate-50/[.02]" />
         
-        {/* First marquee */}
-        <div className="flex gap-8 animate-marquee">
-          {[...categories, ...categories, ...categories].map(({ label, image }, i) => (
-            <div key={i} className="flex items-center gap-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm rounded-2xl px-4 py-3 shadow-lg border border-white/30 dark:border-white/10 min-w-fit">
-              <div className="relative w-10 h-10 rounded-full overflow-hidden">
-                <Image
-                  src={image}
-                  alt={label}
-                  fill
-                  className="object-cover"
-                />
+        {/* Scroll Controls */}
+        <div className="flex items-center justify-between mb-6 px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-[#2563EB] to-[#14B8A6] bg-clip-text text-transparent">
+            Popular Services
+          </h2>
+          
+          {/* Desktop Scroll Arrows */}
+          <div className="hidden sm:flex items-center gap-2">
+            <button
+              onClick={() => {
+                const container = document.getElementById('categories-scroll');
+                if (container) {
+                  container.scrollBy({ left: -300, behavior: 'smooth' });
+                }
+              }}
+              className="p-2 rounded-full bg-gradient-to-r from-[#2563EB] to-[#14B8A6] shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
+              aria-label="Scroll left"
+            >
+              <ArrowRight size={20} className="text-white rotate-180" />
+            </button>
+            <button
+              onClick={() => {
+                const container = document.getElementById('categories-scroll');
+                if (container) {
+                  container.scrollBy({ left: 300, behavior: 'smooth' });
+                }
+              }}
+              className="p-2 rounded-full bg-gradient-to-r from-[#2563EB] to-[#14B8A6] shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
+              aria-label="Scroll right"
+            >
+              <ArrowRight size={20} className="text-white" />
+            </button>
               </div>
-              <span className="text-blue-600 dark:text-blue-400 text-lg font-semibold whitespace-nowrap">
-                {label}
-              </span>
             </div>
-          ))}
+
+        {/* Scrollable Categories Container */}
+        <div className="relative">
+          {/* Mobile Scroll Hint */}
+          <div className="sm:hidden text-center mb-4">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Swipe to explore more services
+            </p>
         </div>
 
-        {/* Second marquee (offset for seamless loop) */}
-        <div className="flex gap-8 animate-marquee-reverse mt-4">
-          {[...categories, ...categories, ...categories].map(({ label, image }, i) => (
-            <div key={`reverse-${i}`} className="flex items-center gap-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm rounded-2xl px-4 py-3 shadow-lg border border-white/30 dark:border-white/10 min-w-fit">
-              <div className="relative w-10 h-10 rounded-full overflow-hidden">
-                <Image
-                  src={image}
-                  alt={label}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-              <span className="text-blue-600 dark:text-blue-400 text-lg font-semibold whitespace-nowrap">
-                {label}
-              </span>
+          {/* Categories Scroll Container */}
+          <div 
+            id="categories-scroll"
+            className="flex gap-6 overflow-x-auto scrollbar-hide px-4 sm:px-6 lg:px-8 pb-4"
+            style={{ scrollSnapType: 'x mandatory' }}
+          >
+            {categories.map(({ label, image }, i) => (
+              <div 
+                key={i} 
+                className="group cursor-pointer bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-xl hover:shadow-2xl border border-slate-200/50 dark:border-slate-700/50 min-w-[280px] transition-all duration-500 hover:-translate-y-2 hover:scale-105 flex-shrink-0"
+                onClick={() => handleCategorySelect(label)}
+                style={{ scrollSnapAlign: 'start' }}
+              >
+                {/* Service Header */}
+                <div className="bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-2xl px-4 py-3 mb-4">
+                  <h3 className="text-white font-bold text-lg text-center">
+                    {label}
+                  </h3>
+                </div>
+                
+                {/* Service Illustration */}
+                <div className="relative h-40 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 rounded-2xl overflow-hidden group-hover:from-blue-100 group-hover:to-purple-100 dark:group-hover:from-blue-900/30 dark:group-hover:to-purple-900/30 transition-all duration-500">
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="relative w-28 h-28 bg-white/90 dark:bg-slate-800/90 rounded-2xl shadow-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+                      <Image
+                        src={image}
+                        alt={label}
+                        width={60}
+                        height={60}
+                        className="object-cover rounded-xl"
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Decorative elements */}
+                  <div className="absolute top-2 right-2 w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full opacity-60 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  <div className="absolute bottom-2 left-2 w-6 h-6 bg-gradient-to-br from-pink-400 to-rose-500 rounded-full opacity-60 group-hover:opacity-100 transition-opacity duration-500"></div>
+                </div>
+                
+                {/* Service Description */}
+                <div className="mt-4 text-center">
+                  <p className="text-slate-600 dark:text-slate-400 text-sm font-medium">
+                    Professional {label.toLowerCase()} services
+                  </p>
+                  <div className="mt-2 flex items-center justify-center space-x-1">
+                    <div className="w-2 h-2 bg-[#2563EB] rounded-full"></div>
+                    <div className="w-2 h-2 bg-[#14B8A6] rounded-full"></div>
+                    <div className="w-2 h-2 bg-[#0EA5E9] rounded-full"></div>
+                  </div>
+                </div>
             </div>
           ))}
+          </div>
         </div>
       </section>
 
@@ -739,90 +800,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* How it works - circular cycle */}
-      <section id="how" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-20">
-        <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-slate-50">How it works</h2>
-        <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-          {/* Cycle diagram */}
-          <div className="relative mx-auto h-[22rem] w-[22rem] sm:h-[26rem] sm:w-[26rem]">
-            {/* Gradient ring */}
-            <div className="absolute inset-0 rounded-full p-[10px]">
-              <div className="absolute inset-0 rounded-full opacity-80" style={{ background: "conic-gradient(#2563EB, #14B8A6, #2563EB)", filter: "blur(2px)" }} />
-              <div className="relative inset-0 h-full w-full rounded-full overflow-hidden border border-white/30 dark:border-white/10">
-                <Image
-                  src={heroImages2[0]}
-                  alt="How it works"
-                  fill
-                  priority
-                  className="object-cover"
-                />
-              </div>
-            </div>
-
-            {/* Step markers fixed around the ring */}
-            <div className="absolute inset-0">
-              <div className="absolute -top-6 left-1/2 -translate-x-1/2">
-                <StepChip icon={<Search className="text-blue-600" size={18} />} label="Pick a service" />
-              </div>
-              <div className="absolute top-1/2 -right-5 -translate-y-1/2">
-                <StepChip icon={<ShieldCheck className="text-blue-700" size={18} />} label="Book securely" />
-              </div>
-              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2">
-                <StepChip icon={<Star className="text-indigo-600" size={18} />} label="Rate & repeat" />
-              </div>
-              <div className="absolute top-1/2 -left-6 -translate-y-1/2">
-                <StepChip icon={<Sparkles className="text-blue-800" size={18} />} label="Enjoy quality" />
-              </div>
-            </div>
-
-            {/* Center label */}
-            {/* <div className="absolute inset-0 grid place-items-center">
-              <div className="text-center">
-                <p className="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">Cycle</p>
-                <p className="text-lg font-extrabold text-slate-900 dark:text-slate-50">Choose → Book → Review</p>
-              </div>
-            </div> */}
-          </div>
-
-          {/* Explanations list */}
-          <div className="space-y-4">
-            {[
-              {
-                title: 'Pick a service',
-                desc: 'Choose from verified providers across plumbing, electrical, cleaning and more.',
-                Icon: Search,
-                accent: 'from-blue-500 to-blue-600',
-                text: 'text-blue-600'
-              },
-              {
-                title: 'Book securely',
-                desc: 'Secure booking with verified providers and transparent pricing.',
-                Icon: ShieldCheck,
-                accent: 'from-blue-600 to-indigo-600',
-                text: 'text-blue-700'
-              },
-              {
-                title: 'Rate & repeat',
-                desc: 'Great experience? Leave a review and rebook your favorite pro in one tap.',
-                Icon: Star,
-                accent: 'from-indigo-500 to-blue-700',
-                text: 'text-indigo-600'
-              }
-            ].map(({ title, desc, Icon, accent, text }, i) => (
-              <div key={i} className="relative overflow-hidden rounded-2xl border border-blue-200/30 dark:border-blue-400/20 bg-white/60 dark:bg-slate-900/50 backdrop-blur-xl p-5 shadow">
-                <div className={`absolute -inset-px opacity-10 bg-gradient-to-r ${accent}`} />
-                <div className="relative flex items-start gap-4">
-                  <div className={`shrink-0 rounded-xl bg-gradient-to-br ${accent} p-2 text-white shadow`}> <Icon size={18} /> </div>
-                  <div>
-                    <h3 className={`font-semibold ${text}`}>{title}</h3>
-                    <p className="text-sm text-slate-600 dark:text-slate-300">{desc}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+    
 
 
       {/* CTA band */}
@@ -867,10 +845,10 @@ export default function Home() {
       </section>
 
       {/* FAQ Section */}
-      <FAQComponent />
+      {/* <FAQComponent /> */}
 
       {/* App Download (coming soon) */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-10">
+      {/* <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-10">
         <div className="relative overflow-hidden rounded-3xl border border-white/30 dark:border-white/10 bg-white/60 dark:bg-slate-900/50 backdrop-blur-xl p-8 shadow flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="absolute -inset-px opacity-10 bg-gradient-to-r from-[#2563EB] to-[#14B8A6]" />
           <div className="relative">
@@ -897,7 +875,7 @@ export default function Home() {
             </button>
           </div>
         </div>
-      </section>
+      </section> */}
     </div>
   );
 }
