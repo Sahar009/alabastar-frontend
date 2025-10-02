@@ -5,7 +5,10 @@ import {
   Search, MapPin, Star, Filter, User, Award, Clock, Map, List,
   Wrench, Droplets, Zap as ZapIcon, Sparkles, Package, Snowflake, Hammer,
   Palette, Bug, Shirt, Square, Video, Sprout, Settings, Key, Sofa,
-  Navigation, Loader2, CheckCircle, AlertCircle, X, Edit3, Check
+  Navigation, Loader2, CheckCircle, AlertCircle, X, Edit3, Check,
+  Users, Lightbulb,
+  Shield,
+  Zap
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { Provider } from "../../types/provider";
@@ -648,7 +651,7 @@ export default function ProvidersPage() {
                 </div>
                 <div className="flex-1">
                   <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
-                    Find Your Perfect Service Provider
+                    Find Your Perfect Product/Service Provider
                 </h2>
                   <p className="text-slate-600 dark:text-slate-400 text-base">
                     Discover skilled professionals ready to help you in minutes
@@ -703,23 +706,43 @@ export default function ProvidersPage() {
                   onChange={handleSearchInputChange}
                   onFocus={handleSearchInputFocus}
                   onBlur={handleSearchInputBlur}
-                  className={`w-full pl-14 pr-12 py-4 border-2 border-slate-200 dark:border-slate-600 rounded-2xl bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm text-slate-900 dark:text-slate-100 transition-all text-base placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-0 shadow-lg hover:shadow-xl ${
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      handleSearchSubmit();
+                    }
+                  }}
+                  className={`w-full pl-14 pr-20 py-4 border-2 border-slate-200 dark:border-slate-600 rounded-2xl bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm text-slate-900 dark:text-slate-100 transition-all text-base placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-0 shadow-lg hover:shadow-xl ${
                     isInputFocused 
                       ? 'border-[#2563EB] shadow-xl shadow-[#2563EB]/20 bg-white dark:bg-slate-700' 
                       : 'hover:border-slate-300 dark:hover:border-slate-500'
                   }`}
                 />
-                {searchQuery && (
-              <button
+                
+                {/* Search Button */}
+                <button
+                  onClick={handleSearchSubmit}
+                  disabled={(!searchQuery.trim() && !selectedCategory) || isEditingLocation}
+                  className={`absolute right-4 top-1/2 transform -translate-y-1/2 w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                    (!searchQuery.trim() && !selectedCategory) || isEditingLocation
+                      ? 'bg-slate-200 dark:bg-slate-600 text-slate-400 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white hover:opacity-90 hover:scale-105 shadow-lg hover:shadow-xl'
+                  }`}
+                >
+                  <Search className="w-4 h-4" />
+                </button>
+                
+                {/* Clear Button - only show when there's text and search button is disabled */}
+                {searchQuery && ((!searchQuery.trim() && !selectedCategory) || isEditingLocation) && (
+                  <button
                     onClick={() => {
                       setSearchQuery('');
                       setShowSuggestions(false);
                       setSearchSuggestions([]);
                     }}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-slate-100 dark:bg-slate-600 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-all hover:bg-slate-200 dark:hover:bg-slate-500"
+                    className="absolute right-16 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-slate-100 dark:bg-slate-600 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-all hover:bg-slate-200 dark:hover:bg-slate-500"
                   >
                     <X className="w-4 h-4" />
-              </button>
+                  </button>
                 )}
               
                 {/* Enhanced Search Suggestions Dropdown */}
@@ -857,6 +880,155 @@ export default function ProvidersPage() {
             </div>
             </div>
           </div>
+
+          {/* How to Search Advert Section */}
+          <div className="relative bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 rounded-3xl shadow-2xl overflow-hidden mb-8">
+            {/* Background Image */}
+            <div className="absolute inset-0">
+              <img
+                src="/images/search-guide-bg.jpg"
+                alt="Search Guide Background"
+                className="w-full h-full object-cover opacity-20"
+              />
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-900/80 via-blue-900/80 to-indigo-900/80"></div>
+            </div>
+            
+            {/* Content */}
+            <div className="relative z-10 p-8 sm:p-12">
+              <div className="max-w-4xl mx-auto">
+                {/* Header */}
+                <div className="text-center mb-12">
+                  <div className="inline-flex items-center space-x-3 mb-6">
+                    <div className="w-12 h-12 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-2xl flex items-center justify-center shadow-xl">
+                      <Search className="w-6 h-6 text-white" />
+                    </div>
+                    <h2 className="text-3xl sm:text-4xl font-bold text-white">
+                      How to Find Your Perfect Provider
+                    </h2>
+                  </div>
+                  <p className="text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed">
+                    Follow these simple steps to connect with skilled professionals in your area
+                  </p>
+                </div>
+
+                {/* Steps */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  {/* Step 1 */}
+                  <div className="text-center group">
+                    <div className="relative mb-6">
+                      <div className="w-32 h-32 rounded-3xl overflow-hidden shadow-2xl mx-auto group-hover:scale-110 transition-transform duration-300">
+                        <img
+                          src="/images/search.png"
+                          alt="Search and Select"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="absolute -top-2 -right-2 w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center shadow-lg">
+                        <Search className="w-5 h-5 text-slate-900" />
+                      </div>
+                    </div>
+                    <h3 className="text-xl font-bold text-white mb-3">Search & Select</h3>
+                    <p className="text-slate-300 leading-relaxed">
+                      Type what you need or choose from popular services. Our smart search finds the best matches.
+                    </p>
+                  </div>
+
+                  {/* Step 2 */}
+                  <div className="text-center group">
+                    <div className="relative mb-6">
+                      <div className="w-32 h-32 rounded-3xl overflow-hidden shadow-2xl mx-auto group-hover:scale-110 transition-transform duration-300">
+                        <img
+                          src="/images/browse.png"
+                          alt="Browse and Compare"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="absolute -top-2 -right-2 w-10 h-10 bg-green-400 rounded-full flex items-center justify-center shadow-lg">
+                        <MapPin className="w-5 h-5 text-white" />
+                      </div>
+                    </div>
+                    <h3 className="text-xl font-bold text-white mb-3">Browse & Compare</h3>
+                    <p className="text-slate-300 leading-relaxed">
+                      View provider profiles, ratings, and portfolios. Compare prices and availability.
+                    </p>
+                  </div>
+
+                  {/* Step 3 */}
+                  <div className="text-center group">
+                    <div className="relative mb-6">
+                      <div className="w-32 h-32 rounded-3xl overflow-hidden shadow-2xl mx-auto group-hover:scale-110 transition-transform duration-300">
+                        <img
+                          src="/images/book.png"
+                          alt="Book and Connect"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="absolute -top-2 -right-2 w-10 h-10 bg-purple-400 rounded-full flex items-center justify-center shadow-lg">
+                        <CheckCircle className="w-5 h-5 text-white" />
+                      </div>
+                    </div>
+                    <h3 className="text-xl font-bold text-white mb-3">Book & Connect</h3>
+                    <p className="text-slate-300 leading-relaxed">
+                      Book your service and connect directly with your chosen provider. Get started in minutes!
+                    </p>
+                  </div>
+                </div>
+
+                {/* Features */}
+                <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div className="text-center">
+                    <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                      <Clock className="w-6 h-6 text-[#14B8A6]" />
+                    </div>
+                    <h4 className="text-white font-semibold mb-2">Quick Response</h4>
+                    <p className="text-slate-400 text-sm">Get responses within minutes</p>
+                  </div>
+                  
+                  <div className="text-center">
+                    <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                      <Shield className="w-6 h-6 text-[#2563EB]" />
+                    </div>
+                    <h4 className="text-white font-semibold mb-2">Verified Providers</h4>
+                    <p className="text-slate-400 text-sm">All providers are background checked</p>
+                  </div>
+                  
+                  <div className="text-center">
+                    <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                      <Star className="w-6 h-6 text-yellow-400" />
+                    </div>
+                    <h4 className="text-white font-semibold mb-2">Quality Guaranteed</h4>
+                    <p className="text-slate-400 text-sm">5-star rated service providers</p>
+                  </div>
+                  
+                  <div className="text-center">
+                    <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                      <Zap className="w-6 h-6 text-orange-400" />
+                    </div>
+                    <h4 className="text-white font-semibold mb-2">Instant Booking</h4>
+                    <p className="text-slate-400 text-sm">Book services instantly online</p>
+                  </div>
+                </div>
+
+                {/* CTA */}
+                <div className="text-center mt-12">
+                  <button
+                    onClick={() => {
+                      const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement;
+                      if (searchInput) {
+                        searchInput.focus();
+                        searchInput.scrollIntoView({ behavior: 'smooth' });
+                      }
+                    }}
+                    className="inline-flex items-center space-x-3 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white px-8 py-4 rounded-2xl font-bold text-lg hover:opacity-90 transition-all duration-300 shadow-2xl hover:shadow-3xl hover:scale-105"
+                  >
+                    <Search className="w-5 h-5" />
+                    <span>Start Searching Now</span>
+                    <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -973,69 +1145,106 @@ export default function ProvidersPage() {
 
               {/* Radius Expansion Prompt */}
               {showRadiusExpansion && (
-                <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl p-4 sm:p-6 lg:p-8 mb-6 shadow-lg">
-                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-6">
-                    {/* Left Section - Icon and Content */}
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-4 flex-1">
-                      {/* Icon */}
-                      <div className="relative w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0">
-                        <div className="absolute inset-0 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full opacity-20 animate-pulse"></div>
-                        <div className="absolute inset-1 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full flex items-center justify-center">
-                          <Navigation className="w-5 h-5 sm:w-6 sm:h-6 text-white animate-bounce" />
+                <div className="bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 dark:from-amber-900/20 dark:via-orange-900/20 dark:to-yellow-900/20 border border-amber-200 dark:border-amber-800 rounded-3xl p-6 sm:p-8 lg:p-10 mb-8 shadow-2xl relative overflow-hidden">
+                  {/* Background Pattern */}
+                  <div className="absolute inset-0 opacity-5 dark:opacity-10">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full blur-2xl transform translate-x-16 -translate-y-16"></div>
+                    <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-orange-400 to-yellow-500 rounded-full blur-xl transform -translate-x-12 translate-y-12"></div>
+                  </div>
+                  
+                  <div className="relative z-10">
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 lg:gap-8">
+                      {/* Left Section - Enhanced Visual */}
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-6 flex-1">
+                        {/* Enhanced Icon with Image */}
+                        <div className="relative flex-shrink-0 w-70 h-70">
+                          <div className="w-[100%] h-[100%] rounded-3xl overflow-hidden shadow-2xl">
+                            <img
+                              src="/images/location.png"
+                              alt="Expand Search Radius"
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
+                            <Navigation className="w-4 h-4 text-white animate-bounce" />
+                          </div>
+                          <div className="absolute -bottom-1 -left-1 w-6 h-6 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-full flex items-center justify-center shadow-lg">
+                            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                          </div>
+                        </div>
+                        
+                        {/* Enhanced Content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center space-x-3 mb-4">
+                            <div className="w-8 h-8 bg-gradient-to-r from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
+                              <Users className="w-4 h-4 text-white" />
+                            </div>
+                            <h3 className="text-xl sm:text-2xl font-bold text-amber-900 dark:text-amber-100">
+                              Expand Your Search Options
+                            </h3>
+                          </div>
+                          
+                          {/* Enhanced Stats Card */}
+                          <div className="bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm rounded-2xl p-4 sm:p-5 mb-4 shadow-lg border border-amber-200/50 dark:border-amber-700/50">
+                            <div className="flex items-center space-x-3 mb-2">
+                              <div className="w-6 h-6 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-lg flex items-center justify-center">
+                                <Search className="w-3 h-3 text-white" />
+                              </div>
+                              <p className="text-amber-800 dark:text-amber-200 text-base sm:text-lg font-semibold">
+                                Current Results
+                              </p>
+                            </div>
+                            <p className="text-amber-800 dark:text-amber-200 text-sm sm:text-base lg:text-lg mb-2">
+                              We found <span className="font-bold text-[#2563EB] bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-lg">{searchResultsCount}</span> provider{searchResultsCount !== 1 ? 's' : ''} within <span className="font-bold text-[#14B8A6] bg-teal-50 dark:bg-teal-900/30 px-2 py-1 rounded-lg">{searchRadius}km</span>
+                            </p>
+                            {userLocation && (
+                              <div className="flex items-center space-x-2 text-amber-700 dark:text-amber-300 text-xs sm:text-sm">
+                                <MapPin className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                                <span className="truncate">near {userLocation.address}</span>
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div className="flex items-center space-x-3">
+                            <div className="w-6 h-6 bg-gradient-to-r from-orange-400 to-yellow-500 rounded-lg flex items-center justify-center">
+                              <Lightbulb className="w-3 h-3 text-white" />
+                            </div>
+                            <p className="text-amber-700 dark:text-amber-300 text-sm sm:text-base lg:text-lg">
+                              Expand the search radius to discover more providers?
+                            </p>
+                          </div>
                         </div>
                       </div>
                       
-                      {/* Content */}
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg sm:text-xl font-bold text-amber-900 dark:text-amber-100 mb-2">
-                          Limited providers in your area
-                        </h3>
-                        
-                        {/* Stats Card */}
-                        <div className="bg-white/60 dark:bg-slate-700/60 rounded-xl p-3 sm:p-4 mb-3">
-                          <p className="text-amber-800 dark:text-amber-200 text-sm sm:text-base lg:text-lg">
-                            We found <span className="font-bold text-[#2563EB]">{searchResultsCount}</span> provider{searchResultsCount !== 1 ? 's' : ''} within <span className="font-bold text-[#2563EB]">{searchRadius}km</span>
-                          </p>
-                          {userLocation && (
-                            <p className="text-amber-700 dark:text-amber-300 text-xs sm:text-sm flex items-center space-x-1 mt-1">
-                              <MapPin className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                              <span className="truncate">near {userLocation.address}</span>
-                            </p>
-                          )}
-                        </div>
-                        
-                        <div className="flex items-center space-x-2">
-                          <p className="text-amber-700 dark:text-amber-300 text-sm sm:text-base lg:text-lg">
-                            Would you like to expand the search radius to find more options?
-                          </p>
-                          <Navigation className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 dark:text-amber-400 animate-pulse flex-shrink-0" />
-                        </div>
+                      {/* Enhanced Action Buttons */}
+                      <div className="flex flex-col sm:flex-row lg:flex-col gap-3 sm:gap-4 lg:gap-4 w-full sm:w-auto lg:w-auto">
+                        <button
+                          onClick={() => setShowRadiusExpansion(false)}
+                          className="group px-6 sm:px-8 py-4 text-amber-700 dark:text-amber-300 hover:text-amber-900 dark:hover:text-amber-100 transition-all duration-300 font-semibold rounded-2xl hover:bg-amber-100 dark:hover:bg-amber-900/30 flex items-center justify-center space-x-3 w-full sm:w-auto lg:w-auto shadow-lg hover:shadow-xl hover:scale-105"
+                        >
+                          <X className="w-5 h-5 group-hover:rotate-90 transition-transform flex-shrink-0" />
+                          <span className="text-sm sm:text-base">Keep Current</span>
+                        </button>
+                        <button
+                          onClick={expandSearchRadius}
+                          className="group px-6 sm:px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-2xl font-semibold transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 flex items-center justify-center space-x-3 w-full sm:w-auto lg:w-auto"
+                        >
+                          <Navigation className="w-5 h-5 group-hover:scale-110 transition-transform flex-shrink-0" />
+                          <span className="text-sm sm:text-base">Expand to {Math.min(searchRadius + 5, 25)}km</span>
+                          <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                        </button>
                       </div>
-                    </div>
-                    
-                    {/* Right Section - Action Buttons */}
-                    <div className="flex flex-col sm:flex-row lg:flex-col gap-2 sm:gap-3 lg:gap-3 w-full sm:w-auto lg:w-auto">
-                      <button
-                        onClick={() => setShowRadiusExpansion(false)}
-                        className="group px-4 sm:px-6 py-3 text-amber-700 dark:text-amber-300 hover:text-amber-900 dark:hover:text-amber-100 transition-all duration-300 font-semibold rounded-xl hover:bg-amber-100 dark:hover:bg-amber-900/30 flex items-center justify-center space-x-2 w-full sm:w-auto lg:w-auto"
-                      >
-                        <X className="w-4 h-4 group-hover:rotate-90 transition-transform flex-shrink-0" />
-                        <span className="text-sm sm:text-base">Keep Current</span>
-                      </button>
-                      <button
-                        onClick={expandSearchRadius}
-                        className="group px-4 sm:px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 flex items-center justify-center space-x-2 w-full sm:w-auto lg:w-auto"
-                      >
-                        <Navigation className="w-4 h-4 group-hover:scale-110 transition-transform flex-shrink-0" />
-                        <span className="text-sm sm:text-base">Expand to {Math.min(searchRadius + 5, 25)}km</span>
-                      </button>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Providers List - 2 per row on larger screens */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Providers List - Dynamic layout based on count */}
+              <div className={`grid gap-8 ${
+                searchResults.length === 1 
+                  ? 'grid-cols-1 max-w-2xl mx-auto' 
+                  : 'grid-cols-1 lg:grid-cols-2'
+              }`}>
                 {searchResults.length > 0 ? (
                   searchResults.map((provider) => (
                   <div
@@ -1303,57 +1512,195 @@ export default function ProvidersPage() {
                 
                 ))
                 ) : (
-                  <div className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 p-8 text-center">
-                    <div className="flex flex-col items-center space-y-4">
-                      <div className="w-16 h-16 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full flex items-center justify-center">
-                        <Search className="w-8 h-8 text-white" />
+                  <div className="col-span-full flex justify-center">
+                    <div className="bg-gradient-to-br from-white via-slate-50 to-blue-50 dark:from-slate-800 dark:via-slate-900 dark:to-blue-900/20 rounded-3xl shadow-2xl border border-slate-200/50 dark:border-slate-700/50 p-8 text-center max-w-lg w-full relative overflow-hidden">
+                      {/* Background Pattern */}
+                      <div className="absolute inset-0 opacity-5 dark:opacity-10">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#2563EB] to-[#14B8A6] rounded-full blur-2xl transform translate-x-16 -translate-y-16"></div>
+                        <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-[#14B8A6] to-[#2563EB] rounded-full blur-xl transform -translate-x-12 translate-y-12"></div>
                       </div>
-                      <div>
-                        <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                          No providers found
-                        </h3>
-                <p className="text-slate-600 dark:text-slate-400">
-                          Try adjusting your search or expanding the radius
-                </p>
+                      
+                      <div className="relative z-10 flex flex-col items-center space-y-6">
+                        {/* Enhanced 2D Image Section */}
+                        <div className="relative w-32 h-32">
+                          <div className="w-full h-full rounded-2xl overflow-hidden shadow-xl border-4 border-white dark:border-slate-700">
+                            <img
+                              src="/images/sad.png"
+                              alt="No providers found"
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          {/* Overlay with animated search icon */}
+                          <div className="absolute inset-0 bg-black/30 rounded-2xl flex items-center justify-center">
+                            <div className="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center shadow-lg animate-pulse">
+                              <Search className="w-5 h-5 text-slate-600 animate-bounce" />
+                            </div>
+                          </div>
+                          {/* Floating elements */}
+                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-full flex items-center justify-center animate-bounce">
+                            <MapPin className="w-2 h-2 text-white" />
+                          </div>
+                          <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center animate-bounce" style={{animationDelay: '0.5s'}}>
+                            <Users className="w-1.5 h-1.5 text-white" />
+                          </div>
+                        </div>
+                        
+                        {/* Enhanced Content */}
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-center space-x-2">
+                            <div className="w-8 h-8 bg-gradient-to-r from-amber-400 to-orange-500 rounded-lg flex items-center justify-center">
+                              <AlertCircle className="w-4 h-4 text-white" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                              No providers found
+                            </h3>
+                          </div>
+                          
+                          <div className="bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-slate-200/50 dark:border-slate-600/50">
+                            <p className="text-slate-600 dark:text-slate-400 text-sm mb-3">
+                              We couldn't find any providers matching your search criteria
+                            </p>
+                            {userLocation && (
+                              <div className="flex items-center justify-center space-x-2 text-xs text-slate-500 dark:text-slate-400">
+                                <MapPin className="w-3 h-3" />
+                                <span>near {userLocation.address}</span>
+                              </div>
+                            )}
+                          </div>
+                          
+                          <p className="text-slate-600 dark:text-slate-400 text-sm flex items-center justify-center space-x-2">
+                            <span>Try these suggestions:</span>
+                            <Sparkles className="w-4 h-4 text-yellow-500" />
+                          </p>
+                        </div>
+                        
+                        {/* Action Buttons */}
+                        <div className="flex flex-col sm:flex-row gap-3 w-full">
+                          <button
+                            onClick={resetSearch}
+                            className="group px-6 py-3 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white rounded-xl hover:opacity-90 transition-all duration-300 font-semibold text-sm shadow-lg hover:shadow-xl hover:scale-105 flex items-center justify-center space-x-2 flex-1"
+                          >
+                            <div className="w-4 h-4 bg-white/20 rounded flex items-center justify-center">
+                              <Search className="w-3 h-3 group-hover:rotate-12 transition-transform" />
+                            </div>
+                            <span>Try Different Search</span>
+                            <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
+                          </button>
+                          
+                          <button
+                            onClick={expandSearchRadius}
+                            className="group px-6 py-3 bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-600 transition-all duration-300 font-semibold text-sm shadow-md hover:shadow-lg hover:scale-105 flex items-center justify-center space-x-2 flex-1"
+                          >
+                            <div className="w-4 h-4 bg-gradient-to-r from-[#2563EB]/20 to-[#14B8A6]/20 rounded flex items-center justify-center">
+                              <Navigation className="w-3 h-3 group-hover:scale-110 transition-transform" />
+                            </div>
+                            <span>Expand Area</span>
+                          </button>
+                        </div>
+                        
+                        {/* Quick Tips */}
+                        <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/20 dark:via-indigo-900/20 dark:to-purple-900/20 rounded-xl p-4 border border-blue-200/50 dark:border-blue-800/50 w-full">
+                          <div className="flex items-center justify-center space-x-2 mb-3">
+                            <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                              <Lightbulb className="w-3 h-3 text-white" />
+                            </div>
+                            <h4 className="text-sm font-bold text-blue-900 dark:text-blue-100">Quick Tips</h4>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 gap-2 text-xs text-blue-800 dark:text-blue-200">
+                            <div className="flex items-center space-x-2">
+                              <div className="w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                <span className="text-white text-xs font-bold">1</span>
+                              </div>
+                              <span>Try broader search terms</span>
+                            </div>
+                            
+                            <div className="flex items-center space-x-2">
+                              <div className="w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                <span className="text-white text-xs font-bold">2</span>
+                              </div>
+                              <span>Expand your search radius</span>
+                            </div>
+                            
+                            <div className="flex items-center space-x-2">
+                              <div className="w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                <span className="text-white text-xs font-bold">3</span>
+                              </div>
+                              <span>Check back later for new providers</span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
-              </div>
-            )}
+                  </div>
+                )}
           </div>
             </>
           )}
         </div>
 
-        {/* No Results Modal */}
+        {/* Enhanced No Results Modal - Compact */}
         {showNoResultsModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-lg w-full mx-4">
-              <div className="p-6">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-gradient-to-br from-white via-slate-50 to-blue-50 dark:from-slate-800 dark:via-slate-900 dark:to-blue-900/20 rounded-3xl shadow-2xl max-w-lg w-full mx-4 relative overflow-hidden">
+              {/* Background Pattern */}
+              <div className="absolute inset-0 opacity-5 dark:opacity-10">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#2563EB] to-[#14B8A6] rounded-full blur-xl transform translate-x-12 -translate-y-12"></div>
+                <div className="absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-tr from-[#14B8A6] to-[#2563EB] rounded-full blur-lg transform -translate-x-8 translate-y-8"></div>
+              </div>
+              
+              <div className="relative z-10 p-6">
                 {/* Close Button */}
                 <div className="flex justify-end mb-4">
                   <button
                     onClick={closeNoResultsModal}
-                    className="w-7 h-7 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+                    className="w-8 h-8 bg-slate-100/80 dark:bg-slate-700/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-600 transition-all duration-300 hover:scale-110 shadow-lg"
                   >
                     <X className="w-4 h-4 text-slate-600 dark:text-slate-400" />
                   </button>
                 </div>
 
-                {/* Animated Icon */}
-                <div className="relative w-16 h-16 mx-auto mb-4">
-                  <div className="absolute inset-0 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full opacity-20 animate-pulse"></div>
-                  <div className="absolute inset-1 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full flex items-center justify-center">
-                    <Search className="w-6 h-6 text-white animate-bounce" />
+                {/* Compact 2D Image Section */}
+                <div className="text-center mb-6">
+                  {/* 2D Image Container */}
+                  <div className="relative w-40 h-40 mx-auto mb-4">
+                    <div className="w-full h-full rounded-2xl overflow-hidden shadow-xl border-4 border-white dark:border-slate-700">
+                      <img
+                        src="/images/sad.png"
+                        alt="No results found"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    {/* Overlay with animated search icon */}
+                    <div className="absolute inset-0 bg-black/30 rounded-2xl flex items-center justify-center">
+                      <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center shadow-lg animate-pulse">
+                        <Search className="w-6 h-6 text-slate-600 animate-bounce" />
+                      </div>
+                    </div>
+                    {/* Floating elements */}
+                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-full flex items-center justify-center animate-bounce">
+                      <MapPin className="w-2.5 h-2.5 text-white" />
+                    </div>
+                    <div className="absolute -bottom-1 -left-1 w-4 h-4 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center animate-bounce" style={{animationDelay: '0.5s'}}>
+                      <Users className="w-2 h-2 text-white" />
+                    </div>
                   </div>
-                </div>
-                
-                {/* Friendly Message */}
-                <div className="mb-6 text-center">
+                  
+                  {/* Compact Title */}
                   <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-3">
                     No {getCategoryLabel(selectedCategory) || 'providers'} found
                   </h3>
-                  <div className="bg-slate-50 dark:bg-slate-700 rounded-xl p-4 mb-4">
-                    <p className="text-sm text-slate-700 dark:text-slate-300 mb-2">
+                  
+                  {/* Compact Message Card */}
+                  <div className="bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm rounded-xl p-4 mb-4 shadow-lg border border-slate-200/50 dark:border-slate-600/50">
+                    <div className="flex items-center justify-center space-x-2 mb-2">
+                      <div className="w-6 h-6 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-lg flex items-center justify-center">
+                        <AlertCircle className="w-3 h-3 text-white" />
+                      </div>
+                      <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Search Results</span>
+                    </div>
+                    
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mb-2">
                       {selectedCategory ? (
                         <>
                           No available <span className="font-semibold text-[#2563EB]">{getCategoryLabel(selectedCategory).toLowerCase()}</span> in your area
@@ -1364,57 +1711,80 @@ export default function ProvidersPage() {
                         </>
                       )}
                     </p>
+                    
                     {userLocation && (
-                      <p className="text-slate-600 dark:text-slate-400 text-xs flex items-center justify-center space-x-1">
+                      <div className="flex items-center justify-center space-x-1 text-xs text-slate-500 dark:text-slate-400">
                         <MapPin className="w-3 h-3" />
                         <span>near {userLocation.address}</span>
-                      </p>
+                      </div>
                     )}
                   </div>
-                  <p className="text-slate-600 dark:text-slate-400 text-sm">
-                    Expand your search? 🌟
+                  
+                  <p className="text-slate-600 dark:text-slate-400 text-sm flex items-center justify-center space-x-2">
+                    <span>Expand your search?</span>
+                    <Sparkles className="w-3 h-3 text-yellow-500" />
                   </p>
                 </div>
                 
-                {/* Action Buttons */}
-                <div className="flex flex-col gap-3 mb-6">
+                {/* Compact Action Buttons */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                   <button
                     onClick={resetSearch}
-                    className="group px-6 py-3 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white rounded-xl hover:opacity-90 transition-all duration-300 font-semibold text-sm shadow-lg hover:shadow-xl hover:scale-105 flex items-center justify-center space-x-2"
+                    className="group px-4 py-3 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white rounded-xl hover:opacity-90 transition-all duration-300 font-semibold text-xs shadow-lg hover:shadow-xl hover:scale-105 flex items-center justify-center space-x-2"
                   >
-                    <Search className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+                    <div className="w-4 h-4 bg-white/20 rounded flex items-center justify-center">
+                      <Search className="w-3 h-3 group-hover:rotate-12 transition-transform" />
+                    </div>
                     <span>Try Different Search</span>
+                    <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
                   </button>
+                  
                   <button
                     onClick={expandSearchRadius}
-                    className="group px-6 py-3 bg-white dark:bg-slate-700 border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-600 transition-all duration-300 font-semibold text-sm shadow-lg hover:shadow-xl hover:scale-105 flex items-center justify-center space-x-2"
+                    className="group px-4 py-3 bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-600 transition-all duration-300 font-semibold text-xs shadow-md hover:shadow-lg hover:scale-105 flex items-center justify-center space-x-2"
                   >
-                    <Navigation className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                    <div className="w-4 h-4 bg-gradient-to-r from-[#2563EB]/20 to-[#14B8A6]/20 rounded flex items-center justify-center">
+                      <Navigation className="w-3 h-3 group-hover:scale-110 transition-transform" />
+                    </div>
                     <span>Expand Search Area</span>
                   </button>
                 </div>
                 
-                {/* Helpful Tips - Compact */}
-                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4">
-                  <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-3 flex items-center justify-center space-x-2">
-                    <Sparkles className="w-4 h-4" />
-                    <span>Search Tips</span>
-                  </h4>
+                {/* Compact Helpful Tips */}
+                <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/20 dark:via-indigo-900/20 dark:to-purple-900/20 rounded-xl p-4 border border-blue-200/50 dark:border-blue-800/50">
+                  <div className="flex items-center justify-center space-x-2 mb-3">
+                    <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                      <Lightbulb className="w-3 h-3 text-white" />
+                    </div>
+                    <h4 className="text-sm font-bold text-blue-900 dark:text-blue-100">Search Tips</h4>
+                  </div>
+                  
                   <div className="grid grid-cols-1 gap-2 text-xs text-blue-800 dark:text-blue-200">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                    <div className="flex items-start space-x-2">
+                      <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-white text-xs font-bold">1</span>
+                      </div>
                       <span>Try broader terms like "plumber" or "electrician"</span>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                    
+                    <div className="flex items-start space-x-2">
+                      <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-white text-xs font-bold">2</span>
+                      </div>
                       <span>Search for specific services like "pipe repair"</span>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                    
+                    <div className="flex items-start space-x-2">
+                      <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-white text-xs font-bold">3</span>
+                      </div>
                       <span>Expand your search radius for more options</span>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                    
+                    <div className="flex items-start space-x-2">
+                      <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-white text-xs font-bold">4</span>
+                      </div>
                       <span>Check back later for new providers</span>
                     </div>
                   </div>
