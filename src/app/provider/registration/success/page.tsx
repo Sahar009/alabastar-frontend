@@ -1,10 +1,10 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { CheckCircle, Loader2, AlertCircle } from "lucide-react";
 
-export default function RegistrationSuccessPage() {
+function RegistrationSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
@@ -144,3 +144,26 @@ export default function RegistrationSuccessPage() {
     </div>
   );
 }
+
+export default function RegistrationSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8 text-center">
+          <div className="w-16 h-16 mx-auto mb-6 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
+            <Loader2 className="w-8 h-8 text-blue-600 dark:text-blue-400 animate-spin" />
+          </div>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">
+            Loading...
+          </h1>
+          <p className="text-slate-600 dark:text-slate-400">
+            Please wait while we prepare your page...
+          </p>
+        </div>
+      </div>
+    }>
+      <RegistrationSuccessContent />
+    </Suspense>
+  );
+}
+
