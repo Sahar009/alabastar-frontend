@@ -1228,19 +1228,19 @@ export default function ProvidersPage() {
                         </div>
                         
                         {/* Action Buttons */}
-                        <div className="flex gap-3">
+                        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                           <button
                             onClick={() => handleBookProvider(provider)}
                             disabled={!provider.isAvailable}
-                            className={`flex-1 py-2 px-4 rounded-lg font-semibold text-sm transition-all duration-300 ${
+                            className={`flex-1 py-2.5 sm:py-2 px-3 sm:px-4 rounded-lg font-semibold text-xs sm:text-sm transition-all duration-300 ${
                               provider.isAvailable
                                 ? 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white hover:opacity-90 hover:scale-105 shadow-lg hover:shadow-xl'
                                 : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed'
                             }`}
                           >
                             {provider.isAvailable ? (
-                              <div className="flex items-center justify-center space-x-2">
-                                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                              <div className="flex items-center justify-center space-x-1 sm:space-x-2">
+                                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full animate-pulse"></div>
                                 <span>Book Now</span>
                               </div>
                             ) : (
@@ -1249,7 +1249,7 @@ export default function ProvidersPage() {
                           </button>
                           <button
                             onClick={() => handleViewProfile(provider)}
-                            className="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-all duration-300 text-sm font-semibold shadow-md hover:shadow-lg hover:scale-105"
+                            className="px-3 sm:px-4 py-2.5 sm:py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-all duration-300 text-xs sm:text-sm font-semibold shadow-md hover:shadow-lg hover:scale-105"
                           >
                             View Profile
                           </button>
@@ -1461,6 +1461,33 @@ export default function ProvidersPage() {
             </div>
           </div>
         </div>
+
+        {/* Booking Modal */}
+        {showBookingModal && selectedProvider && (
+          <BookingModal
+            provider={selectedProvider!}
+            isOpen={showBookingModal}
+            onClose={() => {
+              setShowBookingModal(false);
+              setSelectedProvider(null);
+            }}
+          />
+        )}
+
+        {/* Provider Profile Modal */}
+        {showProfileModal && profileProvider && (
+          <ProviderProfileModal
+            provider={profileProvider}
+            isOpen={showProfileModal}
+            onClose={handleCloseProfileModal}
+            onBook={() => {
+              setShowProfileModal(false);
+              setSelectedProvider(profileProvider);
+              setShowBookingModal(true);
+            }}
+            onContact={handleContactProvider}
+          />
+        )}
       </div>
     );
   }
@@ -2228,7 +2255,7 @@ export default function ProvidersPage() {
         {/* Booking Modal */}
         {showBookingModal && selectedProvider && (
           <BookingModal
-            provider={selectedProvider}
+            provider={selectedProvider!}
             isOpen={showBookingModal}
             onClose={() => {
               setShowBookingModal(false);
@@ -2251,8 +2278,8 @@ export default function ProvidersPage() {
             onContact={handleContactProvider}
           />
         )}
-    </div>
-  );
+      </div>
+    );
   }
 
   return null;
