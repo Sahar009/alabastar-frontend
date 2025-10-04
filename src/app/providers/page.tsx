@@ -8,7 +8,8 @@ import {
   Navigation, Loader2, CheckCircle, AlertCircle, X, Edit3, Check,
   Users, Lightbulb,
   Shield,
-  Zap
+  Zap,
+  Camera
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { Provider } from "../../types/provider";
@@ -77,6 +78,9 @@ export default function ProvidersPage() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [showNoResultsModal, setShowNoResultsModal] = useState(false);
+  const [allProviders, setAllProviders] = useState<Provider[]>([]);
+  const [isLoadingProviders, setIsLoadingProviders] = useState(false);
+  const [ratingFilter, setRatingFilter] = useState<number | null>(null);
   
   // Existing state
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -208,6 +212,79 @@ export default function ProvidersPage() {
       detectUserLocation();
     }
   }, []); // Remove dependencies to prevent re-running
+
+  // Fetch all providers when location is available
+  useEffect(() => {
+    if (userLocation) {
+      fetchAllProviders();
+    }
+  }, [userLocation]);
+
+  const fetchAllProviders = async () => {
+    if (!userLocation) return;
+    
+    setIsLoadingProviders(true);
+    try {
+      const raw = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const base = raw.endsWith('/api') ? raw : `${raw.replace(/\/$/, '')}/api`;
+      
+      // Fetch all providers
+      const response = await fetch(`${base}/providers/search?search=&location=${userLocation.city}`);
+      const data = await response.json();
+      
+      console.log('Fetched providers:', data);
+      
+      if (data.success && data.data?.providers) {
+        const providers: Provider[] = data.data.providers.map((provider: any) => ({
+          id: provider.id,
+          user: {
+            fullName: provider.User?.fullName || 'Provider',
+            email: provider.User?.email || '',
+            phone: provider.User?.phone || '',
+            avatarUrl: provider.User?.avatarUrl || ''
+          },
+          businessName: provider.businessName || provider.User?.fullName || 'Business',
+          category: provider.category,
+          subcategories: provider.subcategories || [],
+          locationCity: provider.locationCity || userLocation.city,
+          locationState: provider.locationState || userLocation.state,
+          ratingAverage: provider.ratingAverage || 4.5,
+          ratingCount: provider.ratingCount || 0,
+          startingPrice: provider.startingPrice || 5000,
+          hourlyRate: provider.hourlyRate || 2000,
+          bio: provider.bio || `Professional ${provider.category} service provider`,
+          verificationStatus: provider.verificationStatus || 'verified',
+          isAvailable: provider.isAvailable !== false,
+          estimatedArrival: provider.estimatedArrival || '30 mins',
+          yearsOfExperience: provider.yearsOfExperience || 3,
+          brandImages: provider.portfolio || provider.brandImages || []
+        }));
+        
+        // Filter providers by location (within 25km radius)
+        const filteredProviders = providers.filter(provider => {
+          // For now, we'll show all providers since we don't have exact coordinates
+          // In a real app, you'd calculate distance using lat/lng
+          return true;
+        });
+        
+        setAllProviders(filteredProviders);
+        setSearchResults(filteredProviders);
+        setSearchResultsCount(filteredProviders.length);
+      } else {
+        console.log('No providers found or API error');
+        setAllProviders([]);
+        setSearchResults([]);
+        setSearchResultsCount(0);
+      }
+    } catch (error) {
+      console.error('Error fetching providers:', error);
+      setAllProviders([]);
+      setSearchResults([]);
+      setSearchResultsCount(0);
+    } finally {
+      setIsLoadingProviders(false);
+    }
+  };
 
   const detectUserLocation = async () => {
     if (!navigator.geolocation) {
@@ -626,260 +703,614 @@ export default function ProvidersPage() {
               </div>
             </div>
             
-            
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      
-
-          {/* Enhanced Search Section */}
-          <div className="bg-gradient-to-br from-white via-slate-50 to-blue-50 dark:from-slate-800 dark:via-slate-900 dark:to-blue-900/20 rounded-3xl shadow-2xl border border-slate-200/50 dark:border-slate-700/50 p-8 mb-8 relative overflow-hidden">
-            {/* Background Pattern */}
-            <div className="absolute inset-0 opacity-5 dark:opacity-10">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-[#2563EB] to-[#14B8A6] rounded-full blur-3xl transform translate-x-32 -translate-y-32"></div>
-              <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-[#14B8A6] to-[#2563EB] rounded-full blur-2xl transform -translate-x-24 translate-y-24"></div>
-            </div>
-            
-            {/* Header with Enhanced Design */}
-            <div className="relative z-10">
-              <div className="flex items-center space-x-4 mb-6">
-                <div className="relative">
-                  <div className="w-14 h-14 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-2xl flex items-center justify-center shadow-xl">
-                    <Search className="w-7 h-7 text-white" />
-                  </div>
-                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
-                    <Sparkles className="w-3 h-3 text-white" />
-                  </div>
-                </div>
-                <div className="flex-1">
-                  <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
-                    Find Your Perfect Product/Service Provider
-                </h2>
-                  <p className="text-slate-600 dark:text-slate-400 text-base">
-                    Discover skilled professionals ready to help you in minutes
-                </p>
-              </div>
-            </div>
-            
-            {/* Enhanced Location Context */}
-            {userLocation && (
-              <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/20 dark:via-indigo-900/20 dark:to-purple-900/20 rounded-2xl border border-blue-200/50 dark:border-blue-800/50 shadow-lg">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="relative">
-                      <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                        <MapPin className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                        <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Searching near:</p>
-                      <p className="text-base font-semibold text-slate-900 dark:text-slate-100">
-                        {userLocation.address}
-                      </p>
-                    </div>
-                  </div>
-                  {isEditingLocation && (
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full animate-pulse"></div>
-                      <span className="px-3 py-1.5 bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 text-amber-700 dark:text-amber-300 rounded-full text-sm font-medium shadow-sm">
-                        Editing location
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-            
-            {/* Enhanced Search Input */}
-            <div className="mb-6">
-              <div className="relative group">
-                <div className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10">
-                  <div className="w-6 h-6 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-lg flex items-center justify-center shadow-lg">
-                    <Search className="w-3 h-3 text-white" />
-                  </div>
-                </div>
-                <input
-                  type="text"
-                  placeholder="What service do you need? (e.g., plumber, electrician, cleaner...)"
-                  value={searchQuery}
-                  onChange={handleSearchInputChange}
-                  onFocus={handleSearchInputFocus}
-                  onBlur={handleSearchInputBlur}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      handleSearchSubmit();
-                    }
-                  }}
-                  className={`w-full pl-14 pr-20 py-4 border-2 border-slate-200 dark:border-slate-600 rounded-2xl bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm text-slate-900 dark:text-slate-100 transition-all text-base placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-0 shadow-lg hover:shadow-xl ${
-                    isInputFocused 
-                      ? 'border-[#2563EB] shadow-xl shadow-[#2563EB]/20 bg-white dark:bg-slate-700' 
-                      : 'hover:border-slate-300 dark:hover:border-slate-500'
-                  }`}
-                />
-                
-                {/* Search Button */}
-                <button
-                  onClick={handleSearchSubmit}
-                  disabled={(!searchQuery.trim() && !selectedCategory) || isEditingLocation}
-                  className={`absolute right-4 top-1/2 transform -translate-y-1/2 w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${
-                    (!searchQuery.trim() && !selectedCategory) || isEditingLocation
-                      ? 'bg-slate-200 dark:bg-slate-600 text-slate-400 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white hover:opacity-90 hover:scale-105 shadow-lg hover:shadow-xl'
-                  }`}
-                >
-                  <Search className="w-4 h-4" />
-                </button>
-                
-                {/* Clear Button - only show when there's text and search button is disabled */}
-                {searchQuery && ((!searchQuery.trim() && !selectedCategory) || isEditingLocation) && (
-                  <button
-                    onClick={() => {
-                      setSearchQuery('');
-                      setShowSuggestions(false);
-                      setSearchSuggestions([]);
-                    }}
-                    className="absolute right-16 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-slate-100 dark:bg-slate-600 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-all hover:bg-slate-200 dark:hover:bg-slate-500"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-              
-                {/* Enhanced Search Suggestions Dropdown */}
-                {showSuggestions && searchSuggestions.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 mt-2 bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl border border-slate-200/50 dark:border-slate-600/50 rounded-2xl shadow-2xl z-50 max-h-72 overflow-y-auto">
-                    <div className="p-2">
-                      {searchSuggestions.map((suggestion, index) => (
-                        <button
-                          key={index}
-                          onClick={() => handleSuggestionClick(suggestion)}
-                          className="w-full px-4 py-3 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-gradient-to-r hover:from-[#2563EB]/10 hover:to-[#14B8A6]/10 dark:hover:from-[#2563EB]/20 dark:hover:to-[#14B8A6]/20 transition-all rounded-xl flex items-center space-x-3 group"
-                        >
-                          <div className="w-8 h-8 bg-gradient-to-r from-[#2563EB]/20 to-[#14B8A6]/20 rounded-lg flex items-center justify-center group-hover:from-[#2563EB]/30 group-hover:to-[#14B8A6]/30 transition-all">
-                            <Search className="w-3 h-3 text-[#2563EB]" />
-                          </div>
-                          <span className="font-medium">{suggestion}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Enhanced Category Selection */}
-            <div className="mb-8">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
-                    <Sparkles className="w-5 h-5 text-white" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+          {/* Main Layout - Sidebar + Content */}
+          <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8">
+            {/* Left Sidebar - Popular Services */}
+            <div className="w-full lg:w-80 flex-shrink-0">
+              <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl sm:rounded-3xl shadow-xl border border-slate-200/50 dark:border-slate-700/50 p-4 sm:p-6 lg:sticky lg:top-24">
+                <div className="flex items-center space-x-3 mb-4 sm:mb-6">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg">
+                    <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                    <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
                       Popular Services
                     </h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                      Choose from our most requested services
+                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                      Browse by category
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2 px-3 py-1.5 bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 rounded-full">
-                  <div className="w-2 h-2 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-full animate-pulse"></div>
-                  <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Tap to select</span>
+                
+                {/* Popular Categories Grid - Responsive */}
+                <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 sm:gap-3">
+                  {categories.slice(1, 9).map(cat => (
+                    <button
+                      key={cat.value}
+                      onClick={() => setSelectedCategory(cat.value)}
+                      className={`group relative flex flex-col items-center space-y-1 sm:space-y-2 p-2 sm:p-3 rounded-lg sm:rounded-xl text-xs font-medium transition-all duration-300 hover:scale-105 ${
+                        selectedCategory === cat.value
+                          ? 'bg-gradient-to-br from-[#2563EB] to-[#14B8A6] text-white shadow-xl shadow-[#2563EB]/30 transform scale-105'
+                          : 'bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 hover:bg-gradient-to-br hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-600 dark:hover:to-slate-500 hover:text-slate-900 dark:hover:text-slate-100 border border-slate-200/50 dark:border-slate-600/50 hover:border-[#2563EB]/30 hover:shadow-lg'
+                      }`}
+                    >
+                      {/* Image Container */}
+                      <div className={`relative w-8 h-8 sm:w-10 sm:h-10 rounded-md sm:rounded-lg overflow-hidden transition-all duration-300 shadow-md ${
+                        selectedCategory === cat.value ? 'animate-pulse shadow-lg' : 'group-hover:scale-110'
+                      }`}>
+                        <img
+                          src={cat.image}
+                          alt={cat.label}
+                          className="w-full h-full object-cover transition-all duration-300"
+                        />
+                        {selectedCategory === cat.value && (
+                          <div className="absolute inset-0 bg-gradient-to-br from-[#2563EB]/20 to-[#14B8A6]/20"></div>
+                        )}
+                        {selectedCategory === cat.value && (
+                          <div className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 w-3 h-3 sm:w-4 sm:h-4 bg-white rounded-full flex items-center justify-center shadow-lg">
+                            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#2563EB] rounded-full animate-pulse"></div>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Label */}
+                      <span className={`text-center leading-tight transition-colors duration-300 text-xs font-semibold ${
+                        selectedCategory === cat.value 
+                          ? 'text-white font-bold' 
+                          : 'text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-100'
+                      }`}>
+                        {cat.label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                
+                {/* Selected Category Indicator */}
+                {selectedCategory && (
+                  <div className="mt-6">
+                    <div className="bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-lg flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                        <span>{getCategoryLabel(selectedCategory)}</span>
+                      </div>
+                      <button
+                        onClick={() => setSelectedCategory('')}
+                        className="hover:bg-white/20 rounded-full p-1 transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Rating Filter Section */}
+                <div className="mt-6">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-8 h-8 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center shadow-lg">
+                      <Star className="w-4 h-4 text-white" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                        Filter by Rating
+                      </h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Minimum rating
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    {[4.5, 4.0, 3.5, 3.0].map((rating) => (
+                      <button
+                        key={rating}
+                        onClick={() => setRatingFilter(ratingFilter === rating ? null : rating)}
+                        className={`w-full flex items-center justify-between p-2 rounded-lg text-xs font-medium transition-all duration-300 ${
+                          ratingFilter === rating
+                            ? 'bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30 text-yellow-800 dark:text-yellow-200 border border-yellow-300 dark:border-yellow-700'
+                            : 'bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600 hover:text-slate-900 dark:hover:text-slate-100'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-1">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star
+                                key={star}
+                                className={`w-3 h-3 ${
+                                  star <= rating
+                                    ? 'text-yellow-500 fill-current'
+                                    : 'text-slate-300 dark:text-slate-600'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <span className="font-semibold">{rating}+</span>
+                        </div>
+                        {ratingFilter === rating && (
+                          <div className="w-4 h-4 bg-yellow-500 rounded-full flex items-center justify-center">
+                            <div className="w-2 h-2 bg-white rounded-full"></div>
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                    
+                    {/* Clear Filter */}
+                    {ratingFilter && (
+                      <button
+                        onClick={() => setRatingFilter(null)}
+                        className="w-full p-2 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 transition-colors flex items-center justify-center space-x-1"
+                      >
+                        <X className="w-3 h-3" />
+                        <span>Clear filter</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
-              
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
-                {categories.slice(1).map(cat => (
-                  <button
-                    key={cat.value}
-                    onClick={() => setSelectedCategory(cat.value)}
-                    className={`group relative flex flex-col items-center space-y-3 p-4 rounded-2xl text-xs font-medium transition-all duration-300 hover:scale-105 ${
-                      selectedCategory === cat.value
-                        ? 'bg-gradient-to-br from-[#2563EB] to-[#14B8A6] text-white shadow-2xl shadow-[#2563EB]/30 transform scale-105'
-                        : 'bg-white/80 dark:bg-slate-700/80 text-slate-600 dark:text-slate-300 hover:bg-gradient-to-br hover:from-slate-50 hover:to-slate-100 dark:hover:from-slate-600 dark:hover:to-slate-500 hover:text-slate-900 dark:hover:text-slate-100 border border-slate-200/50 dark:border-slate-600/50 hover:border-[#2563EB]/30 hover:shadow-xl backdrop-blur-sm'
-                    }`}
-                  >
-                    {/* Enhanced Image Container */}
-                    <div className={`relative w-14 h-14 rounded-2xl overflow-hidden transition-all duration-300 shadow-lg ${
-                      selectedCategory === cat.value ? 'animate-pulse shadow-xl' : 'group-hover:scale-110'
-                    }`}>
-                      <img
-                        src={cat.image}
-                        alt={cat.label}
-                        className="w-full h-full object-cover transition-all duration-300"
-                      />
-                      {selectedCategory === cat.value && (
-                        <div className="absolute inset-0 bg-gradient-to-br from-[#2563EB]/20 to-[#14B8A6]/20"></div>
-                      )}
-                      {selectedCategory === cat.value && (
-                        <div className="absolute -top-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-lg">
-                          <div className="w-2 h-2 bg-[#2563EB] rounded-full animate-pulse"></div>
+            </div>
+            
+            {/* Main Content Area */}
+            <div className="flex-1 min-w-0">
+      
+
+              {/* Enhanced Search Section */}
+              <div className="bg-gradient-to-br from-white via-slate-50 to-blue-50 dark:from-slate-800 dark:via-slate-900 dark:to-blue-900/20 rounded-3xl shadow-2xl border border-slate-200/50 dark:border-slate-700/50 p-6 mb-8 relative overflow-hidden">
+                {/* Background Pattern */}
+                <div className="absolute inset-0 opacity-5 dark:opacity-10">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#2563EB] to-[#14B8A6] rounded-full blur-2xl transform translate-x-16 -translate-y-16"></div>
+                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-[#14B8A6] to-[#2563EB] rounded-full blur-xl transform -translate-x-12 translate-y-12"></div>
+                </div>
+                
+                {/* Header with Enhanced Design */}
+                <div className="relative z-10">
+                {/* Header Section with Background Image */}
+                <div className="relative rounded-2xl overflow-hidden mb-6">
+                  {/* Background Image */}
+                  <div className="absolute inset-0">
+                    <img
+                      src="/images/header-bg.png"
+                      alt="Header background"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-slate-900/70 via-slate-800/60 to-slate-900/70"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent"></div>
+                  </div>
+                  
+                  {/* Content */}
+                  <div className="relative z-10 p-6 sm:p-8">
+                    <div className="flex items-center space-x-4">
+                      <div className="relative">
+                        <div className="w-12 h-12 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-xl flex items-center justify-center shadow-lg">
+                          <Search className="w-6 h-6 text-white" />
+                        </div>
+                        <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
+                          <Sparkles className="w-2.5 h-2.5 text-white" />
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <h2 className="text-xl font-bold text-white mb-1">
+                          The Service/Provider is just a stone throw away 
+                        </h2>
+                        <p className="text-slate-200 text-sm">
+                          Find skilled professionals in your area
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            
+                {/* Enhanced Location Context */}
+                {userLocation && (
+                  <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/20 dark:via-indigo-900/20 dark:to-purple-900/20 rounded-2xl border border-blue-200/50 dark:border-blue-800/50 shadow-lg">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="relative">
+                          <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
+                            <MapPin className="w-4 h-4 text-white" />
+                          </div>
+                          <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full flex items-center justify-center">
+                            <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Searching near:</p>
+                          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                            {userLocation.address}
+                          </p>
+                        </div>
+                      </div>
+                      {isEditingLocation && (
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full animate-pulse"></div>
+                          <span className="px-2 py-1 bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 text-amber-700 dark:text-amber-300 rounded-full text-xs font-medium shadow-sm">
+                            Editing location
+                          </span>
                         </div>
                       )}
                     </div>
+                  </div>
+                )}
+            
+                {/* Enhanced Search Input */}
+                <div className="mb-6">
+                  <div className="relative group">
+                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2 z-10">
+                      <div className="w-5 h-5 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-lg flex items-center justify-center shadow-lg">
+                        <Search className="w-3 h-3 text-white" />
+                      </div>
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="What service do you need? (e.g., plumber, electrician, cleaner...)"
+                      value={searchQuery}
+                      onChange={handleSearchInputChange}
+                      onFocus={handleSearchInputFocus}
+                      onBlur={handleSearchInputBlur}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          handleSearchSubmit();
+                        }
+                      }}
+                      className={`w-full pl-12 pr-16 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm text-slate-900 dark:text-slate-100 transition-all text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-0 shadow-lg hover:shadow-xl ${
+                        isInputFocused 
+                          ? 'border-[#2563EB] shadow-xl shadow-[#2563EB]/20 bg-white dark:bg-slate-700' 
+                          : 'hover:border-slate-300 dark:hover:border-slate-500'
+                      }`}
+                    />
                     
-                    {/* Enhanced Label */}
-                    <span className={`text-center leading-tight transition-colors duration-300 text-xs font-semibold ${
-                      selectedCategory === cat.value 
-                        ? 'text-white font-bold' 
-                        : 'text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-100'
-                    }`}>
-                      {cat.label}
-                    </span>
-                    
-                    {/* Enhanced Hover Effect */}
-                    {!selectedCategory || selectedCategory !== cat.value ? (
-                      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#2563EB]/5 to-[#14B8A6]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    ) : null}
-                  </button>
-                ))}
-              </div>
-              
-              {/* Enhanced Selected Category Indicator */}
-              {selectedCategory && (
-                <div className="mt-6 flex items-center justify-center">
-                  <div className="bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white px-6 py-3 rounded-2xl text-sm font-semibold shadow-xl flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                    <span>Selected: {getCategoryLabel(selectedCategory)}</span>
+                    {/* Search Button */}
                     <button
-                      onClick={() => setSelectedCategory('')}
-                      className="ml-2 hover:bg-white/20 rounded-full p-1 transition-colors"
+                      onClick={handleSearchSubmit}
+                      disabled={(!searchQuery.trim() && !selectedCategory) || isEditingLocation}
+                      className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300 ${
+                        (!searchQuery.trim() && !selectedCategory) || isEditingLocation
+                          ? 'bg-slate-200 dark:bg-slate-600 text-slate-400 cursor-not-allowed'
+                          : 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white hover:opacity-90 hover:scale-105 shadow-lg hover:shadow-xl'
+                      }`}
                     >
-                      <X className="w-4 h-4" />
+                      <Search className="w-3 h-3" />
                     </button>
+                  
+                    {/* Enhanced Search Suggestions Dropdown */}
+                    {showSuggestions && searchSuggestions.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl border border-slate-200/50 dark:border-slate-600/50 rounded-xl shadow-2xl z-50 max-h-60 overflow-y-auto">
+                        <div className="p-2">
+                          {searchSuggestions.map((suggestion, index) => (
+                            <button
+                              key={index}
+                              onClick={() => handleSuggestionClick(suggestion)}
+                              className="w-full px-3 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-gradient-to-r hover:from-[#2563EB]/10 hover:to-[#14B8A6]/10 dark:hover:from-[#2563EB]/20 dark:hover:to-[#14B8A6]/20 transition-all rounded-lg flex items-center space-x-2 group"
+                            >
+                              <div className="w-6 h-6 bg-gradient-to-r from-[#2563EB]/20 to-[#14B8A6]/20 rounded-lg flex items-center justify-center group-hover:from-[#2563EB]/30 group-hover:to-[#14B8A6]/30 transition-all">
+                                <Search className="w-3 h-3 text-[#2563EB]" />
+                              </div>
+                              <span className="font-medium">{suggestion}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
-              )}
-            </div>
 
-            {/* Enhanced Search Button */}
-            <div className="relative">
-            <button
-              onClick={handleSearchSubmit}
-              disabled={(!searchQuery.trim() && !selectedCategory) || isEditingLocation}
-                className={`w-full py-5 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white rounded-2xl font-bold text-lg hover:opacity-90 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1 flex items-center justify-center space-x-3 ${
-                  (!searchQuery.trim() && !selectedCategory) || isEditingLocation 
-                    ? 'cursor-not-allowed' 
-                    : 'cursor-pointer'
-                }`}
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center">
-                    <Search className="w-4 h-4 text-white" />
-                  </div>
-                  <span>
-                    {isEditingLocation ? 'Save Location First' : 'Find Service Providers'}
-                  </span>
-                  <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                {/* Enhanced Search Button */}
+                <div className="relative">
+                  <button
+                    onClick={handleSearchSubmit}
+                    disabled={(!searchQuery.trim() && !selectedCategory) || isEditingLocation}
+                    className={`w-full py-3 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white rounded-xl font-bold text-sm hover:opacity-90 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl hover:scale-[1.02] hover:-translate-y-0.5 flex items-center justify-center space-x-2 ${
+                        (!searchQuery.trim() && !selectedCategory) || isEditingLocation 
+                          ? 'cursor-not-allowed' 
+                          : 'cursor-pointer'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 bg-white/20 rounded flex items-center justify-center">
+                          <Search className="w-3 h-3 text-white" />
+                        </div>
+                        <span>
+                          {isEditingLocation ? 'Save Location First' : 'Find Service Providers'}
+                        </span>
+                        <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
+                      </div>
+                  </button>
+                  
+                  {/* Button Glow Effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-xl blur-lg opacity-30 -z-10"></div>
                 </div>
-            </button>
-              
-              {/* Button Glow Effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-2xl blur-lg opacity-30 -z-10"></div>
-            </div>
+              </div>
+
+              {/* Central Provider Display Area */}
+              <div className="mt-8">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg">
+                      <Users className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                        Available Providers
+                      </h3>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">
+                        {(() => {
+                          const filteredProviders = allProviders.filter(provider => {
+                            const categoryMatch = !selectedCategory || provider.category === selectedCategory;
+                            const ratingMatch = !ratingFilter || (provider.ratingAverage >= ratingFilter);
+                            return categoryMatch && ratingMatch;
+                          });
+                          
+                          if (selectedCategory && ratingFilter) {
+                            return `Showing ${filteredProviders.length} ${getCategoryLabel(selectedCategory).toLowerCase()} providers (${ratingFilter}+ stars)`;
+                          } else if (selectedCategory) {
+                            return `Showing ${filteredProviders.length} ${getCategoryLabel(selectedCategory).toLowerCase()} providers`;
+                          } else if (ratingFilter) {
+                            return `Showing ${filteredProviders.length} providers (${ratingFilter}+ stars)`;
+                          } else {
+                            return `Browse ${allProviders.length} service providers`;
+                          }
+                        })()}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2 px-3 py-1.5 bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 rounded-full">
+                    <div className="w-2 h-2 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full animate-pulse"></div>
+                    <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Live updates</span>
+                  </div>
+                </div>
+                
+                {/* Provider Grid */}
+                {isLoadingProviders ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {[1, 2, 3, 4].map((i) => (
+                      <div key={i} className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200/50 dark:border-slate-700/50 p-6 animate-pulse">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex-1">
+                            <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded mb-2"></div>
+                            <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4"></div>
+                          </div>
+                          <div className="h-6 w-16 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+                        </div>
+                        <div className="h-16 bg-slate-200 dark:bg-slate-700 rounded mb-4"></div>
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-20"></div>
+                          <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-24"></div>
+                        </div>
+                        <div className="flex gap-3">
+                          <div className="h-10 bg-slate-200 dark:bg-slate-700 rounded flex-1"></div>
+                          <div className="h-10 w-24 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {allProviders
+                      .filter(provider => {
+                        // Category filter
+                        const categoryMatch = !selectedCategory || provider.category === selectedCategory;
+                        // Rating filter
+                        const ratingMatch = !ratingFilter || (provider.ratingAverage >= ratingFilter);
+                        return categoryMatch && ratingMatch;
+                      })
+                      .map((provider) => (
+                    <div
+                      key={provider.id}
+                      className="group bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200/50 dark:border-slate-700/50 p-6 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] hover:-translate-y-1 relative overflow-hidden"
+                    >
+                      {/* Background gradient overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-[#2563EB]/5 to-[#14B8A6]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"></div>
+                      
+                      {/* Content */}
+                      <div className="relative z-10">
+                        {/* Header with Avatar and Business Info */}
+                        <div className="flex items-start space-x-4 mb-4">
+                          {/* Avatar */}
+                          <div className="flex-shrink-0">
+                            <Avatar
+                              src={provider.brandImages && provider.brandImages.length > 0 ? (provider.brandImages[0].url || provider.brandImages[0]) : (provider.user?.avatarUrl || '')}
+                              alt={provider.businessName || provider.user?.fullName || 'Provider'}
+                              fallback={provider.businessName || provider.user?.fullName || 'P'}
+                              size="lg"
+                              showVerification={true}
+                              isVerified={provider.verificationStatus === 'verified'}
+                              showAvailability={true}
+                              isAvailable={provider.isAvailable}
+                              className="w-16 h-16 rounded-xl"
+                            />
+                          </div>
+                          
+                          {/* Business Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1 min-w-0">
+                                <h4 className="text-lg font-bold bg-gradient-to-r from-[#2563EB] to-[#14B8A6] bg-clip-text text-transparent mb-1 truncate">
+                                  {provider.businessName}
+                                </h4>
+                                <div className="flex items-center space-x-2 mb-2">
+                                  <img
+                                    src={categories.find(cat => cat.value === provider.category)?.image || '/images/tool.jpg'}
+                                    alt={getCategoryLabel(provider.category)}
+                                    className="w-4 h-4 object-cover rounded"
+                                  />
+                                  <span className="text-sm text-slate-600 dark:text-slate-400 font-medium">
+                                    {getCategoryLabel(provider.category)}
+                                  </span>
+                                </div>
+                                <div className="text-xs text-slate-500 dark:text-slate-400">
+                                  {provider.locationCity}, {provider.locationState}
+                                </div>
+                              </div>
+                              <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                provider.isAvailable 
+                                  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                                  : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'
+                              }`}>
+                                {provider.isAvailable ? 'Available' : 'Busy'}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Description */}
+                        {provider.bio && (
+                          <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 leading-relaxed">
+                            {provider.bio.length > 80 ? provider.bio.substring(0, 80) + '...' : provider.bio}
+                          </p>
+                        )}
+
+                        {/* Brand Images Gallery */}
+                        <div className="mb-4">
+                          <div className="flex items-center space-x-2 mb-3">
+                            <div className="w-2 h-2 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-full animate-pulse"></div>
+                             <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Brand Images</span>
+                          </div>
+                          
+                          {provider.brandImages && provider.brandImages.length > 0 ? (
+                            <div className="grid grid-cols-3 gap-2">
+                              {provider.brandImages.slice(0, 6).map((image: any, index: number) => (
+                                <div
+                                  key={index}
+                                  className="aspect-square rounded-lg overflow-hidden border border-slate-200 dark:border-slate-600 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105 cursor-pointer"
+                                >
+                                  <img
+                                    src={image.url || image}
+                                    alt={`Portfolio ${index + 1}`}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = 'none';
+                                    }}
+                                  />
+                                </div>
+                              ))}
+                              {provider.brandImages.length > 6 && (
+                                <div className="aspect-square rounded-lg bg-gradient-to-br from-[#2563EB]/10 to-[#14B8A6]/10 dark:from-[#2563EB]/20 dark:to-[#14B8A6]/20 border border-[#2563EB]/30 dark:border-[#14B8A6]/30 shadow-sm flex items-center justify-center cursor-pointer hover:scale-105 transition-all duration-300">
+                                  <div className="text-center">
+                                    <div className="w-6 h-6 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-full flex items-center justify-center mx-auto mb-1">
+                                      <span className="text-white font-bold text-xs">+</span>
+                                    </div>
+                                    <span className="text-xs font-bold text-[#2563EB] dark:text-[#14B8A6]">{provider.brandImages.length - 6}</span>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-3 gap-2">
+                              {[1, 2, 3].map((i) => (
+                                <div
+                                  key={i}
+                                  className="aspect-square rounded-lg bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 flex items-center justify-center"
+                                >
+                                  <div className="w-6 h-6 text-slate-400">
+                                    <Camera className="w-full h-full" />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Rating and Stats */}
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center space-x-1">
+                            <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                            <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                              {Number(provider.ratingAverage || 0).toFixed(1)}
+                            </span>
+                            <span className="text-xs text-slate-500 dark:text-slate-400">
+                              ({provider.ratingCount} reviews)
+                            </span>
+                          </div>
+                          {provider.isAvailable && (
+                            <div className="text-xs text-slate-500 dark:text-slate-400">
+                              {provider.estimatedArrival}
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Action Buttons */}
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => handleBookProvider(provider)}
+                            disabled={!provider.isAvailable}
+                            className={`flex-1 py-2 px-4 rounded-lg font-semibold text-sm transition-all duration-300 ${
+                              provider.isAvailable
+                                ? 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white hover:opacity-90 hover:scale-105 shadow-lg hover:shadow-xl'
+                                : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed'
+                            }`}
+                          >
+                            {provider.isAvailable ? (
+                              <div className="flex items-center justify-center space-x-2">
+                                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                                <span>Book Now</span>
+                              </div>
+                            ) : (
+                              'Unavailable'
+                            )}
+                          </button>
+                          <button
+                            onClick={() => handleViewProfile(provider)}
+                            className="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-all duration-300 text-sm font-semibold shadow-md hover:shadow-lg hover:scale-105"
+                          >
+                            View Profile
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                )}
+                
+                {/* No Providers Message */}
+                {!isLoadingProviders && allProviders.filter(provider => {
+                  const categoryMatch = !selectedCategory || provider.category === selectedCategory;
+                  const ratingMatch = !ratingFilter || (provider.ratingAverage >= ratingFilter);
+                  return categoryMatch && ratingMatch;
+                }).length === 0 && (
+                  <div className="text-center py-12">
+                    <div className="w-24 h-24 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Users className="w-12 h-12 text-slate-400" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                      No providers found
+                    </h3>
+                    <p className="text-slate-600 dark:text-slate-400 mb-4">
+                      {(() => {
+                        if (selectedCategory && ratingFilter) {
+                          return `No ${getCategoryLabel(selectedCategory).toLowerCase()} providers with ${ratingFilter}+ stars available`;
+                        } else if (selectedCategory) {
+                          return `No ${getCategoryLabel(selectedCategory).toLowerCase()} providers available in your area`;
+                        } else if (ratingFilter) {
+                          return `No providers with ${ratingFilter}+ stars available`;
+                        } else {
+                          return 'No providers available in your area';
+                        }
+                      })()}
+                    </p>
+                    <div className="flex gap-3 justify-center">
+                      {selectedCategory && (
+                        <button
+                          onClick={() => setSelectedCategory('')}
+                          className="px-4 py-2 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white rounded-lg hover:opacity-90 transition-opacity text-sm font-semibold"
+                        >
+                          Clear Category
+                        </button>
+                      )}
+                      {ratingFilter && (
+                        <button
+                          onClick={() => setRatingFilter(null)}
+                          className="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors text-sm font-semibold"
+                        >
+                          Clear Rating Filter
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
+
+        </div>
 
           {/* How to Search Advert Section */}
           <div className="relative bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 rounded-3xl shadow-2xl overflow-hidden mb-8">

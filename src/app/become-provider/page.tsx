@@ -473,6 +473,19 @@ export default function BecomeProviderPage() {
         <div className="text-center mb-8">
           <h1 className="text-4xl font-extrabold text-slate-900 dark:text-slate-50">Become a Provider</h1>
           <p className="mt-2 text-slate-600 dark:text-slate-300">Join our network of trusted service providers</p>
+          
+          {/* Provider Sign In Link */}
+          <div className="mt-4">
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              Already have a provider account?{' '}
+              <button
+                onClick={() => router.push('/provider/signin')}
+                className="text-[#2563EB] hover:text-[#1D4ED8] font-medium transition-colors"
+              >
+                Sign in here
+              </button>
+            </p>
+          </div>
         </div>
 
         {/* Progress indicator */}

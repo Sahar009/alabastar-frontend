@@ -17,13 +17,29 @@ import {
   TrendingUp,
   MessageSquare,
   Shield,
-  LogOut
+  LogOut,
+  Menu,
+  X,
+  Home,
+  BookOpen,
+  CreditCard,
+  User,
+  HelpCircle,
+  ChevronRight,
+  Activity,
+  Award,
+  MapPin,
+  Phone,
+  Mail
 } from "lucide-react";
 
 export default function ProviderDashboard() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [providerProfile, setProviderProfile] = useState<any>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalBookings: 0,
     completedBookings: 0,
@@ -32,6 +48,57 @@ export default function ProviderDashboard() {
     rating: 0,
     reviews: 0
   });
+
+  // Fetch bookings from API
+  const fetchBookings = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Please sign in to view bookings');
+        router.push('/provider/signin');
+        return;
+      }
+
+      const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${base}/api/bookings/provider`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setBookings(data.bookings || []);
+        
+        // Calculate stats from real data
+        const totalBookings = data.bookings?.length || 0;
+        const completedBookings = data.bookings?.filter((booking: any) => booking.status === 'completed').length || 0;
+        const pendingBookings = data.bookings?.filter((booking: any) => booking.status === 'pending').length || 0;
+        const totalEarnings = data.bookings?.reduce((sum: number, booking: any) => {
+          return booking.status === 'completed' ? sum + (booking.amount || 0) : sum;
+        }, 0) || 0;
+
+        setStats(prevStats => ({
+          ...prevStats,
+          totalBookings,
+          completedBookings,
+          pendingBookings,
+          totalEarnings
+        }));
+      } else {
+        console.error('Failed to fetch bookings:', response.statusText);
+        toast.error('Failed to load bookings');
+      }
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
+      toast.error('Error loading bookings');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     // Load user data from localStorage
@@ -46,15 +113,15 @@ export default function ProviderDashboard() {
       setProviderProfile(JSON.parse(storedProfile));
     }
 
-    // Mock stats data - replace with actual API calls
-    setStats({
-      totalBookings: 24,
-      completedBookings: 18,
-      pendingBookings: 6,
-      totalEarnings: 125000,
+    // Fetch bookings and calculate real stats
+    fetchBookings();
+
+    // Set mock data for rating and reviews (these might come from a different endpoint)
+    setStats(prevStats => ({
+      ...prevStats,
       rating: 4.8,
       reviews: 23
-    });
+    }));
   }, []);
 
   const handleLogout = () => {
@@ -72,217 +139,517 @@ export default function ProviderDashboard() {
     });
   };
 
+  const navigationItems = [
+    {
+      title: "Dashboard",
+      icon: Home,
+      href: "/provider/dashboard",
+      active: true
+    },
+    {
+      title: "Bookings",
+      icon: Calendar,
+      href: "/provider/bookings",
+      badge: stats.pendingBookings > 0 ? stats.pendingBookings : null,
+      active: false
+    },
+    {
+      title: "Earnings",
+      icon: DollarSign,
+      href: "/provider/earnings"
+    },
+    {
+      title: "Messages",
+      icon: MessageSquare,
+      href: "/provider/messages",
+      badge: 3 // Mock unread messages
+    },
+    {
+      title: "Profile",
+      icon: User,
+      href: "/provider/profile",
+      active: false
+    },
+    {
+      title: "Settings",
+      icon: Settings,
+      href: "/provider/settings"
+    },
+    {
+      title: "Help & Support",
+      icon: HelpCircle,
+      href: "/provider/support"
+    }
+  ];
+
   const quickActions = [
     {
       title: "View Bookings",
       icon: Calendar,
-      onClick: () => router.push('/provider/bookings'),
-      color: "bg-blue-500"
+      onClick: () => {
+        // Refresh bookings before navigating
+        fetchBookings();
+        router.push('/provider/bookings');
+      },
+      color: "bg-blue-500",
+      description: "Manage your bookings"
     },
     {
       title: "Earnings",
       icon: DollarSign,
       onClick: () => handleComingSoon("Earnings Dashboard"),
-      color: "bg-green-500"
+      color: "bg-green-500",
+      description: "Track your income"
     },
     {
       title: "Messages",
       icon: MessageSquare,
       onClick: () => handleComingSoon("Messages"),
-      color: "bg-purple-500"
+      color: "bg-purple-500",
+      description: "Customer communications"
     },
     {
       title: "Profile Settings",
-      icon: Settings,
-      onClick: () => router.push('/provider/settings'),
-      color: "bg-gray-500"
+      icon: User,
+      onClick: () => router.push('/provider/profile'),
+      color: "bg-gray-500",
+      description: "Update your profile"
     }
   ];
 
-  const recentActivities = [
-    { type: "booking", message: "New booking request from John Doe", time: "2 hours ago", status: "pending" },
+  // Generate recent activities from real booking data
+  const recentActivities = bookings.slice(0, 4).map((booking: any) => {
+    const timeAgo = new Date(booking.createdAt).toLocaleDateString();
+    return {
+      type: "booking",
+      message: `Booking ${booking.status === 'pending' ? 'request' : booking.status} from ${booking.customer?.fullName || 'Customer'}`,
+      time: timeAgo,
+      status: booking.status,
+      booking: booking
+    };
+  });
+
+  // Add mock review and payment activities if no bookings
+  const mockActivities = [
     { type: "review", message: "Received 5-star review from Sarah", time: "1 day ago", status: "completed" },
-    { type: "payment", message: "Payment received: ₦15,000", time: "2 days ago", status: "completed" },
-    { type: "booking", message: "Booking completed for plumbing service", time: "3 days ago", status: "completed" }
+    { type: "payment", message: "Payment received: ₦15,000", time: "2 days ago", status: "completed" }
   ];
 
+  const allActivities = [...recentActivities, ...mockActivities].slice(0, 4);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-      {/* Header */}
-      <header className="bg-white dark:bg-slate-800 shadow-sm border-b border-slate-200 dark:border-slate-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">
-                Provider Dashboard
-              </h1>
-              <p className="text-slate-600 dark:text-slate-400">
-                Welcome back, {user?.fullName || 'Provider'}!
-              </p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => handleComingSoon("Notifications")}
-                className="p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
-              >
-                <Bell className="w-6 h-6" />
-              </button>
-              <button
-                onClick={handleLogout}
-                className="flex items-center space-x-2 px-4 py-2 text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-              >
-                <LogOut className="w-4 h-4" />
-                <span>Logout</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex">
+      {/* Mobile sidebar overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Total Bookings</p>
-                <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">{stats.totalBookings}</p>
+      {/* Sidebar */}
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-white via-slate-50 to-slate-100 dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 shadow-2xl border-r border-slate-200/50 dark:border-slate-700/50 backdrop-blur-xl transform transition-all duration-500 ease-in-out lg:translate-x-0 lg:static lg:inset-0 lg:flex-shrink-0 ${
+        sidebarOpen ? 'translate-x-0 shadow-3xl' : '-translate-x-full'
+      }`}>
+        <div className="flex flex-col h-full">
+          {/* Sidebar Header */}
+          <div className="flex items-center justify-between p-6 border-b border-slate-200/50 dark:border-slate-700/50 bg-gradient-to-r from-white/80 to-slate-50/80 dark:from-slate-800/80 dark:to-slate-900/80 backdrop-blur-sm">
+            <div className="flex items-center space-x-3 group">
+              <div className="w-12 h-12 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300">
+                <Award className="w-7 h-7 text-white group-hover:rotate-12 transition-transform duration-300" />
               </div>
-              <Calendar className="w-8 h-8 text-blue-500" />
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700">
-            <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Completed</p>
-                <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.completedBookings}</p>
+                <h2 className="text-xl font-bold bg-gradient-to-r from-[#2563EB] to-[#14B8A6] bg-clip-text text-transparent">Alabastar</h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Provider Portal</p>
               </div>
-              <CheckCircle className="w-8 h-8 text-green-500" />
             </div>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="lg:hidden p-2 rounded-xl text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all duration-200"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Pending</p>
-                <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{stats.pendingBookings}</p>
-              </div>
-              <Clock className="w-8 h-8 text-amber-500" />
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Total Earnings</p>
-                <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">₦{stats.totalEarnings.toLocaleString()}</p>
-              </div>
-              <DollarSign className="w-8 h-8 text-green-500" />
-            </div>
-          </div>
-        </div>
-
-        {/* Rating & Reviews */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">Rating & Reviews</h3>
-              <Star className="w-5 h-5 text-yellow-500" />
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="text-3xl font-bold text-slate-900 dark:text-slate-50">{stats.rating}</div>
-              <div>
-                <div className="flex items-center space-x-1">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`w-4 h-4 ${i < Math.floor(stats.rating) ? 'text-yellow-500 fill-current' : 'text-slate-300 dark:text-slate-600'}`}
-                    />
-                  ))}
+          {/* User Profile Section */}
+          <div className="p-6 border-b border-slate-200/50 dark:border-slate-700/50 bg-gradient-to-r from-slate-50/50 to-white/50 dark:from-slate-800/50 dark:to-slate-900/50">
+            <div className="flex items-center space-x-3 group">
+              <div className="relative">
+                <div className="w-14 h-14 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300">
+                  <User className="w-7 h-7 text-white group-hover:scale-110 transition-transform duration-300" />
                 </div>
-                <p className="text-sm text-slate-600 dark:text-slate-400">{stats.reviews} reviews</p>
+                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white dark:border-slate-800 flex items-center justify-center">
+                  <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                </div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-slate-900 dark:text-slate-50 truncate group-hover:text-[#2563EB] transition-colors duration-200">
+                  {user?.fullName || 'Provider'}
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                  {user?.email || 'provider@example.com'}
+                </p>
               </div>
             </div>
-          </div>
-
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">Verification Status</h3>
-              <Shield className="w-5 h-5 text-blue-500" />
-            </div>
-            <div className="flex items-center space-x-3">
-              <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+            <div className="mt-4 flex items-center space-x-2">
+              <div className={`px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm transition-all duration-200 ${
                 providerProfile?.verificationStatus === 'verified' 
-                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                  : providerProfile?.verificationStatus === 'pending'
-                  ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
-                  : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                  ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 dark:from-green-900 dark:to-emerald-900 dark:text-green-200'
+                  : 'bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-800 dark:from-amber-900 dark:to-yellow-900 dark:text-amber-200'
               }`}>
-                {providerProfile?.verificationStatus === 'verified' ? 'Verified' : 
-                 providerProfile?.verificationStatus === 'pending' ? 'Pending Review' : 'Rejected'}
+                {providerProfile?.verificationStatus === 'verified' ? '✓ Verified' : '⏳ Pending'}
               </div>
-              {providerProfile?.verificationStatus === 'pending' && (
-                <AlertCircle className="w-4 h-4 text-amber-500" />
-              )}
+              <Shield className="w-4 h-4 text-slate-400" />
             </div>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mt-2">
-              {providerProfile?.verificationStatus === 'verified' 
-                ? 'Your account is verified and active'
-                : providerProfile?.verificationStatus === 'pending'
-                ? 'Your documents are under review'
-                : 'Please contact support for assistance'}
-            </p>
           </div>
-        </div>
 
-        {/* Quick Actions */}
-        <div className="mb-8">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50 mb-4">Quick Actions</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {quickActions.map((action, index) => (
+          {/* Navigation */}
+          <nav className="flex-1 p-4 space-y-2">
+            {navigationItems.map((item, index) => (
               <button
                 key={index}
-                onClick={action.onClick}
-                className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700 hover:shadow-md transition-shadow text-left group"
+                onClick={() => {
+                  if (item.href === '/provider/dashboard') {
+                    setSidebarOpen(false);
+                  } else if (item.href === '/provider/bookings') {
+                    router.push('/provider/bookings');
+                    setSidebarOpen(false);
+                  } else if (item.href === '/provider/profile') {
+                    router.push('/provider/profile');
+                    setSidebarOpen(false);
+                  } else {
+                    handleComingSoon(item.title);
+                  }
+                }}
+                className={`group w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-300 transform hover:scale-105 ${
+                  item.active 
+                    ? 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white shadow-lg shadow-blue-500/25' 
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-gradient-to-r hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-700 dark:hover:to-slate-600 hover:text-slate-900 dark:hover:text-slate-100 hover:shadow-md'
+                }`}
+                style={{ animationDelay: `${index * 50}ms` }}
               >
-                <div className="flex items-center space-x-4">
-                  <div className={`p-3 rounded-lg ${action.color} text-white group-hover:scale-110 transition-transform`}>
-                    <action.icon className="w-6 h-6" />
+                <div className="flex items-center space-x-3">
+                  <div className={`p-2 rounded-xl transition-all duration-300 ${
+                    item.active 
+                      ? 'bg-white/20' 
+                      : 'bg-slate-100 dark:bg-slate-700 group-hover:bg-white dark:group-hover:bg-slate-600'
+                  }`}>
+                    <item.icon className={`w-5 h-5 transition-all duration-300 ${
+                      item.active 
+                        ? 'text-white' 
+                        : 'text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-100 group-hover:scale-110'
+                    }`} />
                   </div>
-                  <div>
-                    <h4 className="font-medium text-slate-900 dark:text-slate-50">{action.title}</h4>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">Click to access</p>
-                  </div>
+                  <span className="transition-all duration-300">{item.title}</span>
                 </div>
+                {item.badge && (
+                  <span className="px-2.5 py-1 text-xs bg-red-500 text-white rounded-full shadow-lg animate-pulse">
+                    {item.badge}
+                  </span>
+                )}
               </button>
             ))}
+          </nav>
+
+          {/* Logout Button */}
+          <div className="p-4 border-t border-slate-200/50 dark:border-slate-700/50 bg-gradient-to-r from-red-50/50 to-pink-50/50 dark:from-red-900/10 dark:to-pink-900/10">
+            <button
+              onClick={handleLogout}
+              className="group w-full flex items-center space-x-3 px-4 py-3 text-sm font-semibold text-red-600 dark:text-red-400 hover:bg-gradient-to-r hover:from-red-100 hover:to-pink-100 dark:hover:from-red-900/30 dark:hover:to-pink-900/30 rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+            >
+              <div className="p-2 rounded-xl bg-red-100 dark:bg-red-900/30 group-hover:bg-red-200 dark:group-hover:bg-red-800/50 transition-all duration-300">
+                <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+              </div>
+              <span>Logout</span>
+            </button>
           </div>
         </div>
+      </div>
 
-        {/* Recent Activity */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50 mb-4">Recent Activity</h3>
-          <div className="space-y-4">
-            {recentActivities.map((activity, index) => (
-              <div key={index} className="flex items-center space-x-4 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-                <div className={`p-2 rounded-full ${
-                  activity.status === 'completed' ? 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400' :
-                  activity.status === 'pending' ? 'bg-amber-100 text-amber-600 dark:bg-amber-900 dark:text-amber-400' :
-                  'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400'
-                }`}>
-                  {activity.type === 'booking' && <Calendar className="w-4 h-4" />}
-                  {activity.type === 'review' && <Star className="w-4 h-4" />}
-                  {activity.type === 'payment' && <DollarSign className="w-4 h-4" />}
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-slate-900 dark:text-slate-50">{activity.message}</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">{activity.time}</p>
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Top Header */}
+        <header className="bg-gradient-to-r from-white via-slate-50 to-white dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 shadow-lg border-b border-slate-200/50 dark:border-slate-700/50 backdrop-blur-xl">
+          <div className="px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-6">
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => setSidebarOpen(true)}
+                  className="lg:hidden p-3 rounded-2xl text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all duration-200"
+                >
+                  <Menu className="w-6 h-6" />
+                </button>
+                <div>
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-[#2563EB] to-[#14B8A6] bg-clip-text text-transparent">
+                    Dashboard
+                  </h1>
+                  <p className="text-slate-600 dark:text-slate-400 font-medium">
+                    Welcome back, <span className="text-[#2563EB] font-semibold">{user?.fullName || 'Provider'}</span>! 👋
+                  </p>
                 </div>
               </div>
-            ))}
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={fetchBookings}
+                  disabled={loading}
+                  className="group p-3 rounded-2xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all duration-200 disabled:opacity-50"
+                  title="Refresh bookings"
+                >
+                  <div className={`w-6 h-6 ${loading ? 'animate-spin' : 'group-hover:rotate-180'} transition-transform duration-500`}>
+                    <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  </div>
+                </button>
+                <button
+                  onClick={() => handleComingSoon("Notifications")}
+                  className="group relative p-3 rounded-2xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all duration-200"
+                >
+                  <Bell className="w-6 h-6 group-hover:animate-bounce" />
+                  <span className="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full animate-pulse shadow-lg"></span>
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
+        </header>
+
+        {/* Dashboard Content */}
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
+          {/* Stats Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="group bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">Total Bookings</p>
+                  <p className="text-4xl font-bold bg-gradient-to-r from-[#2563EB] to-[#14B8A6] bg-clip-text text-transparent">{stats.totalBookings}</p>
+                  <p className="text-xs text-green-600 dark:text-green-400 flex items-center mt-2 font-medium">
+                    <TrendingUp className="w-3 h-3 mr-1 animate-pulse" />
+                    +12% from last month
+                  </p>
+                </div>
+                <div className="p-4 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                  <Calendar className="w-8 h-8 text-blue-600 dark:text-blue-400 group-hover:animate-bounce" />
+                </div>
+              </div>
+            </div>
+
+            <div className="group bg-gradient-to-br from-white via-green-50 to-white dark:from-slate-800 dark:via-green-900/20 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-green-500/10 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">Completed</p>
+                  <p className="text-4xl font-bold text-green-600 dark:text-green-400">{stats.completedBookings}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-medium">
+                    {Math.round((stats.completedBookings / stats.totalBookings) * 100)}% completion rate
+                  </p>
+                </div>
+                <div className="p-4 bg-gradient-to-br from-green-100 to-emerald-200 dark:from-green-900/30 dark:to-emerald-800/30 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                  <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400 group-hover:animate-pulse" />
+                </div>
+              </div>
+            </div>
+
+            <div className="group bg-gradient-to-br from-white via-amber-50 to-white dark:from-slate-800 dark:via-amber-900/20 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-amber-500/10 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">Pending</p>
+                  <p className="text-4xl font-bold text-amber-600 dark:text-amber-400">{stats.pendingBookings}</p>
+                  <p className="text-xs text-amber-600 dark:text-amber-400 mt-2 font-medium">
+                    Requires attention
+                  </p>
+                </div>
+                <div className="p-4 bg-gradient-to-br from-amber-100 to-yellow-200 dark:from-amber-900/30 dark:to-yellow-800/30 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                  <Clock className="w-8 h-8 text-amber-600 dark:text-amber-400 group-hover:animate-spin" />
+                </div>
+              </div>
+            </div>
+
+            <div className="group bg-gradient-to-br from-white via-emerald-50 to-white dark:from-slate-800 dark:via-emerald-900/20 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">Total Earnings</p>
+                  <p className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">₦{stats.totalEarnings.toLocaleString()}</p>
+                  <p className="text-xs text-green-600 dark:text-green-400 flex items-center mt-2 font-medium">
+                    <TrendingUp className="w-3 h-3 mr-1 animate-pulse" />
+                    +8% from last month
+                  </p>
+                </div>
+                <div className="p-4 bg-gradient-to-br from-emerald-100 to-green-200 dark:from-emerald-900/30 dark:to-green-800/30 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                  <DollarSign className="w-8 h-8 text-emerald-600 dark:text-emerald-400 group-hover:animate-bounce" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Rating & Profile Cards */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 border border-slate-200 dark:border-slate-700">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">Rating & Reviews</h3>
+                <Star className="w-5 h-5 text-yellow-500" />
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="text-4xl font-bold text-slate-900 dark:text-slate-50">{stats.rating}</div>
+                <div>
+                  <div className="flex items-center space-x-1">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`w-4 h-4 ${i < Math.floor(stats.rating) ? 'text-yellow-500 fill-current' : 'text-slate-300 dark:text-slate-600'}`}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">{stats.reviews} reviews</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 border border-slate-200 dark:border-slate-700">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">Verification Status</h3>
+                <Shield className="w-5 h-5 text-blue-500" />
+              </div>
+              <div className="flex items-center space-x-3 mb-3">
+                <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  providerProfile?.verificationStatus === 'verified' 
+                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                    : providerProfile?.verificationStatus === 'pending'
+                    ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
+                    : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                }`}>
+                  {providerProfile?.verificationStatus === 'verified' ? 'Verified' : 
+                   providerProfile?.verificationStatus === 'pending' ? 'Pending Review' : 'Rejected'}
+                </div>
+                {providerProfile?.verificationStatus === 'pending' && (
+                  <AlertCircle className="w-4 h-4 text-amber-500" />
+                )}
+              </div>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                {providerProfile?.verificationStatus === 'verified' 
+                  ? 'Your account is verified and active'
+                  : providerProfile?.verificationStatus === 'pending'
+                  ? 'Your documents are under review'
+                  : 'Please contact support for assistance'}
+              </p>
+            </div>
+
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 border border-slate-200 dark:border-slate-700">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">Business Info</h3>
+                <Activity className="w-5 h-5 text-purple-500" />
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2 text-sm">
+                  <MapPin className="w-4 h-4 text-slate-400" />
+                  <span className="text-slate-600 dark:text-slate-400">Lagos, Nigeria</span>
+                </div>
+                <div className="flex items-center space-x-2 text-sm">
+                  <Phone className="w-4 h-4 text-slate-400" />
+                  <span className="text-slate-600 dark:text-slate-400">{user?.phone || '+234 800 000 0000'}</span>
+                </div>
+                <div className="flex items-center space-x-2 text-sm">
+                  <Mail className="w-4 h-4 text-slate-400" />
+                  <span className="text-slate-600 dark:text-slate-400">{user?.email || 'provider@example.com'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="mb-8">
+            <h3 className="text-2xl font-bold bg-gradient-to-r from-[#2563EB] to-[#14B8A6] bg-clip-text text-transparent mb-8">Quick Actions</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {quickActions.map((action, index) => (
+                <button
+                  key={index}
+                  onClick={action.onClick}
+                  className="group bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl transition-all duration-500 text-left transform hover:scale-105 hover:-translate-y-2"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  <div className="flex items-center space-x-4 mb-4">
+                    <div className={`p-4 rounded-2xl ${action.color} text-white group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg`}>
+                      <action.icon className="w-6 h-6" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-bold text-slate-900 dark:text-slate-50 group-hover:text-[#2563EB] transition-colors duration-200">{action.title}</h4>
+                      <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">{action.description}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="w-full h-1 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                      <div className="h-full bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-full transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-slate-400 ml-3 group-hover:text-[#2563EB] group-hover:translate-x-1 transition-all duration-300" />
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Recent Activity */}
+          <div className="bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 rounded-3xl shadow-xl p-8 border border-slate-200/50 dark:border-slate-700/50">
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-[#2563EB] to-[#14B8A6] bg-clip-text text-transparent">Recent Activity</h3>
+              <button 
+                onClick={() => {
+                  fetchBookings();
+                  router.push('/provider/bookings');
+                }}
+                className="group px-4 py-2 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-300 transform hover:scale-105"
+              >
+                <span className="flex items-center space-x-2">
+                  <span>View All Bookings</span>
+                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
+                </span>
+              </button>
+            </div>
+            <div className="space-y-4">
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2563EB]"></div>
+                  <span className="ml-2 text-slate-600 dark:text-slate-400">Loading activities...</span>
+                </div>
+              ) : allActivities.length > 0 ? (
+                allActivities.map((activity, index) => (
+                  <div key={index} className="flex items-center space-x-4 p-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                    <div className={`p-3 rounded-full ${
+                      activity.status === 'completed' ? 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400' :
+                      activity.status === 'pending' ? 'bg-amber-100 text-amber-600 dark:bg-amber-900 dark:text-amber-400' :
+                      'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400'
+                    }`}>
+                      {activity.type === 'booking' && <Calendar className="w-5 h-5" />}
+                      {activity.type === 'review' && <Star className="w-5 h-5" />}
+                      {activity.type === 'payment' && <DollarSign className="w-5 h-5" />}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-slate-900 dark:text-slate-50">{activity.message}</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">{activity.time}</p>
+                      {'booking' in activity && activity.booking && (
+                        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                          Service: {activity.booking.serviceType || 'General Service'}
+                        </p>
+                      )}
+                    </div>
+                    <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      activity.status === 'completed' 
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                        : activity.status === 'pending'
+                        ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
+                        : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                    }`}>
+                      {activity.status}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8">
+                  <Calendar className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                  <p className="text-slate-600 dark:text-slate-400">No recent activities</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-500 mt-1">Your booking activities will appear here</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </main>
       </div>
     </div>
   );

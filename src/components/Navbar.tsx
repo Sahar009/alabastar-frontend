@@ -35,37 +35,60 @@ export default function Navbar() {
 
             <div className="hidden md:flex items-center gap-3">
               {user ? (
-                <div className="relative">
-                  <button
-                    onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                  >
-                    <div className="w-8 h-8 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                      {user.fullName?.charAt(0) || 'U'}
-                    </div>
-                    <span className="text-slate-700 dark:text-slate-200">{user.fullName}</span>
-                  </button>
-                  
-                  {showUserMenu && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 py-2 z-50">
-                      <Link
-                        href="/profile"
-                        className="flex items-center gap-2 px-4 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700"
-                        onClick={() => setShowUserMenu(false)}
-                      >
-                        <Settings size={16} />
-                        Profile
-                      </Link>
-                      <button
-                        onClick={handleLogout}
-                        className="w-full flex items-center gap-2 px-4 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
-                      >
-                        <LogOut size={16} />
-                        Sign Out
-                      </button>
-                    </div>
+                <>
+                  {/* Provider Dashboard Link */}
+                  {user.role === 'provider' && (
+                    <Link 
+                      href="/provider/dashboard" 
+                      className="inline-flex items-center rounded-full bg-gradient-to-r from-[#2563EB] to-[#14B8A6] px-4 py-2 text-white font-semibold shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all active:scale-[.98]"
+                    >
+                      Dashboard
+                    </Link>
                   )}
-                </div>
+                  
+                  {/* User Menu */}
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowUserMenu(!showUserMenu)}
+                      className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    >
+                      <div className="w-8 h-8 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                        {user.fullName?.charAt(0) || 'U'}
+                      </div>
+                      <span className="text-slate-700 dark:text-slate-200">{user.fullName}</span>
+                    </button>
+                    
+                    {showUserMenu && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 py-2 z-50">
+                        {user.role === 'provider' && (
+                          <Link
+                            href="/provider/dashboard"
+                            className="flex items-center gap-2 px-4 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700"
+                            onClick={() => setShowUserMenu(false)}
+                          >
+                            <Settings size={16} />
+                            Provider Dashboard
+                          </Link>
+                        )}
+                        <Link
+                          href="/profile"
+                          className="flex items-center gap-2 px-4 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700"
+                          onClick={() => setShowUserMenu(false)}
+                        >
+                          <Settings size={16} />
+                          Profile
+                        </Link>
+                        <button
+                          onClick={handleLogout}
+                          className="w-full flex items-center gap-2 px-4 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                        >
+                          <LogOut size={16} />
+                          Sign Out
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </>
               ) : (
                 <Link href="/login" className="text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white transition-colors">Sign In</Link>
               )}
@@ -121,6 +144,9 @@ function MobileMenu({ user, onLogout }: { user: User | null; onLogout: () => voi
                 </div>
                 <span className="text-sm">{user.fullName}</span>
               </div>
+              {user.role === 'provider' && (
+                <Link href="/provider/dashboard" className="block rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 hover:bg-slate-900/5 dark:hover:bg-white/5" onClick={() => setIsOpen(false)}>Provider Dashboard</Link>
+              )}
               <Link href="/profile" className="block rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 hover:bg-slate-900/5 dark:hover:bg-white/5" onClick={() => setIsOpen(false)}>Profile</Link>
               <button onClick={() => { onLogout(); setIsOpen(false); }} className="w-full text-left rounded-lg px-3 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20">Sign Out</button>
             </>

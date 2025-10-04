@@ -3,7 +3,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import type { JSX } from "react";
-import { Wrench, Zap, Truck, Fan, Hammer, PaintRoller, Bug, Shirt, Ruler, Camera, Sparkles, Search, ShieldCheck, Star, Apple, Play, Users, Settings, MapPin, ArrowRight, CheckCircle, Wrench2, Sparkles2, UserPlus, Navigation } from "lucide-react";
+import { Wrench, Zap, Truck, Fan, Hammer, PaintRoller, Bug, Shirt, Ruler, Camera, Sparkles, Search, ShieldCheck, Star, Apple, Play, Users, Settings, MapPin, ArrowRight, CheckCircle, Sparkles2, UserPlus, Navigation, Cog } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import FAQComponent from "@/components/FAQ";
 import Link from "next/link";
@@ -25,10 +25,27 @@ export default function Home() {
     longitude: number;
   } | null>(null);
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
 
   // Auto-detect user location on component mount
   useEffect(() => {
     detectUserLocation();
+  }, []);
+
+  // Handle scroll for pagination
+  useEffect(() => {
+    const container = document.getElementById('popular-services-scroll');
+    if (!container) return;
+
+    const handleScroll = () => {
+      const scrollLeft = container.scrollLeft;
+      const cardWidth = 280; // w-64 + gap-6 = 256px + 24px
+      const currentPage = Math.round(scrollLeft / cardWidth);
+      setCurrentPage(currentPage);
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
   }, []);
 
   const detectUserLocation = async () => {
@@ -472,105 +489,248 @@ export default function Home() {
    
 
       {/* Manual Scroll Categories */}
-      <section className="relative mt-20">
-        <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent to-slate-900/5 dark:to-slate-50/[.02]" />
-        
-        {/* Scroll Controls */}
-        <div className="flex items-center justify-between mb-6 px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-[#2563EB] to-[#14B8A6] bg-clip-text text-transparent">
-            Popular Services
-          </h2>
-          
-          {/* Desktop Scroll Arrows */}
-          <div className="hidden sm:flex items-center gap-2">
-            <button
-              onClick={() => {
-                const container = document.getElementById('categories-scroll');
-                if (container) {
-                  container.scrollBy({ left: -300, behavior: 'smooth' });
-                }
-              }}
-              className="p-2 rounded-full bg-gradient-to-r from-[#2563EB] to-[#14B8A6] shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
-              aria-label="Scroll left"
-            >
-              <ArrowRight size={20} className="text-white rotate-180" />
-            </button>
-            <button
-              onClick={() => {
-                const container = document.getElementById('categories-scroll');
-                if (container) {
-                  container.scrollBy({ left: 300, behavior: 'smooth' });
-                }
-              }}
-              className="p-2 rounded-full bg-gradient-to-r from-[#2563EB] to-[#14B8A6] shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
-              aria-label="Scroll right"
-            >
-              <ArrowRight size={20} className="text-white" />
-            </button>
+      {/* Most Popular Services Section */}
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-20">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100">
+              Most Popular Services
+            </h2>
+            <div className="w-6 h-6 bg-[#2563EB] rounded-full flex items-center justify-center">
+              <ArrowRight size={12} className="text-white rotate-45" />
+            </div>
+          </div>
+          <Link href="/providers" className="flex items-center gap-2 text-[#2563EB] hover:text-[#1D4ED8] font-semibold transition-colors duration-200 group">
+            View All
+            <div className="w-6 h-6 bg-[#2563EB] rounded-full flex items-center justify-center group-hover:bg-[#1D4ED8] transition-colors duration-200">
+              <ArrowRight size={12} className="text-white" />
+            </div>
+          </Link>
+        </div>
+
+        {/* Services Scroll Container */}
+        <div className="relative">
+          {/* Scrollable Services */}
+          <div 
+            id="popular-services-scroll"
+            className="flex gap-6 overflow-x-auto scrollbar-hide pb-4"
+            style={{ scrollSnapType: 'x mandatory' }}
+          >
+            {/* Carpentry */}
+            <div className="group cursor-pointer relative overflow-hidden rounded-2xl h-64 w-64 flex-shrink-0 transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                 onClick={() => handleCategorySelect('Carpentry')}
+                 style={{ scrollSnapAlign: 'start' }}>
+              <div className="absolute inset-0 bg-gradient-to-b from-amber-500/40 to-orange-500/40"></div>
+              <div className="absolute inset-0 bg-black/15 group-hover:bg-black/8 transition-all duration-300"></div>
+              
+              {/* Background Image */}
+              <div className="absolute inset-0 opacity-60">
+                <Image
+                  src="/images/carpenter.png"
+                  alt="Carpentry"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              
+              {/* Icon */}
+              <div className="relative z-10 flex flex-col items-center justify-center h-full">
+                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <Hammer className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-white font-bold text-lg uppercase tracking-wide">
+                  Carpentry
+                </h3>
               </div>
             </div>
 
-        {/* Scrollable Categories Container */}
-        <div className="relative">
-          {/* Mobile Scroll Hint */}
-          <div className="sm:hidden text-center mb-4">
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              Swipe to explore more services
-            </p>
-        </div>
-
-          {/* Categories Scroll Container */}
-          <div 
-            id="categories-scroll"
-            className="flex gap-6 overflow-x-auto scrollbar-hide px-4 sm:px-6 lg:px-8 pb-4"
-            style={{ scrollSnapType: 'x mandatory' }}
-          >
-            {categories.map(({ label, image }, i) => (
-              <div 
-                key={i} 
-                className="group cursor-pointer bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-xl hover:shadow-2xl border border-slate-200/50 dark:border-slate-700/50 min-w-[280px] transition-all duration-500 hover:-translate-y-2 hover:scale-105 flex-shrink-0"
-                onClick={() => handleCategorySelect(label)}
-                style={{ scrollSnapAlign: 'start' }}
-              >
-                {/* Service Header */}
-                <div className="bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-2xl px-4 py-3 mb-4">
-                  <h3 className="text-white font-bold text-lg text-center">
-                    {label}
-                  </h3>
+            {/* Plumber */}
+            <div className="group cursor-pointer relative overflow-hidden rounded-2xl h-64 w-64 flex-shrink-0 transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                 onClick={() => handleCategorySelect('Plumber')}
+                 style={{ scrollSnapAlign: 'start' }}>
+              <div className="absolute inset-0 bg-gradient-to-b from-blue-500/40 to-blue-600/40"></div>
+              <div className="absolute inset-0 bg-black/15 group-hover:bg-black/8 transition-all duration-300"></div>
+              
+              {/* Background Image */}
+              <div className="absolute inset-0 opacity-60">
+                <Image
+                  src="/images/plumber.png"
+                  alt="Plumber"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              
+              {/* Icon */}
+              <div className="relative z-10 flex flex-col items-center justify-center h-full">
+                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <Wrench className="w-8 h-8 text-white" />
                 </div>
-                
-                {/* Service Illustration */}
-                <div className="relative h-40 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 rounded-2xl overflow-hidden group-hover:from-blue-100 group-hover:to-purple-100 dark:group-hover:from-blue-900/30 dark:group-hover:to-purple-900/30 transition-all duration-500">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="relative w-28 h-28 bg-white/90 dark:bg-slate-800/90 rounded-2xl shadow-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
-                      <Image
-                        src={image}
-                        alt={label}
-                        width={60}
-                        height={60}
-                        className="object-cover rounded-xl"
-                      />
-                    </div>
-                  </div>
-                  
-                  {/* Decorative elements */}
-                  <div className="absolute top-2 right-2 w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full opacity-60 group-hover:opacity-100 transition-opacity duration-500"></div>
-                  <div className="absolute bottom-2 left-2 w-6 h-6 bg-gradient-to-br from-pink-400 to-rose-500 rounded-full opacity-60 group-hover:opacity-100 transition-opacity duration-500"></div>
-                </div>
-                
-                {/* Service Description */}
-                <div className="mt-4 text-center">
-                  <p className="text-slate-600 dark:text-slate-400 text-sm font-medium">
-                    Professional {label.toLowerCase()} services
-                  </p>
-                  <div className="mt-2 flex items-center justify-center space-x-1">
-                    <div className="w-2 h-2 bg-[#2563EB] rounded-full"></div>
-                    <div className="w-2 h-2 bg-[#14B8A6] rounded-full"></div>
-                    <div className="w-2 h-2 bg-[#0EA5E9] rounded-full"></div>
-                  </div>
-                </div>
+                <h3 className="text-white font-bold text-lg uppercase tracking-wide">
+                  Plumber
+                </h3>
+              </div>
             </div>
-          ))}
+
+            {/* Electrician */}
+            <div className="group cursor-pointer relative overflow-hidden rounded-2xl h-64 w-64 flex-shrink-0 transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                 onClick={() => handleCategorySelect('Electrician')}
+                 style={{ scrollSnapAlign: 'start' }}>
+              <div className="absolute inset-0 bg-gradient-to-b from-yellow-500/40 to-orange-500/40"></div>
+              <div className="absolute inset-0 bg-black/15 group-hover:bg-black/8 transition-all duration-300"></div>
+              
+              {/* Background Image */}
+              <div className="absolute inset-0 opacity-60">
+                <Image
+                  src="/images/slider6.jpg"
+                  alt="Electrician"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              
+              {/* Icon */}
+              <div className="relative z-10 flex flex-col items-center justify-center h-full">
+                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <Zap className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-white font-bold text-lg uppercase tracking-wide">
+                  Electrician
+                </h3>
+              </div>
+            </div>
+
+            {/* Painter */}
+            <div className="group cursor-pointer relative overflow-hidden rounded-2xl h-64 w-64 flex-shrink-0 transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                 onClick={() => handleCategorySelect('Painter')}
+                 style={{ scrollSnapAlign: 'start' }}>
+              <div className="absolute inset-0 bg-gradient-to-b from-pink-500/40 to-purple-500/40"></div>
+              <div className="absolute inset-0 bg-black/15 group-hover:bg-black/8 transition-all duration-300"></div>
+              
+              {/* Background Image */}
+              <div className="absolute inset-0 opacity-60">
+                <Image
+                  src="/images/painter.png"
+                  alt="Painter"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              
+              {/* Icon */}
+              <div className="relative z-10 flex flex-col items-center justify-center h-full">
+                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <PaintRoller className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-white font-bold text-lg uppercase tracking-wide">
+                  Painter
+                </h3>
+              </div>
+            </div>
+
+            {/* Tutor */}
+            <div className="group cursor-pointer relative overflow-hidden rounded-2xl h-64 w-64 flex-shrink-0 transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                 onClick={() => handleCategorySelect('Tutor')}
+                 style={{ scrollSnapAlign: 'start' }}>
+              <div className="absolute inset-0 bg-gradient-to-b from-green-500/40 to-teal-500/40"></div>
+              <div className="absolute inset-0 bg-black/15 group-hover:bg-black/8 transition-all duration-300"></div>
+              
+              {/* Background Image */}
+              <div className="absolute inset-0 opacity-60">
+                <Image
+                  src="/images/slider2.jpg"
+                  alt="Tutor"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              
+              {/* Icon */}
+              <div className="relative z-10 flex flex-col items-center justify-center h-full">
+                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <Users className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-white font-bold text-lg uppercase tracking-wide">
+                  Tutor
+                </h3>
+              </div>
+            </div>
+
+            {/* Mechanic */}
+            <div className="group cursor-pointer relative overflow-hidden rounded-2xl h-64 w-64 flex-shrink-0 transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                 onClick={() => handleCategorySelect('Mechanic')}
+                 style={{ scrollSnapAlign: 'start' }}>
+              <div className="absolute inset-0 bg-gradient-to-b from-gray-600/40 to-gray-700/40"></div>
+              <div className="absolute inset-0 bg-black/15 group-hover:bg-black/8 transition-all duration-300"></div>
+              
+              {/* Background Image */}
+              <div className="absolute inset-0 opacity-60">
+                <Image
+                  src="/images/mechanic.png"
+                  alt="Mechanic"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              
+              {/* Icon */}
+              <div className="relative z-10 flex flex-col items-center justify-center h-full">
+                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <Cog className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-white font-bold text-lg uppercase tracking-wide">
+                  Mechanic
+                </h3>
+              </div>
+            </div>
+          </div>
+
+          {/* Navigation Controls */}
+          <div className="flex items-center justify-center gap-4 mt-6">
+            {/* Left Arrow */}
+            <button 
+              onClick={() => {
+                const container = document.getElementById('popular-services-scroll');
+                if (container) {
+                  container.scrollBy({ left: -280, behavior: 'smooth' });
+                }
+              }}
+              className="w-10 h-10 bg-slate-200 dark:bg-slate-700 rounded-full flex items-center justify-center hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors duration-200">
+              <ArrowRight size={20} className="text-slate-600 dark:text-slate-300 rotate-180" />
+            </button>
+
+            {/* Pagination Dots */}
+            <div className="flex items-center gap-2">
+              {[0, 1, 2].map((page) => (
+                <div
+                  key={page}
+                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                    currentPage === page
+                      ? 'bg-[#2563EB] scale-110'
+                      : 'bg-slate-300 dark:bg-slate-600 hover:bg-slate-400 dark:hover:bg-slate-500'
+                  }`}
+                  onClick={() => {
+                    const container = document.getElementById('popular-services-scroll');
+                    if (container) {
+                      container.scrollTo({ left: page * 280, behavior: 'smooth' });
+                    }
+                  }}
+                />
+              ))}
+            </div>
+            
+            {/* Right Arrow */}
+            <button 
+              onClick={() => {
+                const container = document.getElementById('popular-services-scroll');
+                if (container) {
+                  container.scrollBy({ left: 280, behavior: 'smooth' });
+                }
+              }}
+              className="w-10 h-10 bg-slate-200 dark:bg-slate-700 rounded-full flex items-center justify-center hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors duration-200">
+              <ArrowRight size={20} className="text-slate-600 dark:text-slate-300" />
+            </button>
           </div>
         </div>
       </section>
@@ -803,16 +963,155 @@ export default function Home() {
     
 
 
-      {/* CTA band */}
+      {/* Features Section */}
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-20">
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#2563EB] to-[#14B8A6] p-8">
-          <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "radial-gradient(circle at 20% 20%, white 2px, transparent 2px)" }} />
-          <div className="relative flex flex-col md:flex-row items-center justify-between gap-6">
-            <div>
-              <h3 className="text-white text-2xl font-extrabold">Need urgent help?</h3>
-              <p className="text-white/90">Tap emergency and get matched with the nearest available provider.</p>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          {/* Left Section - Features Text */}
+          <div className="space-y-8">
+            <h2 className="text-3xl sm:text-4xl font-bold text-[#2563EB] dark:text-[#2563EB] leading-tight">
+              Discover Our Outstanding Features
+            </h2>
+            
+            {/* Feature Cards */}
+            <div className="space-y-6">
+              {/* Feature 1 */}
+              <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-6 shadow-sm border border-slate-200/50 dark:border-slate-700/50 hover:shadow-md transition-all duration-300">
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                      <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                      Verified Professional Providers
+                    </h3>
+                    <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                      All our service providers are thoroughly vetted, licensed, and background-checked to ensure you receive the highest quality service from trusted professionals in your area.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Feature 2 */}
+              <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-6 shadow-sm border border-slate-200/50 dark:border-slate-700/50 hover:shadow-md transition-all duration-300">
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                      <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                      Instant Booking & Real-time Tracking
+                    </h3>
+                    <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                      Book services instantly with our streamlined platform and track your provider's arrival in real-time. Get updates every step of the way for complete peace of mind.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Feature 3 */}
+              <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-6 shadow-sm border border-slate-200/50 dark:border-slate-700/50 hover:shadow-md transition-all duration-300">
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                      <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                      Secure Payment & Quality Guarantee
+                    </h3>
+                    <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                      Enjoy secure payments with our escrow system and our 100% satisfaction guarantee. If you're not completely satisfied, we'll make it right or refund your money.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
-            <a href="#" className="rounded-xl bg-white/90 text-slate-900 font-semibold px-5 py-3 hover:bg-white">Emergency request</a>
+
+            {/* See More Link */}
+            <div className="pt-4">
+              <a href="#" className="inline-flex items-center text-[#2563EB] hover:text-[#1D4ED8] font-semibold transition-colors duration-200 group">
+                See More
+                <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
+              </a>
+            </div>
+          </div>
+
+          {/* Right Section - Image Collage */}
+          <div className="relative">
+            {/* Decorative dotted pattern */}
+            <div className="absolute top-0 right-0 w-32 h-32 opacity-20">
+              <div className="grid grid-cols-4 gap-2 h-full">
+                {Array.from({ length: 16 }).map((_, i) => (
+                  <div key={i} className="w-2 h-2 bg-[#14B8A6] rounded-full"></div>
+                ))}
+              </div>
+            </div>
+
+            {/* Curved arrow */}
+            <div className="absolute top-8 left-8 z-10">
+              <svg width="80" height="60" viewBox="0 0 80 60" className="text-[#14B8A6]">
+                <path
+                  d="M10 50 Q40 10 70 20"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  fill="none"
+                  strokeDasharray="5,5"
+                  className="animate-pulse"
+                />
+                <path
+                  d="M65 15 L70 20 L65 25"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  fill="none"
+                />
+              </svg>
+            </div>
+
+            {/* Image collage */}
+            <div className="relative flex items-center justify-center space-x-4">
+              {/* Circular image */}
+              <div className="relative z-20">
+                <div className="w-50 h-50 rounded-full overflow-hidden shadow-xl border-4 border-white dark:border-slate-800">
+                  <Image
+                    src="/images/mechanic.png"
+                    alt="Professional handshake"
+                    width={200}
+                    height={200}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+
+              {/* Vertical rectangular images */}
+              <div className="space-y-4">
+                {/* First vertical image */}
+                <div className="w-30 h-40 rounded-2xl overflow-hidden shadow-lg border-2 border-white dark:border-slate-800 relative z-10">
+                  <Image
+                    src="/images/slider5.jpg"
+                    alt="Professional working on laptop"
+                    width={96}
+                    height={128}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+
+                {/* Second vertical image */}
+                <div className="w-30 h-40 rounded-2xl overflow-hidden shadow-lg border-2 border-white dark:border-slate-800 relative z-10">
+                  <Image
+                    src="/images/plumber.png"
+                    alt="Professional writing notes"
+                    width={96}
+                    height={128}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

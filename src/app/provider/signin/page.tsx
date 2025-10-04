@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { Mail, Lock, Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, ArrowLeft, Users, Shield, Star, Zap } from "lucide-react";
 
 export default function ProviderSignIn() {
   const router = useRouter();
@@ -29,7 +29,7 @@ export default function ProviderSignIn() {
     setLoading(true);
     try {
       const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const response = await fetch(`${base}/api/auth/login`, {
+      const response = await fetch(`${base}/api/auth/provider/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -65,136 +65,194 @@ export default function ProviderSignIn() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        {/* Back Button */}
-        <div className="flex justify-start">
-          <button
-            onClick={() => router.push('/')}
-            className="flex items-center space-x-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to Home</span>
-          </button>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex">
+      {/* Left Side - Static Image Section */}
+      <div className="hidden lg:flex lg:w-[60%] relative overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <img
+            src="/images/provider-signin-bg.jpg"
+            alt="Provider Sign In"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#2563EB]/80 via-[#14B8A6]/70 to-slate-900/80"></div>
         </div>
-
-        {/* Header */}
-        <div className="text-center">
-          <h1 className="text-3xl font-extrabold text-slate-900 dark:text-slate-50">
-            Provider Sign In
+        
+        {/* Content Overlay */}
+        <div className="relative z-10 flex flex-col justify-center items-center text-center p-12 text-white">
+          {/* Logo/Icon */}
+          <div className="mb-8">
+            <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-3xl flex items-center justify-center shadow-2xl">
+              <Users className="w-10 h-10 text-white" />
+            </div>
+          </div>
+          
+          {/* Title */}
+          <h1 className="text-4xl font-bold mb-4">
+            Welcome Back, Provider!
           </h1>
-          <p className="mt-2 text-slate-600 dark:text-slate-300">
-            Sign in to your provider account
+          <p className="text-xl text-white/90 mb-8 max-w-md">
+            Sign in to access your provider dashboard and manage your services
           </p>
-        </div>
-
-        {/* Sign In Form */}
-        <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">
-                <Mail className="inline w-4 h-4 mr-2" />
-                Email Address
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                required
-                className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#2563EB]/50 focus:border-transparent"
-                placeholder="Enter your email"
-              />
-            </div>
-
-            {/* Password */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">
-                <Lock className="inline w-4 h-4 mr-2" />
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 pr-12 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#2563EB]/50 focus:border-transparent"
-                  placeholder="Enter your password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
+          
+          {/* Features */}
+          <div className="grid grid-cols-1 gap-4 max-w-sm">
+            <div className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm rounded-xl p-3">
+              <div className="w-8 h-8 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-lg flex items-center justify-center">
+                <Shield className="w-4 h-4 text-white" />
               </div>
+              <span className="text-sm font-medium">Secure & Verified</span>
             </div>
-
-            {/* Remember Me & Forgot Password */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 text-[#2563EB] focus:ring-[#2563EB] border-slate-300 dark:border-slate-600 rounded"
-                />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-slate-700 dark:text-slate-300">
-                  Remember me
-                </label>
+            
+            <div className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm rounded-xl p-3">
+              <div className="w-8 h-8 bg-gradient-to-r from-[#14B8A6] to-[#2563EB] rounded-lg flex items-center justify-center">
+                <Star className="w-4 h-4 text-white" />
               </div>
-
-              <div className="text-sm">
-                <button
-                  type="button"
-                  onClick={() => toast('🚧 Password Reset - Coming Soon!')}
-                  className="text-[#2563EB] hover:text-[#1D4ED8] font-medium"
-                >
-                  Forgot password?
-                </button>
-              </div>
+              <span className="text-sm font-medium">5-Star Rated Platform</span>
             </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-gradient-to-r from-[#2563EB] to-[#14B8A6] hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2563EB] disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
-            >
-              {loading ? (
-                <div className="flex items-center space-x-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  <span>Signing in...</span>
-                </div>
-              ) : (
-                'Sign In'
-              )}
-            </button>
-          </form>
-
-          {/* Sign Up Link */}
-          <div className="mt-6 text-center">
-            <p className="text-sm text-slate-600 dark:text-slate-400">
-              Don't have a provider account?{' '}
-              <button
-                onClick={() => router.push('/become-provider')}
-                className="text-[#2563EB] hover:text-[#1D4ED8] font-medium"
-              >
-                Sign up here
-              </button>
-            </p>
+            
+            <div className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm rounded-xl p-3">
+              <div className="w-8 h-8 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-lg flex items-center justify-center">
+                <Zap className="w-4 h-4 text-white" />
+              </div>
+              <span className="text-sm font-medium">Instant Access</span>
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Additional Info */}
-        <div className="text-center">
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            By signing in, you agree to our Terms of Service and Privacy Policy
-          </p>
+      {/* Right Side - Sign In Form */}
+      <div className="w-full lg:w-[40%] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full mx-auto">
+          {/* Back Button */}
+          <div className="flex justify-start mb-6">
+            <button
+              onClick={() => router.push('/')}
+              className="flex items-center space-x-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back to Home</span>
+            </button>
+          </div>
+
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-extrabold text-slate-900 dark:text-slate-50">
+              Provider Sign In
+            </h1>
+            <p className="mt-2 text-slate-600 dark:text-slate-300">
+              Sign in to your provider account
+            </p>
+          </div>
+
+          {/* Sign In Form */}
+          <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl p-8">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Email */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">
+                  <Mail className="inline w-4 h-4 mr-2" />
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#2563EB]/50 focus:border-transparent"
+                  placeholder="Enter your email"
+                />
+              </div>
+
+              {/* Password */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">
+                  <Lock className="inline w-4 h-4 mr-2" />
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 pr-12 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#2563EB]/50 focus:border-transparent"
+                    placeholder="Enter your password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Remember Me & Forgot Password */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <input
+                    id="remember-me"
+                    name="remember-me"
+                    type="checkbox"
+                    className="h-4 w-4 text-[#2563EB] focus:ring-[#2563EB] border-slate-300 dark:border-slate-600 rounded"
+                  />
+                  <label htmlFor="remember-me" className="ml-2 block text-sm text-slate-700 dark:text-slate-300">
+                    Remember me
+                  </label>
+                </div>
+
+                <div className="text-sm">
+                  <button
+                    type="button"
+                    onClick={() => toast('🚧 Password Reset - Coming Soon!')}
+                    className="text-[#2563EB] hover:text-[#1D4ED8] font-medium"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-gradient-to-r from-[#2563EB] to-[#14B8A6] hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2563EB] disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+              >
+                {loading ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>Signing in...</span>
+                  </div>
+                ) : (
+                  'Sign In'
+                )}
+              </button>
+            </form>
+
+            {/* Sign Up Link */}
+            <div className="mt-6 text-center">
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                Don't have a provider account?{' '}
+                <button
+                  onClick={() => router.push('/become-provider')}
+                  className="text-[#2563EB] hover:text-[#1D4ED8] font-medium"
+                >
+                  Sign up here
+                </button>
+              </p>
+            </div>
+          </div>
+
+          {/* Additional Info */}
+          <div className="text-center mt-6">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              By signing in, you agree to our Terms of Service and Privacy Policy
+            </p>
+          </div>
         </div>
       </div>
     </div>
