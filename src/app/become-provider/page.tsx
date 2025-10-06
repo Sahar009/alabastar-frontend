@@ -480,7 +480,7 @@ export default function BecomeProviderPage() {
               Already have a provider account?{' '}
               <button
                 onClick={() => router.push('/provider/signin')}
-                className="text-[#2563EB] hover:text-[#1D4ED8] font-medium transition-colors"
+                className="text-pink-600 hover:text-pink-500 font-medium transition-colors"
               >
                 Sign in here
               </button>
@@ -495,7 +495,7 @@ export default function BecomeProviderPage() {
               <div key={step} className="flex items-center">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
                   currentStep >= step 
-                    ? 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white' 
+                    ? 'bg-gradient-to-r from-pink-600 to-orange-500 text-white' 
                     : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
                 }`}>
                   {step}
@@ -503,7 +503,7 @@ export default function BecomeProviderPage() {
                 {step < 4 && (
                   <div className={`w-16 h-1 mx-2 ${
                     currentStep > step 
-                      ? 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6]' 
+                      ? 'bg-gradient-to-r from-pink-600 to-orange-500' 
                       : 'bg-slate-200 dark:bg-slate-700'
                   }`} />
                 )}
@@ -538,7 +538,7 @@ export default function BecomeProviderPage() {
                     value={formData.fullName}
                     onChange={handleInputChange}
                     required
-                    className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#2563EB]/50 focus:border-transparent"
+                    className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-pink-500/50 focus:border-transparent"
                     placeholder="Enter your full name"
                   />
                 </div>
@@ -554,7 +554,7 @@ export default function BecomeProviderPage() {
                     value={formData.businessName}
                     onChange={handleInputChange}
                     required
-                    className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#2563EB]/50 focus:border-transparent"
+                    className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-pink-500/50 focus:border-transparent"
                     placeholder="Enter your business name"
                   />
                 </div>
@@ -570,7 +570,7 @@ export default function BecomeProviderPage() {
                     value={formData.email}
                     onChange={handleInputChange}
                     required
-                    className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#2563EB]/50 focus:border-transparent"
+                    className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-pink-500/50 focus:border-transparent"
                     placeholder="Enter your email"
                   />
                 </div>
@@ -585,7 +585,7 @@ export default function BecomeProviderPage() {
                     name="phone"
                     value={formData.phone}
                     onChange={handleInputChange}
-                    className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#2563EB]/50 focus:border-transparent"
+                    className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-pink-500/50 focus:border-transparent"
                     placeholder="08123456789 or +2348123456789"
                   />
                   <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
@@ -603,7 +603,7 @@ export default function BecomeProviderPage() {
                     name="alternativePhone"
                     value={formData.alternativePhone}
                     onChange={handleInputChange}
-                    className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#2563EB]/50 focus:border-transparent"
+                    className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-pink-500/50 focus:border-transparent"
                     placeholder="08123456789 or +2348123456789 (optional)"
                   />
                   <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
@@ -739,7 +739,7 @@ export default function BecomeProviderPage() {
                         onFocus={() => setShowSuggestions(true)}
                         onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                         placeholder="Type a subcategory or select from suggestions..."
-                        className="flex-1 rounded-l-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#2563EB]/50 focus:border-transparent"
+                        className="flex-1 rounded-l-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-pink-500/50 focus:border-transparent"
                       />
                       <button
                         type="button"
@@ -749,7 +749,7 @@ export default function BecomeProviderPage() {
                           }
                         }}
                         disabled={!subcategoryInput.trim()}
-                        className="px-4 py-3 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white rounded-r-xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-4 py-3 bg-gradient-to-r from-pink-600 to-orange-500 text-white rounded-r-xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Plus className="w-4 h-4" />
                       </button>
@@ -881,8 +881,8 @@ export default function BecomeProviderPage() {
                 </div>
                 <div className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors group ${
                   uploading 
-                    ? 'border-blue-400 bg-blue-50 dark:bg-blue-900/20' 
-                    : 'border-slate-300 dark:border-slate-600 hover:border-[#2563EB] dark:hover:border-[#2563EB]'
+                    ? 'border-pink-400 bg-pink-50 dark:bg-pink-900/20' 
+                    : 'border-slate-300 dark:border-slate-600 hover:border-pink-500 dark:hover:border-pink-500'
                 }`}>
                   <input
                     ref={fileInputRef}
@@ -900,21 +900,21 @@ export default function BecomeProviderPage() {
                   />
                   <label htmlFor="file-upload" className={`cursor-pointer block ${uploading ? 'cursor-not-allowed' : ''}`}>
                     {uploading ? (
-                      <div className="animate-spin mx-auto h-12 w-12 border-4 border-[#2563EB] border-t-transparent rounded-full"></div>
+                      <div className="animate-spin mx-auto h-12 w-12 border-4 border-pink-600 border-t-transparent rounded-full"></div>
                     ) : (
-                      <Camera className="mx-auto h-12 w-12 text-slate-400 group-hover:text-[#2563EB] transition-colors" />
+                      <Camera className="mx-auto h-12 w-12 text-slate-400 group-hover:text-pink-600 transition-colors" />
                     )}
                     <p className={`mt-2 text-sm transition-colors ${
                       uploading 
-                        ? 'text-blue-600 dark:text-blue-400' 
-                        : 'text-slate-600 dark:text-slate-400 group-hover:text-[#2563EB]'
+                        ? 'text-pink-600 dark:text-pink-400' 
+                        : 'text-slate-600 dark:text-slate-400 group-hover:text-pink-600'
                     }`}>
                       {uploading ? 'Uploading files...' : 'Click to upload your identification document'}
                     </p>
                     <p className="text-xs text-slate-500 dark:text-slate-500">
                       PNG, JPG, PDF up to 10MB each
                     </p>
-                    <div className="mt-2 text-xs text-amber-600 dark:text-amber-400">
+                    <div className="mt-2 text-xs text-pink-600 dark:text-pink-400">
                       Required: NIN, Driver&apos;s License, or National Passport
                     </div>
                   </label>
@@ -1013,8 +1013,8 @@ export default function BecomeProviderPage() {
                 </div>
                 <div className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors group ${
                   uploading 
-                    ? 'border-blue-400 bg-blue-50 dark:bg-blue-900/20' 
-                    : 'border-slate-300 dark:border-slate-600 hover:border-[#2563EB] dark:hover:border-[#2563EB]'
+                    ? 'border-pink-400 bg-pink-50 dark:bg-pink-900/20' 
+                    : 'border-slate-300 dark:border-slate-600 hover:border-pink-500 dark:hover:border-pink-500'
                 }`}>
                   <input
                     ref={brandImageInputRef}
@@ -1032,21 +1032,21 @@ export default function BecomeProviderPage() {
                   />
                   <label htmlFor="brand-image-upload" className={`cursor-pointer block ${uploading ? 'cursor-not-allowed' : ''}`}>
                     {uploading ? (
-                      <div className="animate-spin mx-auto h-12 w-12 border-4 border-[#2563EB] border-t-transparent rounded-full"></div>
+                      <div className="animate-spin mx-auto h-12 w-12 border-4 border-pink-600 border-t-transparent rounded-full"></div>
                     ) : (
-                      <Camera className="mx-auto h-12 w-12 text-slate-400 group-hover:text-[#2563EB] transition-colors" />
+                      <Camera className="mx-auto h-12 w-12 text-slate-400 group-hover:text-pink-600 transition-colors" />
                     )}
                     <p className={`mt-2 text-sm transition-colors ${
                       uploading 
-                        ? 'text-blue-600 dark:text-blue-400' 
-                        : 'text-slate-600 dark:text-slate-400 group-hover:text-[#2563EB]'
+                        ? 'text-pink-600 dark:text-pink-400' 
+                        : 'text-slate-600 dark:text-slate-400 group-hover:text-pink-600'
                     }`}>
                       {uploading ? 'Uploading brand images...' : 'Click to upload your brand images'}
                     </p>
                     <p className="text-xs text-slate-500 dark:text-slate-500">
                       PNG, JPG up to 10MB each
                     </p>
-                    <div className="mt-2 text-xs text-blue-600 dark:text-blue-400">
+                    <div className="mt-2 text-xs text-pink-600 dark:text-pink-400">
                       Required: At least 2-3 brand images
                     </div>
                   </label>
@@ -1172,7 +1172,7 @@ export default function BecomeProviderPage() {
                   type="button"
                   onClick={initializePayment}
                   disabled={isProcessingPayment}
-                  className="w-full py-4 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white rounded-xl font-semibold text-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                  className="w-full py-4 bg-gradient-to-r from-pink-600 to-orange-500 text-white rounded-xl font-semibold text-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
                 >
                   {isProcessingPayment ? (
                     <div className="flex items-center justify-center space-x-2">
@@ -1225,7 +1225,7 @@ export default function BecomeProviderPage() {
                 <button
                   type="button"
                   onClick={nextStep}
-                  className="px-6 py-3 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white rounded-xl hover:opacity-90 transition-opacity"
+                  className="px-6 py-3 bg-gradient-to-r from-pink-600 to-orange-500 text-white rounded-xl hover:opacity-90 transition-opacity"
                 >
                   Next
                 </button>
@@ -1233,7 +1233,7 @@ export default function BecomeProviderPage() {
                 <button
                   type="submit"
                   disabled={loading || !paymentData}
-                  className="px-8 py-3 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50"
+                  className="px-8 py-3 bg-gradient-to-r from-pink-600 to-orange-500 text-white rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50"
                 >
                   {loading ? 'Submitting...' : 'Complete Registration'}
                 </button>

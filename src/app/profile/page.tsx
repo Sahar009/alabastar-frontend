@@ -49,7 +49,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center">
-        <div className="animate-spin h-12 w-12 border-4 border-[#2563EB] border-t-transparent rounded-full"></div>
+        <div className="animate-spin h-12 w-12 border-4 border-pink-600 border-t-transparent rounded-full"></div>
       </div>
     );
   }
@@ -80,7 +80,7 @@ export default function ProfilePage() {
                 {!editing ? (
                   <button
                     onClick={() => setEditing(true)}
-                    className="flex items-center gap-2 px-4 py-2 text-[#2563EB] hover:bg-[#2563EB]/10 rounded-xl transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 text-pink-600 hover:bg-pink-50 dark:hover:bg-pink-900/20 rounded-xl transition-colors"
                   >
                     <Edit3 size={16} />
                     Edit
@@ -89,7 +89,7 @@ export default function ProfilePage() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={handleSave}
-                      className="flex items-center gap-2 px-4 py-2 bg-[#2563EB] text-white rounded-xl hover:opacity-90 transition-opacity"
+                      className="flex items-center gap-2 px-4 py-2 bg-pink-600 text-white rounded-xl hover:opacity-90 transition-opacity"
                     >
                       <Save size={16} />
                       Save
@@ -150,7 +150,7 @@ export default function ProfilePage() {
                       name="phone"
                       value={formData.phone}
                       onChange={handleInputChange}
-                      className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#2563EB]/50 focus:border-transparent"
+                      className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-pink-500/50 focus:border-transparent"
                       placeholder="Enter your phone number"
                     />
                   ) : (
@@ -182,14 +182,14 @@ export default function ProfilePage() {
                   href="/providers"
                   className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                 >
-                  <MapPin className="w-5 h-5 text-[#2563EB]" />
+                  <MapPin className="w-5 h-5 text-pink-600" />
                   <span className="text-slate-700 dark:text-slate-300">Browse Services</span>
                 </Link>
                 <Link
                   href="/bookings"
                   className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                 >
-                  <Settings className="w-5 h-5 text-[#14B8A6]" />
+                  <Settings className="w-5 h-5 text-orange-500" />
                   <span className="text-slate-700 dark:text-slate-300">My Bookings</span>
                 </Link>
                 <button
@@ -209,19 +209,19 @@ export default function ProfilePage() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-slate-700 dark:text-slate-300">Email</span>
-                    <div className={`w-12 h-6 rounded-full ${customer.notificationSettings.email ? 'bg-[#2563EB]' : 'bg-slate-300'} transition-colors`}>
+                    <div className={`w-12 h-6 rounded-full ${customer.notificationSettings.email ? 'bg-pink-600' : 'bg-slate-300'} transition-colors`}>
                       <div className={`w-5 h-5 bg-white rounded-full shadow transform transition-transform ${customer.notificationSettings.email ? 'translate-x-6' : 'translate-x-0.5'} mt-0.5`}></div>
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-slate-700 dark:text-slate-300">SMS</span>
-                    <div className={`w-12 h-6 rounded-full ${customer.notificationSettings.sms ? 'bg-[#2563EB]' : 'bg-slate-300'} transition-colors`}>
+                    <div className={`w-12 h-6 rounded-full ${customer.notificationSettings.sms ? 'bg-pink-600' : 'bg-slate-300'} transition-colors`}>
                       <div className={`w-5 h-5 bg-white rounded-full shadow transform transition-transform ${customer.notificationSettings.sms ? 'translate-x-6' : 'translate-x-0.5'} mt-0.5`}></div>
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-slate-700 dark:text-slate-300">Push</span>
-                    <div className={`w-12 h-6 rounded-full ${customer.notificationSettings.push ? 'bg-[#2563EB]' : 'bg-slate-300'} transition-colors`}>
+                    <div className={`w-12 h-6 rounded-full ${customer.notificationSettings.push ? 'bg-pink-600' : 'bg-slate-300'} transition-colors`}>
                       <div className={`w-5 h-5 bg-white rounded-full shadow transform transition-transform ${customer.notificationSettings.push ? 'translate-x-6' : 'translate-x-0.5'} mt-0.5`}></div>
                     </div>
                   </div>

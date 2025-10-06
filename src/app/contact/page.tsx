@@ -57,7 +57,7 @@ export default function ContactPage() {
 
               <div className="mt-10 rounded-3xl border border-white/30 dark:border-white/10 bg-white/60 dark:bg-slate-900/50 backdrop-blur-xl p-6 shadow">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-center">
-                  <img src="/images/support.svg" alt="Customer care" className="w-full h-auto" />
+                  <img src="/images/support2.svg" alt="Customer care" className="w-full h-auto" />
                   <div>
                     <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-50">We’re here to help</h2>
                     <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Our support team is standing by to assist with bookings, payments, and provider questions. Reach out anytime and we’ll get back ASAP.</p>
@@ -73,7 +73,7 @@ export default function ContactPage() {
             </div>
 
             <form onSubmit={submit} className="relative overflow-hidden rounded-3xl border border-white/30 dark:border-white/10 bg-white/60 dark:bg-slate-900/50 backdrop-blur-xl p-6 shadow">
-              <div className="absolute -inset-px opacity-10 bg-gradient-to-r from-[#2563EB] to-[#14B8A6]" />
+              <div className="absolute -inset-px opacity-10 bg-gradient-to-r from-pink-600 to-orange-500" />
               <div className="relative grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Input label="Full name" name="name" value={form.name} onChange={onChange} required />
                 <Input label="Email" name="email" type="email" value={form.email} onChange={onChange} required />
@@ -81,11 +81,11 @@ export default function ContactPage() {
                 <Input label="Subject" name="subject" value={form.subject} onChange={onChange} />
                 <div className="sm:col-span-2">
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-200">Message</label>
-                  <textarea name="message" value={form.message} onChange={onChange} rows={5} className="mt-1 w-full rounded-xl border border-slate-300/70 dark:border-white/10 bg-white/80 dark:bg-slate-900/60 px-4 py-3 outline-none focus:ring-2 focus:ring-[#2563EB]/30" placeholder="How can we help?" required />
+                  <textarea name="message" value={form.message} onChange={onChange} rows={5} className="mt-1 w-full rounded-xl border border-slate-300/70 dark:border-white/10 bg-white/80 dark:bg-slate-900/60 px-4 py-3 outline-none focus:ring-2 focus:ring-pink-500/30" placeholder="How can we help?" required />
                 </div>
                 <div className="sm:col-span-2 flex items-center justify-between">
                   <p className="text-xs text-slate-500 dark:text-slate-400">We’ll reply within 24 hours.</p>
-                  <button disabled={loading} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#2563EB] to-[#14B8A6] px-5 py-3 text-white font-semibold shadow disabled:opacity-70">
+                  <button disabled={loading} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-pink-600 to-orange-500 px-5 py-3 text-white font-semibold shadow disabled:opacity-70">
                     <Send size={16} /> {loading ? 'Sending…' : 'Send message'}
                   </button>
                 </div>
@@ -101,7 +101,7 @@ export default function ContactPage() {
 function InfoCard({ icon, title, value, sub }: { icon: React.ReactNode; title: string; value: string; sub?: string }) {
   return (
     <div className="rounded-2xl border border-white/30 dark:border-white/10 bg-white/60 dark:bg-slate-900/50 backdrop-blur-xl p-4 shadow flex items-start gap-3">
-      <div className="h-9 w-9 grid place-items-center rounded-lg bg-gradient-to-br from-[#2563EB] to-[#14B8A6] text-white shrink-0">{icon}</div>
+      <div className="h-9 w-9 grid place-items-center rounded-lg bg-gradient-to-br from-pink-600 to-orange-500 text-white shrink-0">{icon}</div>
       <div className="min-w-0">
         <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{title}</p>
         <p className="text-sm font-semibold text-slate-900 dark:text-slate-50 break-words">{value}</p>
@@ -116,7 +116,7 @@ function Input(props: React.InputHTMLAttributes<HTMLInputElement> & { label: str
   return (
     <div>
       <label className="block text-sm font-medium text-slate-700 dark:text-slate-200">{label}</label>
-      <input {...rest} className="mt-1 w-full rounded-xl border border-slate-300/70 dark:border-white/10 bg-white/80 dark:bg-slate-900/60 px-4 py-3 outline-none focus:ring-2 focus:ring-[#2563EB]/30" />
+      <input {...rest} className="mt-1 w-full rounded-xl border border-slate-300/70 dark:border-white/10 bg-white/80 dark:bg-slate-900/60 px-4 py-3 outline-none focus:ring-2 focus:ring-pink-500/30" />
     </div>
   );
 }

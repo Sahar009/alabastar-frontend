@@ -3,7 +3,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import type { JSX } from "react";
-import { Wrench, Zap, Truck, Fan, Hammer, PaintRoller, Bug, Shirt, Ruler, Camera, Sparkles, Search, ShieldCheck, Star, Apple, Play, Users, Settings, MapPin, ArrowRight, CheckCircle, Sparkles2, UserPlus, Navigation, Cog } from "lucide-react";
+import { Wrench, Zap, Truck, Fan, Hammer, PaintRoller, Bug, Shirt, Ruler, Camera, Sparkles, Search, ShieldCheck, Star, Apple, Play, Users, Settings, MapPin, ArrowRight, CheckCircle, UserPlus, Navigation, Cog } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import FAQComponent from "@/components/FAQ";
 import Link from "next/link";
@@ -371,14 +371,14 @@ export default function Home() {
             </div>
 
             {/* Service category buttons - Horizontal scroll on mobile */}
-            <div className="mb-6 sm:mb-8">
-              <div className="flex sm:flex-wrap gap-2 sm:gap-4 overflow-x-auto pb-2 sm:pb-0 scrollbar-hide">
+            <div className="mb-6  sm:mb-8">
+              <div className="flex sm:flex-wrap gap-2 sm:gap-4 overflow-x-auto pb-2 sm:pb-0 scrollbar-hide pt-3">
               <button 
                 onClick={() => handleCategorySelect('plumbing')}
                   className={`flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 rounded-2xl sm:rounded-3xl transition-all duration-300 hover:scale-105 shadow-lg text-xs sm:text-sm font-medium whitespace-nowrap flex-shrink-0 ${
                   selectedCategory === 'plumbing' 
-                    ? 'bg-gradient-to-r from-[#1d4ed8] to-[#0f766e] text-white' 
-                    : 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] hover:from-[#1d4ed8] hover:to-[#0f766e] text-white'
+                    ? 'bg-gradient-to-r from-pink-600 to-orange-500 text-white' 
+                    : 'bg-gradient-to-r from-pink-600 to-orange-500 hover:bg-orange-500 text-white'
                 }`}
               >
                 <span>Plumbing</span>
@@ -388,8 +388,8 @@ export default function Home() {
                 onClick={() => handleCategorySelect('electrical')}
                   className={`flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 rounded-2xl sm:rounded-3xl transition-all duration-300 hover:scale-105 shadow-lg text-xs sm:text-sm font-medium whitespace-nowrap flex-shrink-0 ${
                   selectedCategory === 'electrical' 
-                    ? 'bg-gradient-to-r from-[#1d4ed8] to-[#0f766e] text-white' 
-                    : 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] hover:from-[#1d4ed8] hover:to-[#0f766e] text-white'
+                    ? 'bg-gradient-to-r from-pink-600 to-orange-500 text-white' 
+                    : 'bg-gradient-to-r from-pink-600 to-orange-500 hover:bg-orange-500 text-white'
                 }`}
               >
                 <span>Electrical</span>
@@ -399,8 +399,8 @@ export default function Home() {
                 onClick={() => handleCategorySelect('cleaning')}
                   className={`flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 rounded-2xl sm:rounded-3xl transition-all duration-300 hover:scale-105 shadow-lg text-xs sm:text-sm font-medium whitespace-nowrap flex-shrink-0 ${
                   selectedCategory === 'cleaning' 
-                    ? 'bg-gradient-to-r from-[#1d4ed8] to-[#0f766e] text-white' 
-                    : 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] hover:from-[#1d4ed8] hover:to-[#0f766e] text-white'
+                    ? 'bg-gradient-to-r from-pink-600 to-orange-500 text-white' 
+                    : 'bg-gradient-to-r from-pink-600 to-orange-500 hover:bg-orange-500 text-white'
                 }`}
               >
                 <span>Cleaning</span>
@@ -410,8 +410,8 @@ export default function Home() {
                 onClick={() => handleCategorySelect('carpentry')}
                   className={`flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 rounded-2xl sm:rounded-3xl transition-all duration-300 hover:scale-105 shadow-lg text-xs sm:text-sm font-medium whitespace-nowrap flex-shrink-0 ${
                   selectedCategory === 'carpentry' 
-                    ? 'bg-gradient-to-r from-[#1d4ed8] to-[#0f766e] text-white' 
-                    : 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] hover:from-[#1d4ed8] hover:to-[#0f766e] text-white'
+                    ? 'bg-gradient-to-r from-pink-600 to-orange-500 text-white' 
+                    : 'bg-gradient-to-r from-pink-600 to-orange-500 hover:bg-orange-500 text-white'
                 }`}
               >
                 <span>Carpentry</span>
@@ -421,8 +421,8 @@ export default function Home() {
                   onClick={() => handleCategorySelect('lesson teacher')}
                   className={`flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 rounded-2xl sm:rounded-3xl transition-all duration-300 hover:scale-105 shadow-lg text-xs sm:text-sm font-medium whitespace-nowrap flex-shrink-0 relative ${
                     selectedCategory === 'Lesson Teacher' 
-                    ? 'bg-gradient-to-r from-[#1d4ed8] to-[#0f766e] text-white' 
-                    : 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] hover:from-[#1d4ed8] hover:to-[#0f766e] text-white'
+                    ? 'bg-gradient-to-r from-pink-600 to-orange-500 text-white' 
+                    : 'bg-gradient-to-r from-pink-600 to-orange-500 hover:bg-orange-500 text-white'
                 }`}
               >
                   <span>Lesson Teacher</span>
@@ -497,13 +497,13 @@ export default function Home() {
             <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100">
               Most Popular Services
             </h2>
-            <div className="w-6 h-6 bg-[#2563EB] rounded-full flex items-center justify-center">
+            <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
               <ArrowRight size={12} className="text-white rotate-45" />
             </div>
           </div>
-          <Link href="/providers" className="flex items-center gap-2 text-[#2563EB] hover:text-[#1D4ED8] font-semibold transition-colors duration-200 group">
+          <Link href="/providers" className="flex items-center gap-2 text-orange-500 hover:text-orange-600 font-semibold transition-colors duration-200 group">
             View All
-            <div className="w-6 h-6 bg-[#2563EB] rounded-full flex items-center justify-center group-hover:bg-[#1D4ED8] transition-colors duration-200">
+            <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center group-hover:bg-orange-600 transition-colors duration-200">
               <ArrowRight size={12} className="text-white" />
             </div>
           </Link>
@@ -549,7 +549,7 @@ export default function Home() {
             <div className="group cursor-pointer relative overflow-hidden rounded-2xl h-64 w-64 flex-shrink-0 transition-all duration-300 hover:scale-105 hover:shadow-2xl"
                  onClick={() => handleCategorySelect('Plumber')}
                  style={{ scrollSnapAlign: 'start' }}>
-              <div className="absolute inset-0 bg-gradient-to-b from-blue-500/40 to-blue-600/40"></div>
+              <div className="absolute inset-0 bg-gradient-to-b from-orange-500/40 to-orange-600/40"></div>
               <div className="absolute inset-0 bg-black/15 group-hover:bg-black/8 transition-all duration-300"></div>
               
               {/* Background Image */}
@@ -707,7 +707,7 @@ export default function Home() {
                   key={page}
                   className={`w-3 h-3 rounded-full transition-all duration-300 ${
                     currentPage === page
-                      ? 'bg-[#2563EB] scale-110'
+                      ? 'bg-orange-500 scale-110'
                       : 'bg-slate-300 dark:bg-slate-600 hover:bg-slate-400 dark:hover:bg-slate-500'
                   }`}
                   onClick={() => {
@@ -755,14 +755,14 @@ export default function Home() {
             </div>
             
             {/* Gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-600/70 to-blue-800/80 group-hover:from-blue-600/60 group-hover:to-blue-800/70 transition-all duration-500" />
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-600/70 to-orange-800/80 group-hover:from-orange-600/60 group-hover:to-orange-800/70 transition-all duration-500" />
             <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all duration-500" />
             
             {/* Animated background pattern */}
             <div className="absolute inset-0 opacity-20">
-              <div className="absolute top-10 left-10 w-20 h-20 bg-blue-400 rounded-full blur-xl animate-pulse" />
-              <div className="absolute bottom-20 right-16 w-32 h-32 bg-blue-500 rounded-full blur-2xl animate-bounce" />
-              <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-blue-300 rounded-full blur-lg animate-ping" />
+              <div className="absolute top-10 left-10 w-20 h-20 bg-orange-400 rounded-full blur-xl animate-pulse" />
+              <div className="absolute bottom-20 right-16 w-32 h-32 bg-orange-500 rounded-full blur-2xl animate-bounce" />
+              <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-orange-300 rounded-full blur-lg animate-ping" />
             </div>
             
             <div className="relative h-full p-8 flex flex-col justify-center">
@@ -795,7 +795,7 @@ export default function Home() {
             
             {/* Decorative elements */}
             <div className="absolute top-6 right-6 w-16 h-16 bg-white/10 rounded-full blur-sm animate-pulse" />
-            <div className="absolute bottom-6 left-6 w-12 h-12 bg-blue-400/20 rounded-full blur-md animate-bounce" />
+            <div className="absolute bottom-6 left-6 w-12 h-12 bg-orange-400/20 rounded-full blur-md animate-bounce" />
           </div>
 
           {/* Customized to your specific needs */}
@@ -811,14 +811,14 @@ export default function Home() {
             </div>
             
             {/* Gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-600/70 to-teal-800/80 group-hover:from-emerald-600/60 group-hover:to-teal-800/70 transition-all duration-500" />
+            <div className="absolute inset-0 bg-gradient-to-br from-pink-600/70 to-pink-800/80 group-hover:from-pink-600/60 group-hover:to-pink-800/70 transition-all duration-500" />
             <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all duration-500" />
             
             {/* Animated background pattern */}
             <div className="absolute inset-0 opacity-20">
-              <div className="absolute top-16 right-12 w-24 h-24 bg-emerald-400 rounded-full blur-xl animate-pulse" />
-              <div className="absolute bottom-12 left-20 w-28 h-28 bg-teal-500 rounded-full blur-2xl animate-bounce" />
-              <div className="absolute top-1/3 right-1/3 w-20 h-20 bg-emerald-300 rounded-full blur-lg animate-ping" />
+              <div className="absolute top-16 right-12 w-24 h-24 bg-pink-400 rounded-full blur-xl animate-pulse" />
+              <div className="absolute bottom-12 left-20 w-28 h-28 bg-pink-500 rounded-full blur-2xl animate-bounce" />
+              <div className="absolute top-1/3 right-1/3 w-20 h-20 bg-pink-300 rounded-full blur-lg animate-ping" />
             </div>
             
             <div className="relative h-full p-8 flex flex-col justify-center">
@@ -851,7 +851,7 @@ export default function Home() {
             
             {/* Decorative elements */}
             <div className="absolute top-8 left-8 w-14 h-14 bg-white/10 rounded-full blur-sm animate-pulse" />
-            <div className="absolute bottom-8 right-8 w-10 h-10 bg-emerald-400/20 rounded-full blur-md animate-bounce" />
+            <div className="absolute bottom-8 right-8 w-10 h-10 bg-pink-400/20 rounded-full blur-md animate-bounce" />
           </div>
         </div>
 
@@ -968,7 +968,7 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Left Section - Features Text */}
           <div className="space-y-8">
-            <h2 className="text-3xl sm:text-4xl font-bold text-[#2563EB] dark:text-[#2563EB] leading-tight">
+            <h2 className="text-3xl sm:text-4xl font-bold text-pink-600 dark:text-pink-500 leading-tight">
               Discover Our Outstanding Features
             </h2>
             
@@ -1034,7 +1034,7 @@ export default function Home() {
 
             {/* See More Link */}
             <div className="pt-4">
-              <a href="#" className="inline-flex items-center text-[#2563EB] hover:text-[#1D4ED8] font-semibold transition-colors duration-200 group">
+              <a href="#" className="inline-flex items-center text-orange-500 hover:text-orange-600 font-semibold transition-colors duration-200 group">
                 See More
                 <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
               </a>
@@ -1047,14 +1047,14 @@ export default function Home() {
             <div className="absolute top-0 right-0 w-32 h-32 opacity-20">
               <div className="grid grid-cols-4 gap-2 h-full">
                 {Array.from({ length: 16 }).map((_, i) => (
-                  <div key={i} className="w-2 h-2 bg-[#14B8A6] rounded-full"></div>
+                  <div key={i} className="w-2 h-2 bg-pink-500 rounded-full"></div>
                 ))}
               </div>
             </div>
 
             {/* Curved arrow */}
             <div className="absolute top-8 left-8 z-10">
-              <svg width="80" height="60" viewBox="0 0 80 60" className="text-[#14B8A6]">
+              <svg width="80" height="60" viewBox="0 0 80 60" className="text-orange-500">
                 <path
                   d="M10 50 Q40 10 70 20"
                   stroke="currentColor"
@@ -1119,7 +1119,7 @@ export default function Home() {
       {/* Newsletter Subscription */}
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-20">
         <div className="relative overflow-hidden rounded-3xl border border-white/30 dark:border-white/10 bg-white/60 dark:bg-slate-900/50 backdrop-blur-xl p-8 shadow">
-          <div className="absolute -inset-px opacity-10 bg-gradient-to-r from-[#2563EB] to-[#14B8A6]" />
+          <div className="absolute -inset-px opacity-10 bg-gradient-to-r from-pink-600 to-orange-500" />
           <div className="relative text-center">
             <h3 className="text-2xl font-extrabold text-slate-900 dark:text-slate-50">Stay updated</h3>
             <p className="mt-2 text-slate-600 dark:text-slate-300">Get the latest updates on new features and providers in your area.</p>
@@ -1130,9 +1130,9 @@ export default function Home() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
-                className="flex-1 rounded-xl border border-slate-300/70 dark:border-white/10 bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#2563EB]/40"
+                className="flex-1 rounded-xl border border-slate-300/70 dark:border-white/10 bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-pink-500/40"
               />
-              <button className="rounded-xl bg-gradient-to-r from-[#2563EB] to-[#14B8A6] px-5 py-3 text-white font-semibold shadow-md shadow-sky-500/20 active:scale-[.98]">
+              <button className="rounded-xl bg-gradient-to-r from-pink-600 to-orange-500 px-5 py-3 text-white font-semibold shadow-md shadow-pink-500/20 active:scale-[.98]">
                 Subscribe
               </button>
             </form>

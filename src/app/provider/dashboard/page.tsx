@@ -1,6 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
 import toast from "react-hot-toast";
 import { 
   Calendar, 
@@ -30,8 +32,22 @@ import {
   Award,
   MapPin,
   Phone,
-  Mail
+  Mail,
+  Check
 } from "lucide-react";
+
+interface Notification {
+  id: string;
+  title: string;
+  body: string;
+  type: string;
+  category: string;
+  priority: string;
+  isRead: boolean;
+  createdAt: string;
+  actionUrl?: string;
+  imageUrl?: string;
+}
 
 export default function ProviderDashboard() {
   const router = useRouter();
@@ -49,6 +65,90 @@ export default function ProviderDashboard() {
     reviews: 0
   });
 
+  // Notification states
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
+
+  // Fetch unread notification count
+  const fetchUnreadCount = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const response = await fetch(`${base}/api/notifications/unread-count`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUnreadCount(data.count || 0);
+      }
+    } catch (error) {
+      console.error('Error fetching unread count:', error);
+    }
+  };
+
+  // Fetch recent notifications
+  const fetchNotifications = async () => {
+    try {
+      setNotificationsLoading(true);
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const response = await fetch(`${base}/api/notifications?limit=5`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setNotifications(data.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    } finally {
+      setNotificationsLoading(false);
+    }
+  };
+
+  const handleNotificationClick = () => {
+    setShowNotifications(!showNotifications);
+    if (!showNotifications && notifications.length === 0) {
+      fetchNotifications();
+    }
+  };
+
+  const markAsRead = async (notificationId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const response = await fetch(`${base}/api/notifications/${notificationId}/read`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        setNotifications(prev => 
+          prev.map(n => n.id === notificationId ? { ...n, isRead: true } : n)
+        );
+        fetchUnreadCount();
+      }
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  };
+
   // Fetch bookings from API
   const fetchBookings = async () => {
     try {
@@ -61,7 +161,7 @@ export default function ProviderDashboard() {
       }
 
       const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const response = await fetch(`${base}/api/bookings/provider`, {
+      const response = await fetch(`${base}/api/bookings`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -116,12 +216,20 @@ export default function ProviderDashboard() {
     // Fetch bookings and calculate real stats
     fetchBookings();
 
+    // Fetch notifications
+    fetchUnreadCount();
+    
+    // Poll for new notifications every 30 seconds
+    const interval = setInterval(fetchUnreadCount, 30000);
+
     // Set mock data for rating and reviews (these might come from a different endpoint)
     setStats(prevStats => ({
       ...prevStats,
       rating: 4.8,
       reviews: 23
     }));
+
+    return () => clearInterval(interval);
   }, []);
 
   const handleLogout = () => {
@@ -255,11 +363,11 @@ export default function ProviderDashboard() {
           {/* Sidebar Header */}
           <div className="flex items-center justify-between p-6 border-b border-slate-200/50 dark:border-slate-700/50 bg-gradient-to-r from-white/80 to-slate-50/80 dark:from-slate-800/80 dark:to-slate-900/80 backdrop-blur-sm">
             <div className="flex items-center space-x-3 group">
-              <div className="w-12 h-12 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300">
+              <div className="w-12 h-12 bg-pink-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300">
                 <Award className="w-7 h-7 text-white group-hover:rotate-12 transition-transform duration-300" />
               </div>
               <div>
-                <h2 className="text-xl font-bold bg-gradient-to-r from-[#2563EB] to-[#14B8A6] bg-clip-text text-transparent">Alabastar</h2>
+                <h2 className="text-xl font-bold text-pink-600">Alabastar</h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Provider Portal</p>
               </div>
             </div>
@@ -275,7 +383,7 @@ export default function ProviderDashboard() {
           <div className="p-6 border-b border-slate-200/50 dark:border-slate-700/50 bg-gradient-to-r from-slate-50/50 to-white/50 dark:from-slate-800/50 dark:to-slate-900/50">
             <div className="flex items-center space-x-3 group">
               <div className="relative">
-                <div className="w-14 h-14 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300">
+                <div className="w-14 h-14 bg-gradient-to-r from-[#FF6B35] to-[#EC4899] rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300">
                   <User className="w-7 h-7 text-white group-hover:scale-110 transition-transform duration-300" />
                 </div>
                 <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white dark:border-slate-800 flex items-center justify-center">
@@ -283,7 +391,7 @@ export default function ProviderDashboard() {
                 </div>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-slate-900 dark:text-slate-50 truncate group-hover:text-[#2563EB] transition-colors duration-200">
+                <p className="text-sm font-semibold text-slate-900 dark:text-slate-50 truncate group-hover:text-pink-600 transition-colors duration-200">
                   {user?.fullName || 'Provider'}
                 </p>
                 <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
@@ -323,7 +431,7 @@ export default function ProviderDashboard() {
                 }}
                 className={`group w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-300 transform hover:scale-105 ${
                   item.active 
-                    ? 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white shadow-lg shadow-blue-500/25' 
+                    ? 'bg-pink-600 text-white shadow-lg shadow-pink-500/25' 
                     : 'text-slate-600 dark:text-slate-400 hover:bg-gradient-to-r hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-700 dark:hover:to-slate-600 hover:text-slate-900 dark:hover:text-slate-100 hover:shadow-md'
                 }`}
                 style={{ animationDelay: `${index * 50}ms` }}
@@ -380,11 +488,11 @@ export default function ProviderDashboard() {
                   <Menu className="w-6 h-6" />
                 </button>
                 <div>
-                  <h1 className="text-3xl font-bold bg-gradient-to-r from-[#2563EB] to-[#14B8A6] bg-clip-text text-transparent">
+                  <h1 className="text-3xl font-bold text-pink-600">
                     Dashboard
                   </h1>
                   <p className="text-slate-600 dark:text-slate-400 font-medium">
-                    Welcome back, <span className="text-[#2563EB] font-semibold">{user?.fullName || 'Provider'}</span>! 👋
+                    Welcome back, <span className="text-pink-600 font-semibold">{user?.fullName || 'Provider'}</span>! 👋
                   </p>
                 </div>
               </div>
@@ -401,13 +509,117 @@ export default function ProviderDashboard() {
                     </svg>
                   </div>
                 </button>
-                <button
-                  onClick={() => handleComingSoon("Notifications")}
-                  className="group relative p-3 rounded-2xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all duration-200"
-                >
-                  <Bell className="w-6 h-6 group-hover:animate-bounce" />
-                  <span className="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full animate-pulse shadow-lg"></span>
-                </button>
+
+                {/* Notification Bell with Dropdown */}
+                <div className="relative">
+                  <button
+                    onClick={handleNotificationClick}
+                    className="group relative p-3 rounded-2xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all duration-200"
+                  >
+                    <Bell className="w-6 h-6 group-hover:animate-bounce" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </button>
+
+                  {/* Notifications Dropdown */}
+                  {showNotifications && (
+                    <div className="absolute right-0 mt-2 w-96 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 z-50 max-h-[500px] overflow-hidden flex flex-col">
+                      <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                        <h3 className="font-semibold text-slate-900 dark:text-white">Notifications</h3>
+                        <Link 
+                          href="/notifications" 
+                          className="text-sm text-pink-600 hover:text-pink-700 dark:text-pink-400"
+                          onClick={() => setShowNotifications(false)}
+                        >
+                          View All
+                        </Link>
+                      </div>
+
+                      <div className="overflow-y-auto max-h-96">
+                        {notificationsLoading ? (
+                          <div className="p-8 text-center text-slate-500">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600 mx-auto"></div>
+                          </div>
+                        ) : notifications.length === 0 ? (
+                          <div className="p-8 text-center text-slate-500 dark:text-slate-400">
+                            <Bell size={48} className="mx-auto mb-2 opacity-30" />
+                            <p>No notifications yet</p>
+                          </div>
+                        ) : (
+                          notifications.map((notification) => (
+                            <div
+                              key={notification.id}
+                              className={`p-4 border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer transition-colors ${
+                                !notification.isRead ? 'bg-pink-50 dark:bg-pink-900/10' : ''
+                              }`}
+                              onClick={() => {
+                                if (!notification.isRead) {
+                                  markAsRead(notification.id);
+                                }
+                                if (notification.actionUrl) {
+                                  router.push(notification.actionUrl);
+                                }
+                                setShowNotifications(false);
+                              }}
+                            >
+                              <div className="flex items-start gap-3">
+                                {notification.imageUrl && (
+                                  <Image 
+                                    src={notification.imageUrl} 
+                                    alt="" 
+                                    width={40} 
+                                    height={40} 
+                                    className="rounded-lg"
+                                  />
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-start justify-between gap-2">
+                                    <h4 className="font-semibold text-sm text-slate-900 dark:text-white line-clamp-1">
+                                      {notification.title}
+                                    </h4>
+                                    {!notification.isRead && (
+                                      <span className="flex-shrink-0 w-2 h-2 bg-pink-600 rounded-full"></span>
+                                    )}
+                                  </div>
+                                  <p className="text-sm text-slate-600 dark:text-slate-300 line-clamp-2 mt-1">
+                                    {notification.body}
+                                  </p>
+                                  <div className="flex items-center gap-2 mt-2">
+                                    <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                      notification.priority === 'urgent' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                                      notification.priority === 'high' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' :
+                                      'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
+                                    }`}>
+                                      {notification.category}
+                                    </span>
+                                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                                      {new Date(notification.createdAt).toLocaleDateString()}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+
+                      {notifications.length > 0 && (
+                        <div className="p-3 border-t border-slate-200 dark:border-slate-700">
+                          <Link
+                            href="/notifications"
+                            className="block text-center text-sm text-pink-600 hover:text-pink-700 dark:text-pink-400 font-medium"
+                            onClick={() => setShowNotifications(false)}
+                          >
+                            View all notifications
+                          </Link>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -421,7 +633,7 @@ export default function ProviderDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">Total Bookings</p>
-                  <p className="text-4xl font-bold bg-gradient-to-r from-[#2563EB] to-[#14B8A6] bg-clip-text text-transparent">{stats.totalBookings}</p>
+                  <p className="text-4xl font-bold text-pink-600">{stats.totalBookings}</p>
                   <p className="text-xs text-green-600 dark:text-green-400 flex items-center mt-2 font-medium">
                     <TrendingUp className="w-3 h-3 mr-1 animate-pulse" />
                     +12% from last month
@@ -467,7 +679,7 @@ export default function ProviderDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">Total Earnings</p>
-                  <p className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">₦{stats.totalEarnings.toLocaleString()}</p>
+                  <p className="text-4xl font-bold text-pink-600">₦{stats.totalEarnings.toLocaleString()}</p>
                   <p className="text-xs text-green-600 dark:text-green-400 flex items-center mt-2 font-medium">
                     <TrendingUp className="w-3 h-3 mr-1 animate-pulse" />
                     +8% from last month
@@ -556,7 +768,7 @@ export default function ProviderDashboard() {
 
           {/* Quick Actions */}
           <div className="mb-8">
-            <h3 className="text-2xl font-bold bg-gradient-to-r from-[#2563EB] to-[#14B8A6] bg-clip-text text-transparent mb-8">Quick Actions</h3>
+            <h3 className="text-2xl font-bold text-pink-600 mb-8">Quick Actions</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {quickActions.map((action, index) => (
                 <button
@@ -570,15 +782,15 @@ export default function ProviderDashboard() {
                       <action.icon className="w-6 h-6" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-bold text-slate-900 dark:text-slate-50 group-hover:text-[#2563EB] transition-colors duration-200">{action.title}</h4>
+                      <h4 className="font-bold text-slate-900 dark:text-slate-50 group-hover:text-pink-600 transition-colors duration-200">{action.title}</h4>
                       <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">{action.description}</p>
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="w-full h-1 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-full transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
+                      <div className="h-full bg-pink-600 rounded-full transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
                     </div>
-                    <ChevronRight className="w-5 h-5 text-slate-400 ml-3 group-hover:text-[#2563EB] group-hover:translate-x-1 transition-all duration-300" />
+                    <ChevronRight className="w-5 h-5 text-slate-400 ml-3 group-hover:text-pink-600 group-hover:translate-x-1 transition-all duration-300" />
                   </div>
                 </button>
               ))}
@@ -588,13 +800,13 @@ export default function ProviderDashboard() {
           {/* Recent Activity */}
           <div className="bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 rounded-3xl shadow-xl p-8 border border-slate-200/50 dark:border-slate-700/50">
             <div className="flex items-center justify-between mb-8">
-              <h3 className="text-2xl font-bold bg-gradient-to-r from-[#2563EB] to-[#14B8A6] bg-clip-text text-transparent">Recent Activity</h3>
+              <h3 className="text-2xl font-bold text-pink-600">Recent Activity</h3>
               <button 
                 onClick={() => {
                   fetchBookings();
                   router.push('/provider/bookings');
                 }}
-                className="group px-4 py-2 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-300 transform hover:scale-105"
+                className="group px-4 py-2 bg-pink-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-pink-500/25 transition-all duration-300 transform hover:scale-105"
               >
                 <span className="flex items-center space-x-2">
                   <span>View All Bookings</span>
@@ -603,9 +815,9 @@ export default function ProviderDashboard() {
               </button>
             </div>
             <div className="space-y-4">
-              {loading ? (
+                {loading ? (
                 <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2563EB]"></div>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600"></div>
                   <span className="ml-2 text-slate-600 dark:text-slate-400">Loading activities...</span>
                 </div>
               ) : allActivities.length > 0 ? (

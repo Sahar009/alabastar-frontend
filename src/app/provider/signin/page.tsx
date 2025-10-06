@@ -75,7 +75,7 @@ export default function ProviderSignIn() {
             alt="Provider Sign In"
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-br from-[#2563EB]/80 via-[#14B8A6]/70 to-slate-900/80"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-pink-600/80 via-pink-500/70 to-slate-900/80"></div>
         </div>
         
         {/* Content Overlay */}
@@ -98,21 +98,21 @@ export default function ProviderSignIn() {
           {/* Features */}
           <div className="grid grid-cols-1 gap-4 max-w-sm">
             <div className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm rounded-xl p-3">
-              <div className="w-8 h-8 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-pink-600 rounded-lg flex items-center justify-center">
                 <Shield className="w-4 h-4 text-white" />
               </div>
               <span className="text-sm font-medium">Secure & Verified</span>
             </div>
             
             <div className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm rounded-xl p-3">
-              <div className="w-8 h-8 bg-gradient-to-r from-[#14B8A6] to-[#2563EB] rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-pink-600 rounded-lg flex items-center justify-center">
                 <Star className="w-4 h-4 text-white" />
               </div>
               <span className="text-sm font-medium">5-Star Rated Platform</span>
             </div>
             
             <div className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm rounded-xl p-3">
-              <div className="w-8 h-8 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-pink-600 rounded-lg flex items-center justify-center">
                 <Zap className="w-4 h-4 text-white" />
               </div>
               <span className="text-sm font-medium">Instant Access</span>
@@ -160,7 +160,7 @@ export default function ProviderSignIn() {
                   value={formData.email}
                   onChange={handleInputChange}
                   required
-                  className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#2563EB]/50 focus:border-transparent"
+                  className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-pink-500/50 focus:border-transparent"
                   placeholder="Enter your email"
                 />
               </div>
@@ -198,7 +198,7 @@ export default function ProviderSignIn() {
                     id="remember-me"
                     name="remember-me"
                     type="checkbox"
-                    className="h-4 w-4 text-[#2563EB] focus:ring-[#2563EB] border-slate-300 dark:border-slate-600 rounded"
+                    className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-slate-300 dark:border-slate-600 rounded"
                   />
                   <label htmlFor="remember-me" className="ml-2 block text-sm text-slate-700 dark:text-slate-300">
                     Remember me
@@ -209,7 +209,7 @@ export default function ProviderSignIn() {
                   <button
                     type="button"
                     onClick={() => toast('🚧 Password Reset - Coming Soon!')}
-                    className="text-[#2563EB] hover:text-[#1D4ED8] font-medium"
+                    className="text-pink-600 hover:text-pink-500 font-medium"
                   >
                     Forgot password?
                   </button>
@@ -220,7 +220,7 @@ export default function ProviderSignIn() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-gradient-to-r from-[#2563EB] to-[#14B8A6] hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2563EB] disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {loading ? (
                   <div className="flex items-center space-x-2">
@@ -239,7 +239,7 @@ export default function ProviderSignIn() {
                 Don't have a provider account?{' '}
                 <button
                   onClick={() => router.push('/become-provider')}
-                  className="text-[#2563EB] hover:text-[#1D4ED8] font-medium"
+                  className="text-pink-600 hover:text-pink-500 font-medium"
                 >
                   Sign up here
                 </button>

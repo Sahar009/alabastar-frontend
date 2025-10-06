@@ -710,7 +710,7 @@ export default function ProvidersPage() {
             <div className="w-full lg:w-80 flex-shrink-0">
               <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl sm:rounded-3xl shadow-xl border border-slate-200/50 dark:border-slate-700/50 p-4 sm:p-6 lg:sticky lg:top-24">
                 <div className="flex items-center space-x-3 mb-4 sm:mb-6">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-pink-600 to-orange-500 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg">
                     <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                   </div>
                   <div>
@@ -731,8 +731,8 @@ export default function ProvidersPage() {
                       onClick={() => setSelectedCategory(cat.value)}
                       className={`group relative flex flex-col items-center space-y-1 sm:space-y-2 p-2 sm:p-3 rounded-lg sm:rounded-xl text-xs font-medium transition-all duration-300 hover:scale-105 ${
                         selectedCategory === cat.value
-                          ? 'bg-gradient-to-br from-[#2563EB] to-[#14B8A6] text-white shadow-xl shadow-[#2563EB]/30 transform scale-105'
-                          : 'bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 hover:bg-gradient-to-br hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-600 dark:hover:to-slate-500 hover:text-slate-900 dark:hover:text-slate-100 border border-slate-200/50 dark:border-slate-600/50 hover:border-[#2563EB]/30 hover:shadow-lg'
+                          ? 'bg-gradient-to-br from-pink-600 to-orange-500 text-white shadow-xl shadow-pink-500/30 transform scale-105'
+                          : 'bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 hover:bg-gradient-to-br hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-600 dark:hover:to-slate-500 hover:text-slate-900 dark:hover:text-slate-100 border border-slate-200/50 dark:border-slate-600/50 hover:border-pink-500/30 hover:shadow-lg'
                       }`}
                     >
                       {/* Image Container */}
@@ -745,11 +745,11 @@ export default function ProvidersPage() {
                           className="w-full h-full object-cover transition-all duration-300"
                         />
                         {selectedCategory === cat.value && (
-                          <div className="absolute inset-0 bg-gradient-to-br from-[#2563EB]/20 to-[#14B8A6]/20"></div>
+                          <div className="absolute inset-0 bg-gradient-to-br from-pink-600/20 to-orange-500/20"></div>
                         )}
                         {selectedCategory === cat.value && (
                           <div className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 w-3 h-3 sm:w-4 sm:h-4 bg-white rounded-full flex items-center justify-center shadow-lg">
-                            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#2563EB] rounded-full animate-pulse"></div>
+                            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-pink-600 rounded-full animate-pulse"></div>
                           </div>
                         )}
                       </div>
@@ -769,7 +769,7 @@ export default function ProvidersPage() {
                 {/* Selected Category Indicator */}
                 {selectedCategory && (
                   <div className="mt-6">
-                    <div className="bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-lg flex items-center justify-between">
+                    <div className="bg-gradient-to-r from-pink-600 to-orange-500 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-lg flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
                         <span>{getCategoryLabel(selectedCategory)}</span>
@@ -880,7 +880,7 @@ export default function ProvidersPage() {
                   <div className="relative z-10 p-6 sm:p-8">
                     <div className="flex items-center space-x-4">
                       <div className="relative">
-                        <div className="w-12 h-12 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-xl flex items-center justify-center shadow-lg">
+                        <div className="w-12 h-12 bg-gradient-to-r from-pink-600 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
                           <Search className="w-6 h-6 text-white" />
                         </div>
                         <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
@@ -934,11 +934,11 @@ export default function ProvidersPage() {
                 {/* Enhanced Search Input */}
                 <div className="mb-6">
                   <div className="relative group">
-                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2 z-10">
-                      <div className="w-5 h-5 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-lg flex items-center justify-center shadow-lg">
-                        <Search className="w-3 h-3 text-white" />
+                      <div className="absolute left-3 top-1/2 transform -translate-y-1/2 z-10">
+                        <div className="w-5 h-5 bg-gradient-to-r from-pink-600 to-orange-500 rounded-lg flex items-center justify-center shadow-lg">
+                          <Search className="w-3 h-3 text-white" />
+                        </div>
                       </div>
-                    </div>
                     <input
                       type="text"
                       placeholder="What service do you need? (e.g., plumber, electrician, cleaner...)"
@@ -953,7 +953,7 @@ export default function ProvidersPage() {
                       }}
                       className={`w-full pl-12 pr-16 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm text-slate-900 dark:text-slate-100 transition-all text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-0 shadow-lg hover:shadow-xl ${
                         isInputFocused 
-                          ? 'border-[#2563EB] shadow-xl shadow-[#2563EB]/20 bg-white dark:bg-slate-700' 
+                          ? 'border-pink-500 shadow-xl shadow-pink-500/20 bg-white dark:bg-slate-700' 
                           : 'hover:border-slate-300 dark:hover:border-slate-500'
                       }`}
                     />
@@ -965,7 +965,7 @@ export default function ProvidersPage() {
                       className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300 ${
                         (!searchQuery.trim() && !selectedCategory) || isEditingLocation
                           ? 'bg-slate-200 dark:bg-slate-600 text-slate-400 cursor-not-allowed'
-                          : 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white hover:opacity-90 hover:scale-105 shadow-lg hover:shadow-xl'
+                          : 'bg-gradient-to-r from-pink-600 to-orange-500 text-white hover:opacity-90 hover:scale-105 shadow-lg hover:shadow-xl'
                       }`}
                     >
                       <Search className="w-3 h-3" />
@@ -998,7 +998,7 @@ export default function ProvidersPage() {
                   <button
                     onClick={handleSearchSubmit}
                     disabled={(!searchQuery.trim() && !selectedCategory) || isEditingLocation}
-                    className={`w-full py-3 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white rounded-xl font-bold text-sm hover:opacity-90 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl hover:scale-[1.02] hover:-translate-y-0.5 flex items-center justify-center space-x-2 ${
+                    className={`w-full py-3 bg-gradient-to-r from-pink-600 to-orange-500 text-white rounded-xl font-bold text-sm hover:opacity-90 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl hover:scale-[1.02] hover:-translate-y-0.5 flex items-center justify-center space-x-2 ${
                         (!searchQuery.trim() && !selectedCategory) || isEditingLocation 
                           ? 'cursor-not-allowed' 
                           : 'cursor-pointer'
@@ -1016,7 +1016,7 @@ export default function ProvidersPage() {
                   </button>
                   
                   {/* Button Glow Effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-xl blur-lg opacity-30 -z-10"></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-pink-600 to-orange-500 rounded-xl blur-lg opacity-30 -z-10"></div>
                 </div>
               </div>
 
@@ -1123,7 +1123,7 @@ export default function ProvidersPage() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between">
                               <div className="flex-1 min-w-0">
-                                <h4 className="text-lg font-bold bg-gradient-to-r from-[#2563EB] to-[#14B8A6] bg-clip-text text-transparent mb-1 truncate">
+                                <h4 className="text-lg font-bold bg-gradient-to-r from-pink-600 to-orange-500 bg-clip-text text-transparent mb-1 truncate">
                                   {provider.businessName}
                                 </h4>
                                 <div className="flex items-center space-x-2 mb-2">
@@ -1160,10 +1160,10 @@ export default function ProvidersPage() {
 
                         {/* Brand Images Gallery */}
                         <div className="mb-4">
-                          <div className="flex items-center space-x-2 mb-3">
-                            <div className="w-2 h-2 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-full animate-pulse"></div>
-                             <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Brand Images</span>
-                          </div>
+                            <div className="flex items-center space-x-2 mb-3">
+                              <div className="w-2 h-2 bg-gradient-to-r from-pink-600 to-orange-500 rounded-full animate-pulse"></div>
+                               <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Brand Images</span>
+                            </div>
                           
                           {provider.brandImages && provider.brandImages.length > 0 ? (
                             <div className="grid grid-cols-3 gap-2">
@@ -1234,7 +1234,7 @@ export default function ProvidersPage() {
                             disabled={!provider.isAvailable}
                             className={`flex-1 py-2.5 sm:py-2 px-3 sm:px-4 rounded-lg font-semibold text-xs sm:text-sm transition-all duration-300 ${
                               provider.isAvailable
-                                ? 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white hover:opacity-90 hover:scale-105 shadow-lg hover:shadow-xl'
+                                ? 'bg-gradient-to-r from-pink-600 to-orange-500 text-white hover:opacity-90 hover:scale-105 shadow-lg hover:shadow-xl'
                                 : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed'
                             }`}
                           >
@@ -1290,7 +1290,7 @@ export default function ProvidersPage() {
                       {selectedCategory && (
                         <button
                           onClick={() => setSelectedCategory('')}
-                          className="px-4 py-2 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white rounded-lg hover:opacity-90 transition-opacity text-sm font-semibold"
+                          className="px-4 py-2 bg-gradient-to-r from-pink-600 to-orange-500 text-white rounded-lg hover:opacity-90 transition-opacity text-sm font-semibold"
                         >
                           Clear Category
                         </button>
@@ -1330,7 +1330,7 @@ export default function ProvidersPage() {
                 {/* Header */}
                 <div className="text-center mb-12">
                   <div className="inline-flex items-center space-x-3 mb-6">
-                    <div className="w-12 h-12 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-2xl flex items-center justify-center shadow-xl">
+                    <div className="w-12 h-12 bg-gradient-to-r from-pink-600 to-orange-500 rounded-2xl flex items-center justify-center shadow-xl">
                       <Search className="w-6 h-6 text-white" />
                     </div>
                     <h2 className="text-3xl sm:text-4xl font-bold text-white">
@@ -1450,7 +1450,7 @@ export default function ProvidersPage() {
                         searchInput.scrollIntoView({ behavior: 'smooth' });
                       }
                     }}
-                    className="inline-flex items-center space-x-3 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white px-8 py-4 rounded-2xl font-bold text-lg hover:opacity-90 transition-all duration-300 shadow-2xl hover:shadow-3xl hover:scale-105"
+                    className="inline-flex items-center space-x-3 bg-gradient-to-r from-pink-600 to-orange-500 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:opacity-90 transition-all duration-300 shadow-2xl hover:shadow-3xl hover:scale-105"
                   >
                     <Search className="w-5 h-5" />
                     <span>Start Searching Now</span>
@@ -1528,10 +1528,10 @@ export default function ProvidersPage() {
               <div className="mb-6">
                 {/* Zooming/Scaling Loader Animation */}
                 <div className="relative w-24 h-24 mx-auto mb-6">
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#2563EB] to-[#14B8A6] animate-ping opacity-75"></div>
-                  <div className="absolute inset-2 rounded-full bg-gradient-to-r from-[#2563EB] to-[#14B8A6] animate-pulse"></div>
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-pink-600 to-orange-500 animate-ping opacity-75"></div>
+                  <div className="absolute inset-2 rounded-full bg-gradient-to-r from-pink-600 to-orange-500 animate-pulse"></div>
                   <div className="absolute inset-4 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center">
-                    <Search className="w-6 h-6 text-[#2563EB] animate-bounce" />
+                    <Search className="w-6 h-6 text-pink-600 animate-bounce" />
                   </div>
                 </div>
                 
@@ -1545,9 +1545,9 @@ export default function ProvidersPage() {
                 
                 {/* Progress Dots */}
                 <div className="flex justify-center space-x-2 mt-6">
-                  <div className="w-2 h-2 bg-[#2563EB] rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-[#2563EB] rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                  <div className="w-2 h-2 bg-[#2563EB] rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                  <div className="w-2 h-2 bg-pink-600 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-pink-600 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                  <div className="w-2 h-2 bg-pink-600 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
                 </div>
               </div>
             </div>
@@ -1738,7 +1738,7 @@ export default function ProvidersPage() {
                         <div className="flex-1 min-w-0 flex flex-col justify-between">
                           <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-3">
                             <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                              <h3 className="text-lg sm:text-lg font-bold bg-gradient-to-r from-[#2563EB] to-[#14B8A6] bg-clip-text text-transparent truncate">
+                              <h3 className="text-lg sm:text-lg font-bold bg-gradient-to-r from-pink-600 to-orange-500 bg-clip-text text-transparent truncate">
                                 {provider.businessName || 'Business Name'}
                             </h3>
                               {/* {provider.user?.fullName && provider.businessName && (
@@ -1811,7 +1811,7 @@ export default function ProvidersPage() {
                           {/* Brand Images - Enhanced Grid Cards */}
                           <div className="mb-6">
                             <div className="flex items-center space-x-2 mb-3">
-                              <div className="w-2 h-2 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-full animate-pulse"></div>
+                              <div className="w-2 h-2 bg-gradient-to-r from-pink-600 to-orange-500 rounded-full animate-pulse"></div>
                               <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Brand Images</span>
                             </div>
                             <div className="grid grid-cols-3 gap-3">
@@ -1936,7 +1936,7 @@ export default function ProvidersPage() {
                           disabled={!provider.isAvailable}
                           className={`px-6 py-4 rounded-xl font-bold text-sm transition-all duration-300 cursor-pointer w-full shadow-lg hover:shadow-xl ${
                             provider.isAvailable
-                              ? 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white hover:opacity-90 hover:scale-105 hover:-translate-y-0.5'
+                              ? 'bg-gradient-to-r from-pink-600 to-orange-500 text-white hover:opacity-90 hover:scale-105 hover:-translate-y-0.5'
                               : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed'
                           }`}
                         >
@@ -2036,7 +2036,7 @@ export default function ProvidersPage() {
                         <div className="flex flex-col sm:flex-row gap-3 w-full">
                           <button
                             onClick={resetSearch}
-                            className="group px-6 py-3 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white rounded-xl hover:opacity-90 transition-all duration-300 font-semibold text-sm shadow-lg hover:shadow-xl hover:scale-105 flex items-center justify-center space-x-2 flex-1"
+                            className="group px-6 py-3 bg-gradient-to-r from-pink-600 to-orange-500 text-white rounded-xl hover:opacity-90 transition-all duration-300 font-semibold text-sm shadow-lg hover:shadow-xl hover:scale-105 flex items-center justify-center space-x-2 flex-1"
                           >
                             <div className="w-4 h-4 bg-white/20 rounded flex items-center justify-center">
                               <Search className="w-3 h-3 group-hover:rotate-12 transition-transform" />
@@ -2049,7 +2049,7 @@ export default function ProvidersPage() {
                             onClick={expandSearchRadius}
                             className="group px-6 py-3 bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-600 transition-all duration-300 font-semibold text-sm shadow-md hover:shadow-lg hover:scale-105 flex items-center justify-center space-x-2 flex-1"
                           >
-                            <div className="w-4 h-4 bg-gradient-to-r from-[#2563EB]/20 to-[#14B8A6]/20 rounded flex items-center justify-center">
+                            <div className="w-4 h-4 bg-gradient-to-r from-pink-600/20 to-orange-500/20 rounded flex items-center justify-center">
                               <Navigation className="w-3 h-3 group-hover:scale-110 transition-transform" />
                             </div>
                             <span>Expand Area</span>
@@ -2188,7 +2188,7 @@ export default function ProvidersPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                   <button
                     onClick={resetSearch}
-                    className="group px-4 py-3 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white rounded-xl hover:opacity-90 transition-all duration-300 font-semibold text-xs shadow-lg hover:shadow-xl hover:scale-105 flex items-center justify-center space-x-2"
+                    className="group px-4 py-3 bg-gradient-to-r from-pink-600 to-orange-500 text-white rounded-xl hover:opacity-90 transition-all duration-300 font-semibold text-xs shadow-lg hover:shadow-xl hover:scale-105 flex items-center justify-center space-x-2"
                   >
                     <div className="w-4 h-4 bg-white/20 rounded flex items-center justify-center">
                       <Search className="w-3 h-3 group-hover:rotate-12 transition-transform" />
@@ -2201,7 +2201,7 @@ export default function ProvidersPage() {
                     onClick={expandSearchRadius}
                     className="group px-4 py-3 bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-600 transition-all duration-300 font-semibold text-xs shadow-md hover:shadow-lg hover:scale-105 flex items-center justify-center space-x-2"
                   >
-                    <div className="w-4 h-4 bg-gradient-to-r from-[#2563EB]/20 to-[#14B8A6]/20 rounded flex items-center justify-center">
+                    <div className="w-4 h-4 bg-gradient-to-r from-pink-600/20 to-orange-500/20 rounded flex items-center justify-center">
                       <Navigation className="w-3 h-3 group-hover:scale-110 transition-transform" />
                     </div>
                     <span>Expand Search Area</span>

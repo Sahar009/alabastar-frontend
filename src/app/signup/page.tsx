@@ -219,7 +219,7 @@ function SignupContent() {
                 required
                 value={formData.fullName}
                 onChange={handleInputChange}
-                className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#2563EB]/50 focus:border-transparent transition-all"
+                className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-pink-500/50 focus:border-transparent transition-all"
                 placeholder="Enter your full name"
               />
             </div>
@@ -237,7 +237,7 @@ function SignupContent() {
                 required
                 value={formData.email}
                 onChange={handleInputChange}
-                className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#2563EB]/50 focus:border-transparent transition-all"
+                className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-pink-500/50 focus:border-transparent transition-all"
                 placeholder="Enter your email"
               />
             </div>
@@ -254,7 +254,7 @@ function SignupContent() {
                 autoComplete="tel"
                 value={formData.phone}
                 onChange={handleInputChange}
-                className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#2563EB]/50 focus:border-transparent transition-all"
+                className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-pink-500/50 focus:border-transparent transition-all"
                 placeholder="08123456789 or +2348123456789"
               />
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
@@ -342,17 +342,17 @@ function SignupContent() {
                   required
                   checked={formData.agreeToTerms}
                   onChange={handleInputChange}
-                  className="h-4 w-4 text-[#2563EB] focus:ring-[#2563EB]/50 border-slate-300 rounded"
+                  className="h-4 w-4 text-pink-600 focus:ring-pink-500/50 border-slate-300 rounded"
                 />
               </div>
               <div className="ml-3 text-sm">
                 <label htmlFor="agreeToTerms" className="text-slate-700 dark:text-slate-300">
                   I agree to the{" "}
-                  <a href="#" className="text-[#2563EB] hover:text-[#2563EB]/80">
+                  <a href="#" className="text-pink-600 hover:text-pink-500">
                     Terms of Service
                   </a>{" "}
                   and{" "}
-                  <a href="#" className="text-[#2563EB] hover:text-[#2563EB]/80">
+                  <a href="#" className="text-pink-600 hover:text-pink-500">
                     Privacy Policy
                   </a>
                 </label>
@@ -362,7 +362,7 @@ function SignupContent() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-gradient-to-r from-[#2563EB] to-[#14B8A6] hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2563EB]/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-gradient-to-r from-pink-600 to-orange-500 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
               {loading ? (
                 <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
@@ -407,7 +407,7 @@ function SignupContent() {
           <div className="mt-6 text-center">
             <p className="text-sm text-slate-600 dark:text-slate-400">
               Already have an account?{" "}
-              <Link href="/login" className="font-medium text-[#2563EB] hover:text-[#2563EB]/80">
+              <Link href="/login" className="font-medium text-pink-600 hover:text-pink-500">
                 Sign in here
               </Link>
             </p>
@@ -418,7 +418,7 @@ function SignupContent() {
         <div className="text-center">
           <p className="text-sm text-slate-600 dark:text-slate-400">
             Are you a service provider?{" "}
-            <Link href="/become-provider" className="font-medium text-[#14B8A6] hover:text-[#14B8A6]/80">
+            <Link href="/become-provider" className="font-medium text-orange-500 hover:text-orange-400">
               Join as a provider
             </Link>
           </p>
