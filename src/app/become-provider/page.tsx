@@ -1,8 +1,8 @@
 "use client";
-import { useState, useRef } from "react";
+import React, { useState, useRef } from "react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { Upload, User, Mail, Phone, FileText, Award, Camera, X, Plus, Tag, Image, Eye, EyeOff } from "lucide-react";
+import { Upload, User, Mail, Phone, FileText, Award, Camera, X, Plus, Tag, Image, Eye, EyeOff, Gift, Check } from "lucide-react";
 import type React from "react";
 import LocationPicker from "../../components/LocationPicker";
 
@@ -34,6 +34,8 @@ export default function BecomeProviderPage() {
     locationState: "",
     latitude: "",
     longitude: "",
+    referralCode: "", // Add referral code field
+    subscriptionPlanId: "", // Add subscription plan selection
     
     // Document data
     documents: [] as File[],
@@ -59,6 +61,12 @@ export default function BecomeProviderPage() {
   const [registrationFee, setRegistrationFee] = useState(5000); // Default fee
   const [paymentData, setPaymentData] = useState<any>(null);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [referralCodeValid, setReferralCodeValid] = useState<boolean | null>(null);
+  const [referralCodeInfo, setReferralCodeInfo] = useState<any>(null);
+  const [validatingReferralCode, setValidatingReferralCode] = useState(false);
+  const [subscriptionPlans, setSubscriptionPlans] = useState<any[]>([]);
+  const [loadingPlans, setLoadingPlans] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const brandImageInputRef = useRef<HTMLInputElement>(null);
 
@@ -135,6 +143,74 @@ export default function BecomeProviderPage() {
       setFormData(prev => ({ ...prev, [name]: formattedValue }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
+    }
+
+    // Validate referral code in real-time
+    if (name === 'referralCode') {
+      validateReferralCode(value);
+    }
+  };
+
+  const validateReferralCode = async (code: string) => {
+    if (!code || code.trim().length < 6) {
+      setReferralCodeValid(null);
+      setReferralCodeInfo(null);
+      return;
+    }
+
+    try {
+      setValidatingReferralCode(true);
+      const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${base}/api/referrals/validate/${code.trim()}`);
+      const data = await response.json();
+
+      if (data.success && data.valid) {
+        setReferralCodeValid(true);
+        setReferralCodeInfo(data.data);
+        toast.success(`Valid referral code! You'll be referred by ${data.data.businessName}`);
+      } else {
+        setReferralCodeValid(false);
+        setReferralCodeInfo(null);
+        if (code.trim().length >= 6) {
+          toast.error(data.message || 'Invalid referral code');
+        }
+      }
+    } catch (error) {
+      console.error('Error validating referral code:', error);
+      setReferralCodeValid(false);
+      setReferralCodeInfo(null);
+      if (code.trim().length >= 6) {
+        toast.error('Error validating referral code');
+      }
+    } finally {
+      setValidatingReferralCode(false);
+    }
+  };
+
+  const fetchSubscriptionPlans = async () => {
+    try {
+      setLoadingPlans(true);
+      const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${base}/api/subscription-plans/plans`);
+      const data = await response.json();
+
+      if (data.success) {
+        setSubscriptionPlans(data.data);
+        // Auto-select the first (cheapest) plan
+        if (data.data.length > 0) {
+          const firstPlan = data.data[0];
+          setSelectedPlan(firstPlan);
+          setFormData(prev => ({ ...prev, subscriptionPlanId: firstPlan.id }));
+          setRegistrationFee(firstPlan.price);
+        }
+      } else {
+        toast.error('Failed to load subscription plans');
+      }
+    } catch (error) {
+      console.error('Error fetching subscription plans:', error);
+      toast.error('Error loading subscription plans');
+    } finally {
+      setLoadingPlans(false);
     }
   };
 
@@ -335,8 +411,8 @@ export default function BecomeProviderPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // If we're on step 4 and payment is initialized, redirect to Paystack
-    if (currentStep === 4 && paymentData) {
+    // If we're on step 5 and payment is initialized, redirect to Paystack
+    if (currentStep === 5 && paymentData) {
       window.location.href = paymentData.authorization_url;
       return;
     }
@@ -415,9 +491,15 @@ export default function BecomeProviderPage() {
         toast.error('Please upload at least one brand image');
         return;
       }
+    } else if (currentStep === 4) {
+      // Check required fields for step 4 (subscription plan)
+      if (!formData.subscriptionPlanId) {
+        toast.error('Please select a subscription plan');
+        return;
+      }
     }
     
-    if (currentStep < 4) setCurrentStep(currentStep + 1);
+    if (currentStep < 5) setCurrentStep(currentStep + 1);
   };
 
   const prevStep = () => {
@@ -467,6 +549,11 @@ export default function BecomeProviderPage() {
     }
   };
 
+  // Fetch subscription plans on component mount
+  React.useEffect(() => {
+    fetchSubscriptionPlans();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -491,7 +578,7 @@ export default function BecomeProviderPage() {
         {/* Progress indicator */}
         <div className="mb-8">
           <div className="flex items-center justify-center space-x-4">
-            {[1, 2, 3, 4].map((step) => (
+            {[1, 2, 3, 4, 5].map((step) => (
               <div key={step} className="flex items-center">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
                   currentStep >= step 
@@ -500,7 +587,7 @@ export default function BecomeProviderPage() {
                 }`}>
                   {step}
                 </div>
-                {step < 4 && (
+                {step < 5 && (
                   <div className={`w-16 h-1 mx-2 ${
                     currentStep > step 
                       ? 'bg-gradient-to-r from-pink-600 to-orange-500' 
@@ -512,10 +599,11 @@ export default function BecomeProviderPage() {
           </div>
           <div className="flex justify-center mt-2">
             <p className="text-sm text-slate-600 dark:text-slate-400">
-              Step {currentStep} of 4: {
+              Step {currentStep} of 5: {
                 currentStep === 1 ? 'Personal Information' :
                 currentStep === 2 ? 'Service Details' : 
-                currentStep === 3 ? 'Documents & Verification' : 'Payment'
+                currentStep === 3 ? 'Documents & Verification' : 
+                currentStep === 4 ? 'Subscription Plan' : 'Payment'
               }
             </p>
           </div>
@@ -667,6 +755,69 @@ export default function BecomeProviderPage() {
                       )}
                     </button>
                   </div>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">
+                    <Gift className="inline w-4 h-4 mr-2" />
+                    Referral Code (Optional)
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      name="referralCode"
+                      value={formData.referralCode}
+                      onChange={handleInputChange}
+                      className={`w-full rounded-xl border px-4 py-3 pr-12 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-pink-500/50 focus:border-transparent ${
+                        referralCodeValid === true 
+                          ? 'border-green-500 bg-green-50 dark:bg-green-900/20' 
+                          : referralCodeValid === false 
+                          ? 'border-red-500 bg-red-50 dark:bg-red-900/20' 
+                          : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700'
+                      }`}
+                      placeholder="Enter referral code if you have one"
+                    />
+                    {validatingReferralCode && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <div className="w-5 h-5 border-2 border-pink-600 border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    )}
+                    {referralCodeValid === true && !validatingReferralCode && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                    )}
+                    {referralCodeValid === false && !validatingReferralCode && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Referral Code Info */}
+                  {referralCodeInfo && (
+                    <div className="mt-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                      <div className="flex items-center space-x-2">
+                        <Gift className="w-4 h-4 text-green-600 dark:text-green-400" />
+                        <div>
+                          <p className="text-sm text-green-700 dark:text-green-300 font-medium">
+                            Referred by: {referralCodeInfo.businessName}
+                          </p>
+                          <p className="text-xs text-green-600 dark:text-green-400">
+                            {referralCodeInfo.category} • {referralCodeInfo.totalReferrals} referrals made
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                    Got referred by an existing provider? Enter their referral code to earn them a commission when you subscribe!
+                  </p>
                 </div>
               </div>
             </div>
@@ -1121,6 +1272,99 @@ export default function BecomeProviderPage() {
 
           {currentStep === 4 && (
             <div className="space-y-6">
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Choose Your Subscription Plan</h2>
+              <p className="text-slate-600 dark:text-slate-400">Select a subscription plan that best fits your business needs</p>
+              
+              {loadingPlans ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="w-8 h-8 border-2 border-pink-600 border-t-transparent rounded-full animate-spin"></div>
+                  <span className="ml-2 text-slate-600 dark:text-slate-400">Loading subscription plans...</span>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {subscriptionPlans.map((plan) => (
+                    <div
+                      key={plan.id}
+                      className={`relative rounded-2xl border-2 p-6 cursor-pointer transition-all duration-200 ${
+                        selectedPlan?.id === plan.id
+                          ? 'border-pink-500 bg-pink-50 dark:bg-pink-900/20 shadow-lg'
+                          : 'border-slate-200 dark:border-slate-700 hover:border-pink-300 dark:hover:border-pink-600'
+                      }`}
+                      onClick={() => {
+                        setSelectedPlan(plan);
+                        setFormData(prev => ({ ...prev, subscriptionPlanId: plan.id }));
+                        setRegistrationFee(plan.price);
+                      }}
+                    >
+                      {selectedPlan?.id === plan.id && (
+                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-pink-500 rounded-full flex items-center justify-center">
+                          <Check className="w-4 h-4 text-white" />
+                        </div>
+                      )}
+                      
+                      <div className="text-center">
+                        <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">{plan.name}</h3>
+                        <div className="mb-4">
+                          <span className="text-3xl font-bold text-pink-600 dark:text-pink-400">
+                            {new Intl.NumberFormat('en-NG', {
+                              style: 'currency',
+                              currency: 'NGN',
+                              minimumFractionDigits: 0,
+                              maximumFractionDigits: 0
+                            }).format(plan.price)}
+                          </span>
+                          <span className="text-slate-600 dark:text-slate-400 ml-1">/{plan.interval}</span>
+                        </div>
+                        
+                        {plan.benefits && plan.benefits.length > 0 && (
+                          <ul className="text-sm text-slate-600 dark:text-slate-400 space-y-2 mb-4">
+                            {plan.benefits.map((benefit: string, index: number) => (
+                              <li key={index} className="flex items-center">
+                                <Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
+                                {benefit}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                        
+                        <div className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                          selectedPlan?.id === plan.id
+                            ? 'bg-pink-500 text-white'
+                            : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+                        }`}>
+                          {selectedPlan?.id === plan.id ? 'Selected' : 'Select Plan'}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {selectedPlan && (
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4">
+                  <div className="flex items-center space-x-2">
+                    <Check className="w-5 h-5 text-green-600 dark:text-green-400" />
+                    <div>
+                      <p className="text-green-700 dark:text-green-300 font-medium">
+                        Selected: {selectedPlan.name}
+                      </p>
+                      <p className="text-green-600 dark:text-green-400 text-sm">
+                        {new Intl.NumberFormat('en-NG', {
+                          style: 'currency',
+                          currency: 'NGN',
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 0
+                        }).format(selectedPlan.price)} per {selectedPlan.interval}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {currentStep === 5 && (
+            <div className="space-y-6">
               <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Payment</h2>
               
               <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 border border-green-200 dark:border-green-800 rounded-2xl p-6">
@@ -1129,14 +1373,20 @@ export default function BecomeProviderPage() {
                     <NairaIcon className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Registration Fee</h3>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">Complete your provider registration</p>
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                      {selectedPlan ? selectedPlan.name : 'Subscription Plan'}
+                    </h3>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                      {selectedPlan ? `${selectedPlan.interval} subscription` : 'Complete your provider registration'}
+                    </p>
                   </div>
                 </div>
                 
                 <div className="bg-white dark:bg-slate-800 rounded-xl p-4 mb-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-600 dark:text-slate-400">Registration Fee</span>
+                    <span className="text-slate-600 dark:text-slate-400">
+                      {selectedPlan ? selectedPlan.name : 'Subscription Fee'}
+                    </span>
                     <span className="text-2xl font-bold text-slate-900 dark:text-slate-100">
                       {new Intl.NumberFormat('en-NG', {
                         style: 'currency',
@@ -1147,7 +1397,7 @@ export default function BecomeProviderPage() {
                     </span>
                   </div>
                   <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                    One-time payment to activate your provider account
+                    {selectedPlan ? `${selectedPlan.interval} subscription with instant activation` : 'One-time payment to activate your provider account'}
                   </div>
                 </div>
 
@@ -1182,7 +1432,7 @@ export default function BecomeProviderPage() {
                   ) : (
                     <div className="flex items-center justify-center space-x-2">
                       <NairaIcon className="w-6 h-6" />
-                      <span>Pay Registration Fee</span>
+                      <span>Pay {selectedPlan ? selectedPlan.name : 'Subscription Fee'}</span>
                     </div>
                   )}
                 </button>
@@ -1221,7 +1471,7 @@ export default function BecomeProviderPage() {
             )}
             
             <div className="ml-auto">
-              {currentStep < 4 ? (
+              {currentStep < 5 ? (
                 <button
                   type="button"
                   onClick={nextStep}

@@ -33,7 +33,10 @@ import {
   MapPin,
   Phone,
   Mail,
-  Check
+  Check,
+  Copy,
+  Share2,
+  Gift
 } from "lucide-react";
 
 interface Notification {
@@ -63,6 +66,15 @@ export default function ProviderDashboard() {
     totalEarnings: 0,
     rating: 0,
     reviews: 0
+  });
+
+  // Referral states
+  const [referralCode, setReferralCode] = useState<string>('');
+  const [referralStats, setReferralStats] = useState({
+    totalReferrals: 0,
+    completedReferrals: 0,
+    totalCommissions: 0,
+    pendingCommissions: 0
   });
 
   // Notification states
@@ -149,6 +161,181 @@ export default function ProviderDashboard() {
     }
   };
 
+  // Fetch referral code and stats
+  const fetchReferralData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      
+      // Get provider profile to check if referral code exists
+      const profileResponse = await fetch(`${base}/api/providers/profile`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (profileResponse.ok) {
+        const profileData = await profileResponse.json();
+        console.log('Profile response data:', profileData);
+        if (profileData.success && profileData.data) {
+          const profile = profileData.data;
+          
+          // If no referral code, generate one
+          if (!profile.referralCode) {
+            console.log('No referral code found, generating one...');
+            const generateResponse = await fetch(`${base}/api/referrals/generate/${profile.id}`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              }
+            });
+
+            console.log('Generate response status:', generateResponse.status);
+            
+            if (generateResponse.ok) {
+              const generateData = await generateResponse.json();
+              console.log('Generate response data:', generateData);
+              if (generateData.success) {
+                setReferralCode(generateData.referralCode);
+                console.log('Referral code generated:', generateData.referralCode);
+              } else {
+                console.error('Failed to generate referral code:', generateData.message);
+                toast.error(`Failed to generate referral code: ${generateData.message}`);
+              }
+            } else {
+              const errorData = await generateResponse.json();
+              console.error('Generate referral code error:', errorData);
+              toast.error(`Error generating referral code: ${errorData.message || 'Unknown error'}`);
+            }
+          } else {
+            setReferralCode(profile.referralCode);
+            console.log('Using existing referral code:', profile.referralCode);
+          }
+
+          // Fetch referral stats
+          const statsResponse = await fetch(`${base}/api/referrals/stats/${profile.id}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          if (statsResponse.ok) {
+            const statsData = await statsResponse.json();
+            if (statsData.success && statsData.data) {
+              setReferralStats({
+                totalReferrals: statsData.data.stats.totalReferrals,
+                completedReferrals: statsData.data.stats.completedReferrals,
+                totalCommissions: statsData.data.stats.totalCommissions,
+                pendingCommissions: statsData.data.stats.pendingCommissions
+              });
+            }
+          }
+        } else {
+          console.error('Profile fetch failed - no data:', profileData);
+          toast.error('Failed to load provider profile');
+        }
+      } else {
+        const errorData = await profileResponse.json();
+        console.error('Profile fetch error:', errorData);
+        toast.error(`Error loading profile: ${errorData.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error fetching referral data:', error);
+      toast.error('Error loading referral data');
+    }
+  };
+
+  // Refresh all dashboard data
+  const refreshDashboardData = async () => {
+    await Promise.all([
+      fetchBookings(),
+      fetchReferralData(),
+      fetchProviderRating()
+    ]);
+  };
+
+  // Copy referral code to clipboard
+  const copyReferralCode = async () => {
+    try {
+      await navigator.clipboard.writeText(referralCode);
+      toast.success('Referral code copied to clipboard!');
+    } catch (error) {
+      console.error('Failed to copy:', error);
+      toast.error('Failed to copy referral code');
+    }
+  };
+
+  // Share referral code
+  const shareReferralCode = async () => {
+    const shareText = `Join me on Alabastar! Use my referral code: ${referralCode} to get started as a service provider.`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Join Alabastar with my referral code',
+          text: shareText,
+          url: window.location.origin
+        });
+      } catch (error) {
+        console.error('Error sharing:', error);
+        // Fallback to copying
+        await navigator.clipboard.writeText(shareText);
+        toast.success('Referral message copied to clipboard!');
+      }
+    } else {
+      // Fallback for browsers that don't support Web Share API
+      await navigator.clipboard.writeText(shareText);
+      toast.success('Referral message copied to clipboard!');
+    }
+  };
+
+  // Fetch provider rating data
+  const fetchProviderRating = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      
+      // Get provider profile first to get the provider ID
+      const profileResponse = await fetch(`${base}/api/providers/profile`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (profileResponse.ok) {
+        const profileData = await profileResponse.json();
+        if (profileData.success && profileData.data) {
+          const providerId = profileData.data.id;
+          
+          // Fetch rating statistics
+          const ratingResponse = await fetch(`${base}/api/reviews/provider/${providerId}/stats`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          if (ratingResponse.ok) {
+            const ratingData = await ratingResponse.json();
+            if (ratingData.success && ratingData.data) {
+              setStats(prevStats => ({
+                ...prevStats,
+                rating: ratingData.data.averageRating || 0,
+                reviews: ratingData.data.totalReviews || 0
+              }));
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching provider rating:', error);
+    }
+  };
+
   // Fetch bookings from API
   const fetchBookings = async () => {
     try {
@@ -216,18 +403,17 @@ export default function ProviderDashboard() {
     // Fetch bookings and calculate real stats
     fetchBookings();
 
+    // Fetch referral data
+    fetchReferralData();
+
+    // Fetch provider rating data
+    fetchProviderRating();
+
     // Fetch notifications
     fetchUnreadCount();
     
     // Poll for new notifications every 30 seconds
     const interval = setInterval(fetchUnreadCount, 30000);
-
-    // Set mock data for rating and reviews (these might come from a different endpoint)
-    setStats(prevStats => ({
-      ...prevStats,
-      rating: 4.8,
-      reviews: 23
-    }));
 
     return () => clearInterval(interval);
   }, []);
@@ -367,7 +553,7 @@ export default function ProviderDashboard() {
                 <Award className="w-7 h-7 text-white group-hover:rotate-12 transition-transform duration-300" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-pink-600">Alabastar</h2>
+              <Image src="/brand/logo.png" alt="Alabastar" width={100} height={70} priority />
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Provider Portal</p>
               </div>
             </div>
@@ -498,10 +684,10 @@ export default function ProviderDashboard() {
               </div>
               <div className="flex items-center space-x-3">
                 <button
-                  onClick={fetchBookings}
+                  onClick={refreshDashboardData}
                   disabled={loading}
                   className="group p-3 rounded-2xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all duration-200 disabled:opacity-50"
-                  title="Refresh bookings"
+                  title="Refresh dashboard data"
                 >
                   <div className={`w-6 h-6 ${loading ? 'animate-spin' : 'group-hover:rotate-180'} transition-transform duration-500`}>
                     <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -700,17 +886,30 @@ export default function ProviderDashboard() {
                 <Star className="w-5 h-5 text-yellow-500" />
               </div>
               <div className="flex items-center space-x-4">
-                <div className="text-4xl font-bold text-slate-900 dark:text-slate-50">{stats.rating}</div>
+                <div className="text-4xl font-bold text-slate-900 dark:text-slate-50">
+                  {stats.reviews > 0 ? stats.rating.toFixed(1) : 'New'}
+                </div>
                 <div>
                   <div className="flex items-center space-x-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`w-4 h-4 ${i < Math.floor(stats.rating) ? 'text-yellow-500 fill-current' : 'text-slate-300 dark:text-slate-600'}`}
-                      />
-                    ))}
+                    {stats.reviews > 0 ? (
+                      [...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-4 h-4 ${i < Math.floor(stats.rating) ? 'text-yellow-500 fill-current' : 'text-slate-300 dark:text-slate-600'}`}
+                        />
+                      ))
+                    ) : (
+                      [...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className="w-4 h-4 text-slate-300 dark:text-slate-600"
+                        />
+                      ))
+                    )}
                   </div>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">{stats.reviews} reviews</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    {stats.reviews > 0 ? `${stats.reviews} reviews` : 'No reviews yet'}
+                  </p>
                 </div>
               </div>
             </div>
@@ -766,6 +965,118 @@ export default function ProviderDashboard() {
             </div>
           </div>
 
+          {/* Referral Program Section */}
+          <div className="mb-8">
+            <h3 className="text-2xl font-bold text-pink-600 mb-6">Referral Program</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Referral Code Card */}
+              <div className="bg-gradient-to-br from-white via-pink-50 to-white dark:from-slate-800 dark:via-pink-900/20 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-lg font-semibold text-slate-900 dark:text-slate-50">Your Referral Code</h4>
+                  <Gift className="w-6 h-6 text-pink-600" />
+                </div>
+                
+                {referralCode ? (
+                  <div className="space-y-4">
+                    <div className="bg-gradient-to-r from-pink-100 to-pink-200 dark:from-pink-900/30 dark:to-pink-800/30 rounded-2xl p-4 border-2 border-dashed border-pink-300 dark:border-pink-600">
+                      <div className="text-center">
+                        <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">Share this code with new providers</p>
+                        <div className="text-3xl font-bold text-pink-600 font-mono tracking-wider">
+                          {referralCode}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex space-x-3">
+                      <button
+                        onClick={copyReferralCode}
+                        className="flex-1 flex items-center justify-center space-x-2 px-4 py-3 bg-pink-600 text-white rounded-xl font-semibold hover:bg-pink-700 transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+                      >
+                        <Copy className="w-4 h-4" />
+                        <span>Copy Code</span>
+                      </button>
+                      <button
+                        onClick={shareReferralCode}
+                        className="flex-1 flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-orange-500 to-pink-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-pink-700 transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+                      >
+                        <Share2 className="w-4 h-4" />
+                        <span>Share</span>
+                      </button>
+                    </div>
+                    
+                    <div className="text-center">
+                      <p className="text-sm text-slate-600 dark:text-slate-400">
+                        Earn <span className="font-semibold text-pink-600">10% commission</span> when your referrals subscribe!
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600 mx-auto mb-4"></div>
+                    <p className="text-slate-600 dark:text-slate-400">Generating your referral code...</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Referral Stats Card */}
+              <div className="bg-gradient-to-br from-white via-emerald-50 to-white dark:from-slate-800 dark:via-emerald-900/20 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-lg font-semibold text-slate-900 dark:text-slate-50">Referral Stats</h4>
+                  <TrendingUp className="w-6 h-6 text-emerald-600" />
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center p-4 bg-gradient-to-br from-emerald-100 to-green-200 dark:from-emerald-900/30 dark:to-green-800/30 rounded-2xl">
+                      <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                        {referralStats.totalReferrals}
+                      </div>
+                      <div className="text-sm text-slate-600 dark:text-slate-400 font-medium">
+                        Total Referrals
+                      </div>
+                    </div>
+                    <div className="text-center p-4 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30 rounded-2xl">
+                      <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                        {referralStats.completedReferrals}
+                      </div>
+                      <div className="text-sm text-slate-600 dark:text-slate-400 font-medium">
+                        Completed
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl">
+                      <div className="flex items-center space-x-2">
+                        <DollarSign className="w-4 h-4 text-green-600" />
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Total Commissions</span>
+                      </div>
+                      <span className="font-bold text-green-600 dark:text-green-400">
+                        ₦{referralStats.totalCommissions.toLocaleString()}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between p-3 bg-gradient-to-r from-amber-100 to-yellow-100 dark:from-amber-900/20 dark:to-yellow-900/20 rounded-xl">
+                      <div className="flex items-center space-x-2">
+                        <Clock className="w-4 h-4 text-amber-600" />
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Pending</span>
+                      </div>
+                      <span className="font-bold text-amber-600 dark:text-amber-400">
+                        ₦{referralStats.pendingCommissions.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="text-center pt-2">
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Commissions are paid when referrals complete their first subscription
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Quick Actions */}
           <div className="mb-8">
             <h3 className="text-2xl font-bold text-pink-600 mb-8">Quick Actions</h3>
@@ -803,7 +1114,7 @@ export default function ProviderDashboard() {
               <h3 className="text-2xl font-bold text-pink-600">Recent Activity</h3>
               <button 
                 onClick={() => {
-                  fetchBookings();
+                  refreshDashboardData();
                   router.push('/provider/bookings');
                 }}
                 className="group px-4 py-2 bg-pink-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-pink-500/25 transition-all duration-300 transform hover:scale-105"

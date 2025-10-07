@@ -8,7 +8,7 @@ export interface SearchFilters {
   longitude?: number;
   radius?: number;
   priceRange: [number, number];
-  rating: number;
+  ratingAverage: number;
   availability: boolean;
   verified: boolean;
   sortBy: string;
@@ -77,9 +77,9 @@ export class ProvidersService {
     }
 
     // Rating filter
-    if (filters.rating && filters.rating > 0) {
+    if (filters.ratingAverage && filters.ratingAverage > 0) {
       filtered = filtered.filter(provider =>
-        provider.ratingAverage >= filters.rating!
+        provider.ratingAverage >= filters.ratingAverage!
       );
     }
 
@@ -105,7 +105,7 @@ export class ProvidersService {
     const sorted = [...providers];
 
     switch (sortBy) {
-      case 'rating':
+      case 'ratingAverage':
         return sorted.sort((a, b) => b.ratingAverage - a.ratingAverage);
       case 'price_low':
         return sorted.sort((a, b) => a.hourlyRate - b.hourlyRate);
@@ -203,8 +203,8 @@ export class ProvidersService {
       businessName: `${names[index % names.length]} Services`,
       category: categories[index % categories.length],
       description: `Professional ${categories[index % categories.length]} services with ${5 + (index % 5)} years of experience.`,
-      rating: 3.5 + (index % 3),
-      reviewCount: 10 + (index % 50),
+      ratingAverage: 3.5 + (index % 3),
+      ratingCount: 10 + (index % 50),
       hourlyRate: 2000 + (index * 500),
       isAvailable: Math.random() > 0.3,
       isVerified: Math.random() > 0.4,

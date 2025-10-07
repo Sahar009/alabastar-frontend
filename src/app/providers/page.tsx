@@ -81,6 +81,7 @@ export default function ProvidersPage() {
   const [allProviders, setAllProviders] = useState<Provider[]>([]);
   const [isLoadingProviders, setIsLoadingProviders] = useState(false);
   const [ratingFilter, setRatingFilter] = useState<number | null>(null);
+  const [providerRatings, setProviderRatings] = useState<Record<string, { averageRating: number; totalReviews: number }>>({});
   
   // Existing state
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -205,6 +206,13 @@ export default function ProvidersPage() {
           console.log('About to call handleSearchSubmit');
           handleSearchSubmit();
         }, 100); // Small delay to ensure state is set
+      } else {
+        // Even without search params, load all providers for the location
+        console.log('Loading all providers for location');
+        setCurrentStep('search');
+        setTimeout(() => {
+          fetchAllProviders();
+        }, 100);
       }
     } else {
       console.log('No URL location data, detecting location');
@@ -220,8 +228,58 @@ export default function ProvidersPage() {
     }
   }, [userLocation]);
 
+  // Refresh ratings every 5 minutes
+  useEffect(() => {
+    if (allProviders.length > 0) {
+      const interval = setInterval(() => {
+        refreshProviderRatings();
+      }, 5 * 60 * 1000); // 5 minutes
+
+      return () => clearInterval(interval);
+    }
+  }, [allProviders.length]);
+
+  // Helper function to fetch provider ratings
+  const fetchProviderRatings = async (providerIds: string[]) => {
+    const raw = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    const base = raw.endsWith('/api') ? raw : `${raw.replace(/\/$/, '')}/api`;
+    
+    const ratings: Record<string, { averageRating: number; totalReviews: number }> = {};
+    
+    // Fetch ratings for all providers in parallel
+    await Promise.all(
+      providerIds.map(async (providerId) => {
+        try {
+          const ratingResponse = await fetch(`${base}/reviews/provider/${providerId}/stats`);
+          const ratingData = await ratingResponse.json();
+          
+          if (ratingData.success) {
+            ratings[providerId] = {
+              averageRating: ratingData.data.averageRating,
+              totalReviews: ratingData.data.totalReviews
+            };
+          } else {
+            ratings[providerId] = { averageRating: 0, totalReviews: 0 };
+          }
+        } catch (error) {
+          console.error(`Error fetching rating for provider ${providerId}:`, error);
+          ratings[providerId] = { averageRating: 0, totalReviews: 0 };
+        }
+      })
+    );
+    
+    return ratings;
+  };
+
   const fetchAllProviders = async () => {
-    if (!userLocation) return;
+    // Use current location or default to Lagos
+    const location = userLocation || {
+      address: 'Lagos, Nigeria',
+      city: 'Lagos',
+      state: 'Lagos',
+      latitude: 6.5244,
+      longitude: 3.3792
+    };
     
     setIsLoadingProviders(true);
     try {
@@ -229,39 +287,47 @@ export default function ProvidersPage() {
       const base = raw.endsWith('/api') ? raw : `${raw.replace(/\/$/, '')}/api`;
       
       // Fetch all providers
-      const response = await fetch(`${base}/providers/search?search=&location=${userLocation.city}`);
+      const response = await fetch(`${base}/providers/search?search=&location=${location.city}`);
       const data = await response.json();
       
       console.log('Fetched providers:', data);
       
       if (data.success && data.data?.providers) {
-        const providers: Provider[] = data.data.providers.map((provider: any) => ({
-          id: provider.id,
-          user: {
-            fullName: provider.User?.fullName || 'Provider',
-            email: provider.User?.email || '',
-            phone: provider.User?.phone || '',
-            avatarUrl: provider.User?.avatarUrl || ''
-          },
-          businessName: provider.businessName || provider.User?.fullName || 'Business',
-          category: provider.category,
-          subcategories: provider.subcategories || [],
-          locationCity: provider.locationCity || userLocation.city,
-          locationState: provider.locationState || userLocation.state,
-          ratingAverage: provider.ratingAverage || 4.5,
-          ratingCount: provider.ratingCount || 0,
-          startingPrice: provider.startingPrice || 5000,
-          hourlyRate: provider.hourlyRate || 2000,
-          bio: provider.bio || `Professional ${provider.category} service provider`,
-          verificationStatus: provider.verificationStatus || 'verified',
-          isAvailable: provider.isAvailable !== false,
-          estimatedArrival: provider.estimatedArrival || '30 mins',
-          yearsOfExperience: provider.yearsOfExperience || 3,
-          brandImages: provider.portfolio || provider.brandImages || []
-        }));
+        // Fetch ratings for all providers efficiently
+        const providerIds = data.data.providers.map((provider: any) => provider.id);
+        const ratings = await fetchProviderRatings(providerIds);
+        
+        const providersWithRatings: Provider[] = data.data.providers.map((provider: any) => {
+          const ratingInfo = ratings[provider.id] || { averageRating: 0, totalReviews: 0 };
+          
+          return {
+            id: provider.id,
+            user: {
+              fullName: provider.User?.fullName || 'Provider',
+              email: provider.User?.email || '',
+              phone: provider.User?.phone || '',
+              avatarUrl: provider.User?.avatarUrl || ''
+            },
+            businessName: provider.businessName || provider.User?.fullName || 'Business',
+            category: provider.category,
+            subcategories: provider.subcategories || [],
+            locationCity: provider.locationCity || location.city,
+            locationState: provider.locationState || location.state,
+            ratingAverage: ratingInfo.averageRating,
+            ratingCount: ratingInfo.totalReviews,
+            startingPrice: provider.startingPrice || 5000,
+            hourlyRate: provider.hourlyRate || 2000,
+            bio: provider.bio || `Professional ${provider.category} service provider`,
+            verificationStatus: provider.verificationStatus || 'verified',
+            isAvailable: provider.isAvailable !== false,
+            estimatedArrival: provider.estimatedArrival || '30 mins',
+            yearsOfExperience: provider.yearsOfExperience || 3,
+            brandImages: provider.portfolio || provider.brandImages || []
+          };
+        });
         
         // Filter providers by location (within 25km radius)
-        const filteredProviders = providers.filter(provider => {
+        const filteredProviders = providersWithRatings.filter(provider => {
           // For now, we'll show all providers since we don't have exact coordinates
           // In a real app, you'd calculate distance using lat/lng
           return true;
@@ -336,6 +402,10 @@ export default function ProvidersPage() {
         // Only set to search step if we don't have URL parameters
         if (!urlSearch && !urlCategory) {
           setCurrentStep('search');
+          // Auto-load providers after location detection
+          setTimeout(() => {
+            fetchAllProviders();
+          }, 500);
         }
       } catch (error) {
         console.error('Reverse geocoding failed:', error);
@@ -354,6 +424,10 @@ export default function ProvidersPage() {
         // Only set to search step if we don't have URL parameters
         if (!urlSearch && !urlCategory) {
           setCurrentStep('search');
+          // Auto-load providers after location detection
+          setTimeout(() => {
+            fetchAllProviders();
+          }, 500);
         }
       }
     } catch (error) {
@@ -361,6 +435,22 @@ export default function ProvidersPage() {
       // Fallback to manual location selection only if no URL parameters
       if (!urlSearch && !urlCategory) {
         setCurrentStep('search');
+        // Set a default location and load providers
+        setUserLocation({
+          address: 'Lagos, Nigeria',
+          city: 'Lagos',
+          state: 'Lagos',
+          latitude: 6.5244,
+          longitude: 3.3792,
+          streetNumber: '',
+          streetName: '',
+          postalCode: '',
+          country: 'Nigeria'
+        });
+        // Auto-load providers with default location
+        setTimeout(() => {
+          fetchAllProviders();
+        }, 500);
       }
     }
   };
@@ -417,8 +507,14 @@ export default function ProvidersPage() {
     setCurrentStep('results');
     setShowRadiusExpansion(false);
     
-    // Get current location (including any edits)
-    const currentLocation = userLocation;
+    // Get current location (including any edits) or use default
+    const currentLocation = userLocation || {
+      address: 'Lagos, Nigeria',
+      city: 'Lagos',
+      state: 'Lagos',
+      latitude: 6.5244,
+      longitude: 3.3792
+    };
     
     try {
       // Fetch real providers from API
@@ -454,30 +550,38 @@ export default function ProvidersPage() {
       console.log('API Response:', data);
       
       if (data.success && data.data?.providers) {
-        const allProviders: Provider[] = data.data.providers.map((provider: any) => ({
-          id: provider.id,
-          user: {
-            fullName: provider.User?.fullName || 'Provider',
-            email: provider.User?.email || '',
-            phone: provider.User?.phone || '',
-            avatarUrl: provider.User?.avatarUrl || ''
-          },
-          businessName: provider.businessName || provider.User?.fullName || 'Business',
-          category: provider.category,
-          subcategories: provider.subcategories || [],
-          locationCity: provider.locationCity || currentLocation?.city || 'Lagos',
-          locationState: provider.locationState || currentLocation?.state || 'Lagos',
-          ratingAverage: provider.ratingAverage || 4.5,
-          ratingCount: provider.ratingCount || 0,
-          startingPrice: provider.startingPrice || 5000,
-          hourlyRate: provider.hourlyRate || 2000,
-          bio: provider.bio || `Professional ${provider.category} service provider`,
-          verificationStatus: provider.verificationStatus || 'verified',
-          isAvailable: provider.isAvailable !== false,
-          estimatedArrival: provider.estimatedArrival || '30 mins',
-          yearsOfExperience: provider.yearsOfExperience || 3,
-          brandImages: provider.brandImages || []
-        }));
+        // Fetch ratings for all providers efficiently
+        const providerIds = data.data.providers.map((provider: any) => provider.id);
+        const ratings = await fetchProviderRatings(providerIds);
+        
+        const allProviders: Provider[] = data.data.providers.map((provider: any) => {
+          const ratingInfo = ratings[provider.id] || { averageRating: 0, totalReviews: 0 };
+          
+          return {
+            id: provider.id,
+            user: {
+              fullName: provider.User?.fullName || 'Provider',
+              email: provider.User?.email || '',
+              phone: provider.User?.phone || '',
+              avatarUrl: provider.User?.avatarUrl || ''
+            },
+            businessName: provider.businessName || provider.User?.fullName || 'Business',
+            category: provider.category,
+            subcategories: provider.subcategories || [],
+            locationCity: provider.locationCity || currentLocation?.city || 'Lagos',
+            locationState: provider.locationState || currentLocation?.state || 'Lagos',
+            ratingAverage: ratingInfo.averageRating,
+            ratingCount: ratingInfo.totalReviews,
+            startingPrice: provider.startingPrice || 5000,
+            hourlyRate: provider.hourlyRate || 2000,
+            bio: provider.bio || `Professional ${provider.category} service provider`,
+            verificationStatus: provider.verificationStatus || 'verified',
+            isAvailable: provider.isAvailable !== false,
+            estimatedArrival: provider.estimatedArrival || '30 mins',
+            yearsOfExperience: provider.yearsOfExperience || 3,
+            brandImages: provider.brandImages || []
+          };
+        });
         
         // Apply radius-based filtering (simplified for demo)
         const radiusFilteredResults = allProviders.filter((_, index) => {
@@ -626,6 +730,24 @@ export default function ProvidersPage() {
       longitude: location.longitude
     } : null);
     setIsEditingLocation(false);
+  };
+
+  // Function to refresh ratings for existing providers
+  const refreshProviderRatings = async () => {
+    if (allProviders.length === 0) return;
+    
+    const providerIds = allProviders.map(provider => provider.id);
+    const ratings = await fetchProviderRatings(providerIds);
+    
+    // Update providers with new ratings
+    const updatedProviders = allProviders.map(provider => ({
+      ...provider,
+      ratingAverage: ratings[provider.id]?.averageRating || provider.ratingAverage,
+      ratingCount: ratings[provider.id]?.totalReviews || provider.ratingCount
+    }));
+    
+    setAllProviders(updatedProviders);
+    setSearchResults(updatedProviders);
   };
 
   // Render different steps
@@ -1214,10 +1336,10 @@ export default function ProvidersPage() {
                           <div className="flex items-center space-x-1">
                             <Star className="w-4 h-4 text-yellow-500 fill-current" />
                             <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                              {Number(provider.ratingAverage || 0).toFixed(1)}
+                              {provider.ratingCount > 0 ? Number(provider.ratingAverage).toFixed(1) : 'New'}
                             </span>
                             <span className="text-xs text-slate-500 dark:text-slate-400">
-                              ({provider.ratingCount} reviews)
+                              ({provider.ratingCount} review{provider.ratingCount !== 1 ? 's' : ''})
                             </span>
                           </div>
                           {provider.isAvailable && (
@@ -1895,12 +2017,12 @@ export default function ProvidersPage() {
                               <div className="flex items-center space-x-1">
                                 <Star className="w-5 h-5 text-yellow-500 fill-current flex-shrink-0" />
                                 <span className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                                {Number(provider.ratingAverage || 0).toFixed(1)}
-                              </span>
+                                  {provider.ratingCount > 0 ? Number(provider.ratingAverage).toFixed(1) : 'New'}
+                                </span>
                               </div>
                               <div className="w-px h-4 bg-yellow-300 dark:bg-yellow-700"></div>
                               <span className="text-sm text-slate-600 dark:text-slate-400 font-medium">
-                                {provider.ratingCount} reviews
+                                {provider.ratingCount} review{provider.ratingCount !== 1 ? 's' : ''}
                               </span>
                             </div>
                             
