@@ -611,6 +611,9 @@ export default function ProviderDashboard() {
                   } else if (item.href === '/provider/profile') {
                     router.push('/provider/profile');
                     setSidebarOpen(false);
+                  } else if (item.href === '/provider/settings') {
+                    router.push('/provider/settings');
+                    setSidebarOpen(false);
                   } else {
                     handleComingSoon(item.title);
                   }

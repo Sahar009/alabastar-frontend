@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import useLocation from "../../../hooks/useLocation";
 import { 
   ArrowLeft,
   User,
@@ -37,6 +38,7 @@ import {
 
 export default function ProviderProfile() {
   const router = useRouter();
+  const { detectLocation: detectUserLocation, detecting: detectingLocation } = useLocation();
   const [user, setUser] = useState<any>(null);
   const [providerProfile, setProviderProfile] = useState<any>(null);
   const [documents, setDocuments] = useState<any[]>([]);
@@ -44,6 +46,12 @@ export default function ProviderProfile() {
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState(false);
+  const [stats, setStats] = useState({
+    rating: 0,
+    reviews: 0,
+    totalReferrals: 0,
+    totalCommissions: 0
+  });
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -65,7 +73,6 @@ export default function ProviderProfile() {
       setLoading(true);
       const token = localStorage.getItem('token');
       const storedUser = localStorage.getItem('user');
-      const storedProfile = localStorage.getItem('providerProfile');
       
       if (!token) {
         toast.error('Please sign in to view profile');
@@ -78,51 +85,105 @@ export default function ProviderProfile() {
         setUser(userData);
       }
       
-      if (storedProfile) {
-        const profile = JSON.parse(storedProfile);
-        setProviderProfile(profile);
-        
-        // Fetch detailed profile from API
-        const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-        const response = await fetch(`${base}/api/providers/${profile.id}`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          const detailedProfile = data.data;
-          
-          // Update form data with detailed profile
-          setFormData({
-            fullName: detailedProfile.user?.fullName || '',
-            email: detailedProfile.user?.email || '',
-            phone: detailedProfile.user?.phone || '',
-            businessName: detailedProfile.businessName || '',
-            bio: detailedProfile.bio || '',
-            category: detailedProfile.category || '',
-            subcategories: detailedProfile.subcategories || [],
-            locationCity: detailedProfile.locationCity || '',
-            locationState: detailedProfile.locationState || '',
-            latitude: detailedProfile.latitude || '',
-            longitude: detailedProfile.longitude || '',
-            portfolio: detailedProfile.portfolio || []
-          });
-
-          setProviderProfile(detailedProfile);
-
-          // Fetch documents
-          await fetchDocuments(profile.id, token);
+      // Fetch profile using the current user's token (no need for providerId)
+      const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${base}/api/providers/profile`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Profile fetch error:', errorData);
+        toast.error(errorData.message || 'Failed to load profile');
+        return;
       }
+
+      const responseData = await response.json();
+      console.log('Profile API Response:', responseData);
+      const detailedProfile = responseData.data;
+      
+      if (!detailedProfile) {
+        console.error('No profile data in response');
+        toast.error('Failed to load profile data');
+        return;
+      }
+
+      // Update form data with detailed profile
+      const userData = detailedProfile.User || detailedProfile.user || {};
+      
+      const newFormData = {
+        fullName: userData.fullName || '',
+        email: userData.email || '',
+        phone: userData.phone || '',
+        businessName: detailedProfile.businessName || '',
+        bio: detailedProfile.bio || '',
+        category: detailedProfile.category || '',
+        subcategories: detailedProfile.subcategories || [],
+        locationCity: detailedProfile.locationCity || '',
+        locationState: detailedProfile.locationState || '',
+        latitude: detailedProfile.latitude || '',
+        longitude: detailedProfile.longitude || '',
+        portfolio: detailedProfile.portfolio || []
+      };
+      
+      console.log('Setting form data:', newFormData);
+      setFormData(newFormData);
+      setProviderProfile(detailedProfile);
+
+      // Set stats from profile
+      setStats({
+        rating: 0,
+        reviews: 0,
+        totalReferrals: detailedProfile.totalReferrals || 0,
+        totalCommissions: parseFloat(detailedProfile.totalCommissionsEarned) || 0
+      });
+
+      // Set documents from the profile response
+      if (detailedProfile.ProviderDocuments) {
+        console.log('Setting documents from profile response:', detailedProfile.ProviderDocuments);
+        setDocuments(detailedProfile.ProviderDocuments);
+      } else {
+        // Fallback: Fetch documents separately if not included
+        console.log('Fetching documents separately');
+        await fetchDocuments(detailedProfile.id, token);
+      }
+
+      // Fetch rating data
+      await fetchProviderRating(detailedProfile.id, token);
     } catch (error) {
       console.error('Error fetching profile:', error);
       toast.error('Error loading profile');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fetch provider rating data
+  const fetchProviderRating = async (providerId: string, token: string) => {
+    try {
+      const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const ratingResponse = await fetch(`${base}/api/reviews/provider/${providerId}/stats`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (ratingResponse.ok) {
+        const ratingData = await ratingResponse.json();
+        if (ratingData.success && ratingData.data) {
+          setStats(prevStats => ({
+            ...prevStats,
+            rating: ratingData.data.averageRating || 0,
+            reviews: ratingData.data.totalReviews || 0
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching provider rating:', error);
     }
   };
 
@@ -139,8 +200,12 @@ export default function ProviderProfile() {
       });
 
       if (response.ok) {
-        const data = await response.json();
-        setDocuments(data.data || []);
+        const responseData = await response.json();
+        console.log('Documents API Response:', responseData);
+        setDocuments(responseData.data?.documents || responseData.data || []);
+      } else {
+        const errorData = await response.json();
+        console.error('Documents fetch error:', errorData);
       }
     } catch (error) {
       console.error('Error fetching documents:', error);
@@ -162,7 +227,7 @@ export default function ProviderProfile() {
         throw new Error('Provider profile not found');
       }
 
-      const response = await fetch(`${base}/api/providers/${providerProfile.id}`, {
+      const response = await fetch(`${base}/api/providers/profile/${providerProfile.id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -205,6 +270,21 @@ export default function ProviderProfile() {
       ...prev,
       [name]: value
     }));
+  };
+
+  // Detect user location using the hook
+  const detectLocation = async () => {
+    const locationData = await detectUserLocation(true);
+    
+    if (locationData) {
+      setFormData(prev => ({
+        ...prev,
+        locationCity: locationData.city || '',
+        locationState: locationData.state || '',
+        latitude: locationData.latitude.toString(),
+        longitude: locationData.longitude.toString()
+      }));
+    }
   };
 
   // Handle document upload
@@ -311,6 +391,28 @@ export default function ProviderProfile() {
     );
   }
 
+  // Show error if no profile data after loading
+  if (!loading && !providerProfile) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <p className="text-slate-600 dark:text-slate-400 font-medium">Failed to load profile data</p>
+          <button
+            onClick={fetchProfile}
+            className="mt-4 px-6 py-2 bg-[#ec4899] text-white rounded-xl hover:shadow-lg transition-all"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  console.log('Rendering profile with formData:', formData);
+  console.log('Provider profile:', providerProfile);
+  console.log('Documents:', documents);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -405,7 +507,7 @@ export default function ProviderProfile() {
                     <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Rating</span>
                   </div>
                   <span className="text-lg font-bold text-slate-900 dark:text-slate-50">
-                    {providerProfile?.rating || 'New'}
+                    {stats.reviews > 0 ? stats.rating.toFixed(1) : 'New'}
                   </span>
                 </div>
                 
@@ -417,7 +519,7 @@ export default function ProviderProfile() {
                     <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Total Referrals</span>
                   </div>
                   <span className="text-lg font-bold text-slate-900 dark:text-slate-50">
-                    {providerProfile?.totalReferrals || 0}
+                    {stats.totalReferrals}
                   </span>
                 </div>
 
@@ -429,7 +531,7 @@ export default function ProviderProfile() {
                     <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Commissions</span>
                   </div>
                   <span className="text-lg font-bold text-slate-900 dark:text-slate-50">
-                    ₦{providerProfile?.totalCommissionsEarned?.toLocaleString() || '0'}
+                    ₦{stats.totalCommissions.toLocaleString()}
                   </span>
                 </div>
               </div>
@@ -588,45 +690,63 @@ export default function ProviderProfile() {
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                          City
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                          Location
                         </label>
-                        {editing ? (
-                          <input
-                            type="text"
-                            name="locationCity"
-                            value={formData.locationCity}
-                            onChange={handleInputChange}
-                            className="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-2xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#ec4899] focus:border-transparent transition-all duration-200"
-                          />
-                        ) : (
-                          <div className="flex items-center space-x-3 p-3 bg-slate-50 dark:bg-slate-700 rounded-xl">
-                            <MapPin className="w-4 h-4 text-slate-400" />
-                            <span className="text-slate-900 dark:text-slate-100">{formData.locationCity || 'Not specified'}</span>
-                          </div>
+                        {editing && (
+                          <button
+                            type="button"
+                            onClick={detectLocation}
+                            disabled={detectingLocation}
+                            className="flex items-center space-x-1 text-xs text-[#ec4899] hover:text-pink-700 font-medium disabled:opacity-50"
+                          >
+                            <MapPin className="w-3 h-3" />
+                            <span>{detectingLocation ? 'Detecting...' : 'Detect Location'}</span>
+                          </button>
                         )}
                       </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                            City
+                          </label>
+                          {editing ? (
+                            <input
+                              type="text"
+                              name="locationCity"
+                              value={formData.locationCity}
+                              onChange={handleInputChange}
+                              className="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-2xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#ec4899] focus:border-transparent transition-all duration-200"
+                            />
+                          ) : (
+                            <div className="flex items-center space-x-3 p-3 bg-slate-50 dark:bg-slate-700 rounded-xl">
+                              <MapPin className="w-4 h-4 text-slate-400" />
+                              <span className="text-slate-900 dark:text-slate-100">{formData.locationCity || 'Not specified'}</span>
+                            </div>
+                          )}
+                        </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                          State
-                        </label>
-                        {editing ? (
-                          <input
-                            type="text"
-                            name="locationState"
-                            value={formData.locationState}
-                            onChange={handleInputChange}
-                            className="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-2xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#ec4899] focus:border-transparent transition-all duration-200"
-                          />
-                        ) : (
-                          <div className="flex items-center space-x-3 p-3 bg-slate-50 dark:bg-slate-700 rounded-xl">
-                            <MapPin className="w-4 h-4 text-slate-400" />
-                            <span className="text-slate-900 dark:text-slate-100">{formData.locationState || 'Not specified'}</span>
-                          </div>
-                        )}
+                        <div>
+                          <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                            State
+                          </label>
+                          {editing ? (
+                            <input
+                              type="text"
+                              name="locationState"
+                              value={formData.locationState}
+                              onChange={handleInputChange}
+                              className="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-2xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#ec4899] focus:border-transparent transition-all duration-200"
+                            />
+                          ) : (
+                            <div className="flex items-center space-x-3 p-3 bg-slate-50 dark:bg-slate-700 rounded-xl">
+                              <MapPin className="w-4 h-4 text-slate-400" />
+                              <span className="text-slate-900 dark:text-slate-100">{formData.locationState || 'Not specified'}</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                     
