@@ -872,7 +872,7 @@ export default function ProviderDashboard() {
                   </p>
                 </div>
                 <div className="p-4 bg-gradient-to-br from-emerald-100 to-green-200 dark:from-emerald-900/30 dark:to-green-800/30 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                  <DollarSign className="w-8 h-8 text-emerald-600 dark:text-emerald-400 group-hover:animate-bounce" />
+                <span className="w-8 h-8 text-emerald-600 dark:text-emerald-400 group-hover:animate-bounce">₦</span>
                 </div>
               </div>
             </div>

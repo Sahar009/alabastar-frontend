@@ -1,3 +1,4 @@
+
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -174,7 +175,7 @@ export default function ProviderBookings() {
                 <ArrowLeft className="w-6 h-6" />
               </button>
               <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-[#2563EB] to-[#14B8A6] bg-clip-text text-transparent mb-2">
+                <h1 className="text-4xl font-bold text-[#ec4899] mb-2">
                   Bookings
                 </h1>
                 <p className="text-slate-600 dark:text-slate-400 font-medium">
@@ -185,7 +186,7 @@ export default function ProviderBookings() {
             <button
               onClick={fetchBookings}
               disabled={loading}
-              className="group px-4 py-2 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-300 transform hover:scale-105 disabled:opacity-50"
+              className="group px-4 py-2 bg-[#ec4899] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-pink-500/25 transition-all duration-300 transform hover:scale-105 disabled:opacity-50"
             >
               <div className="flex items-center space-x-2">
                 <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : 'group-hover:rotate-180'} transition-transform duration-500`} />
@@ -197,14 +198,14 @@ export default function ProviderBookings() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-          <div className="group bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
+          <div className="group bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-pink-500/10 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">Total Bookings</p>
-                <p className="text-3xl font-bold bg-gradient-to-r from-[#2563EB] to-[#14B8A6] bg-clip-text text-transparent">{stats.total}</p>
+                <p className="text-3xl font-bold text-[#ec4899]">{stats.total}</p>
               </div>
-              <div className="p-3 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                <Calendar className="w-6 h-6 text-blue-600 dark:text-blue-400 group-hover:animate-bounce" />
+              <div className="p-3 bg-pink-100 dark:from-pink-900/30 dark:to-pink-800/30 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                <Calendar className="w-6 h-6 text-[#ec4899] group-hover:animate-bounce" />
               </div>
             </div>
           </div>
@@ -221,14 +222,14 @@ export default function ProviderBookings() {
             </div>
           </div>
 
-          <div className="group bg-gradient-to-br from-white via-blue-50 to-white dark:from-slate-800 dark:via-blue-900/20 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
+          <div className="group bg-gradient-to-br from-white via-pink-50 to-white dark:from-slate-800 dark:via-pink-900/20 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-pink-500/10 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">Confirmed</p>
-                <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">{stats.confirmed}</p>
+                <p className="text-3xl font-bold text-[#ec4899]">{stats.confirmed}</p>
               </div>
-              <div className="p-3 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                <CheckCircle className="w-6 h-6 text-blue-600 dark:text-blue-400 group-hover:animate-bounce" />
+              <div className="p-3 bg-pink-100 dark:from-pink-900/30 dark:to-pink-800/30 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                <CheckCircle className="w-6 h-6 text-[#ec4899] group-hover:animate-bounce" />
               </div>
             </div>
           </div>
@@ -252,7 +253,8 @@ export default function ProviderBookings() {
                 <p className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">₦{stats.totalEarnings.toLocaleString()}</p>
               </div>
               <div className="p-3 bg-gradient-to-br from-emerald-100 to-green-200 dark:from-emerald-900/30 dark:to-emerald-800/30 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                <DollarSign className="w-6 h-6 text-emerald-600 dark:text-emerald-400 group-hover:animate-bounce" />
+               
+                <span className="w-6 h-6 text-emerald-600 dark:text-emerald-400 group-hover:animate-bounce">₦</span>
               </div>
             </div>
           </div>
@@ -264,13 +266,13 @@ export default function ProviderBookings() {
             {/* Search */}
             <div className="flex-1">
               <div className="relative group">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 group-hover:text-[#2563EB] transition-colors duration-200" />
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 group-hover:text-[#ec4899] transition-colors duration-200" />
                 <input
                   type="text"
                   placeholder="Search bookings by customer, service, or notes..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 border border-slate-300 dark:border-slate-600 rounded-2xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#2563EB] focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md"
+                  className="w-full pl-12 pr-4 py-3 border border-slate-300 dark:border-slate-600 rounded-2xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#ec4899] focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md"
                 />
               </div>
             </div>
@@ -281,7 +283,7 @@ export default function ProviderBookings() {
               <select
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
-                className="px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-2xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#2563EB] focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md font-medium"
+                className="px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-2xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#ec4899] focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md font-medium"
               >
                 <option value="all">All Status</option>
                 <option value="pending">Pending</option>
@@ -297,7 +299,7 @@ export default function ProviderBookings() {
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
-              <Loader2 className="w-12 h-12 text-[#2563EB] animate-spin mx-auto mb-4" />
+              <Loader2 className="w-12 h-12 text-[#ec4899] animate-spin mx-auto mb-4" />
               <p className="text-slate-600 dark:text-slate-400 font-medium">Loading bookings...</p>
             </div>
           </div>
@@ -314,7 +316,7 @@ export default function ProviderBookings() {
                     {/* Booking Info */}
                     <div className="flex-1">
                       <div className="flex items-center space-x-4 mb-4">
-                        <h3 className="text-xl font-bold text-slate-900 dark:text-slate-50 group-hover:text-[#2563EB] transition-colors duration-200">
+                        <h3 className="text-xl font-bold text-slate-900 dark:text-slate-50 group-hover:text-[#ec4899] transition-colors duration-200">
                           {booking.service?.name || 'General Service'}
                         </h3>
                         <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold shadow-sm ${getStatusColor(booking.status)}`}>
@@ -412,7 +414,7 @@ export default function ProviderBookings() {
 
                       <button
                         onClick={() => handleComingSoon("Customer Messages")}
-                        className="group px-6 py-3 border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-2xl font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-[#2563EB] hover:text-[#2563EB] transition-all duration-300 transform hover:scale-105 flex items-center space-x-2"
+                        className="group px-6 py-3 border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-2xl font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-[#ec4899] hover:text-[#ec4899] transition-all duration-300 transform hover:scale-105 flex items-center space-x-2"
                       >
                         <MessageSquare className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
                         <span>Message</span>
@@ -429,9 +431,9 @@ export default function ProviderBookings() {
         {!loading && filteredBookings.length === 0 && (
           <div className="text-center py-16">
             <div className="relative w-32 h-32 mx-auto mb-8">
-              <div className="absolute inset-0 bg-gradient-to-br from-[#2563EB]/20 to-[#14B8A6]/20 rounded-full animate-pulse"></div>
-              <div className="absolute inset-4 bg-gradient-to-br from-[#2563EB]/10 to-[#14B8A6]/10 rounded-full"></div>
-              <Calendar className="absolute inset-0 w-16 h-16 text-[#2563EB] mx-auto my-auto animate-bounce" />
+              <div className="absolute inset-0 bg-[#ec4899]/20 rounded-full animate-pulse"></div>
+              <div className="absolute inset-4 bg-[#ec4899]/10 rounded-full"></div>
+              <Calendar className="absolute inset-0 w-16 h-16 text-[#ec4899] mx-auto my-auto animate-bounce" />
             </div>
             <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-50 mb-4">
               {searchTerm || filter !== 'all' ? 'No bookings found' : 'No bookings yet'}
@@ -444,7 +446,7 @@ export default function ProviderBookings() {
             {!searchTerm && filter === 'all' && (
               <button
                 onClick={() => router.push('/provider/dashboard')}
-                className="group px-6 py-3 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white rounded-2xl font-semibold hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-300 transform hover:scale-105"
+                className="group px-6 py-3 bg-[#ec4899] text-white rounded-2xl font-semibold hover:shadow-lg hover:shadow-pink-500/25 transition-all duration-300 transform hover:scale-105"
               >
                 <span className="flex items-center space-x-2">
                   <span>Go to Dashboard</span>
