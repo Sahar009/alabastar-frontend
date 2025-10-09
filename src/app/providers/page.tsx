@@ -322,7 +322,9 @@ export default function ProvidersPage() {
             isAvailable: provider.isAvailable !== false,
             estimatedArrival: provider.estimatedArrival || '30 mins',
             yearsOfExperience: provider.yearsOfExperience || 3,
-            brandImages: provider.portfolio || provider.brandImages || []
+            brandImages: provider.portfolio || provider.brandImages || [],
+            isTopListed: provider.isTopListed || false,
+            daysRemaining: provider.daysRemaining || 0
           };
         });
         
@@ -579,7 +581,9 @@ export default function ProvidersPage() {
             isAvailable: provider.isAvailable !== false,
             estimatedArrival: provider.estimatedArrival || '30 mins',
             yearsOfExperience: provider.yearsOfExperience || 3,
-            brandImages: provider.brandImages || []
+            brandImages: provider.brandImages || [],
+            isTopListed: provider.isTopListed || false,
+            daysRemaining: provider.daysRemaining || 0
           };
         });
         
@@ -1220,7 +1224,7 @@ export default function ProvidersPage() {
                       className="group bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200/50 dark:border-slate-700/50 p-6 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] hover:-translate-y-1 relative overflow-hidden"
                     >
                       {/* Featured Badge */}
-                      {(provider as any).isTopListed && (
+                      {provider.isTopListed && (
                         <div className="absolute top-0 right-0 z-20">
                           <div className="bg-gradient-to-r from-orange-500 to-pink-600 text-white px-4 py-2 rounded-bl-2xl rounded-tr-2xl shadow-lg">
                             <div className="flex items-center space-x-2">
@@ -1844,7 +1848,7 @@ export default function ProvidersPage() {
                     className="group bg-white dark:bg-slate-800 rounded-3xl shadow-xl border border-slate-200/50 dark:border-slate-700/50 p-6 sm:p-8 transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1 relative overflow-hidden"
                   >
                     {/* Featured Badge */}
-                    {(provider as any).isTopListed && (
+                    {provider.isTopListed && (
                       <div className="absolute top-0 right-0 z-20">
                         <div className="bg-gradient-to-r from-orange-500 to-pink-600 text-white px-4 py-2 rounded-bl-2xl rounded-tr-3xl shadow-lg">
                           <div className="flex items-center space-x-2">

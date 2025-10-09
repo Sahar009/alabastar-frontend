@@ -26,6 +26,8 @@ export interface Provider {
   isAvailable: boolean;
   estimatedArrival: string;
   brandImages?: any[];
+  isTopListed?: boolean;
+  daysRemaining?: number;
 }
 
 
