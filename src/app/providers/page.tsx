@@ -1023,11 +1023,11 @@ export default function ProvidersPage() {
             
                 {/* Enhanced Location Context */}
                 {userLocation && (
-                  <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/20 dark:via-indigo-900/20 dark:to-purple-900/20 rounded-2xl border border-blue-200/50 dark:border-blue-800/50 shadow-lg">
+                  <div className="mb-6 p-4 bg-gradient-to-r from-orange-50 via-pink-50 to-orange-50 dark:from-orange-900/20 dark:via-pink-900/20 dark:to-orange-900/20 rounded-2xl border border-orange-200/50 dark:border-orange-800/50 shadow-lg">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         <div className="relative">
-                          <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
+                          <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-pink-600 rounded-lg flex items-center justify-center shadow-lg">
                             <MapPin className="w-4 h-4 text-white" />
                           </div>
                           <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full flex items-center justify-center">
@@ -1219,6 +1219,18 @@ export default function ProvidersPage() {
                       key={provider.id}
                       className="group bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200/50 dark:border-slate-700/50 p-6 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] hover:-translate-y-1 relative overflow-hidden"
                     >
+                      {/* Featured Badge */}
+                      {(provider as any).isTopListed && (
+                        <div className="absolute top-0 right-0 z-20">
+                          <div className="bg-gradient-to-r from-orange-500 to-pink-600 text-white px-4 py-2 rounded-bl-2xl rounded-tr-2xl shadow-lg">
+                            <div className="flex items-center space-x-2">
+                              <Zap className="w-4 h-4 animate-pulse" />
+                              <span className="text-xs font-bold">FEATURED</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       {/* Background gradient overlay */}
                       <div className="absolute inset-0 bg-gradient-to-br from-[#2563EB]/5 to-[#14B8A6]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"></div>
                       
@@ -1831,6 +1843,18 @@ export default function ProvidersPage() {
                     key={provider.id}
                     className="group bg-white dark:bg-slate-800 rounded-3xl shadow-xl border border-slate-200/50 dark:border-slate-700/50 p-6 sm:p-8 transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1 relative overflow-hidden"
                   >
+                    {/* Featured Badge */}
+                    {(provider as any).isTopListed && (
+                      <div className="absolute top-0 right-0 z-20">
+                        <div className="bg-gradient-to-r from-orange-500 to-pink-600 text-white px-4 py-2 rounded-bl-2xl rounded-tr-3xl shadow-lg">
+                          <div className="flex items-center space-x-2">
+                            <Zap className="w-4 h-4 animate-pulse" />
+                            <span className="text-xs font-bold">FEATURED</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Background gradient overlay */}
                     <div className="absolute inset-0 bg-gradient-to-br from-[#2563EB]/5 to-[#14B8A6]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl"></div>
                     
@@ -1884,13 +1908,13 @@ export default function ProvidersPage() {
                           {/* Enhanced Info Cards */}
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                             {/* Location Card */}
-                            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
+                            <div className="bg-gradient-to-r from-orange-50 to-pink-50 dark:from-orange-900/20 dark:to-pink-900/20 rounded-xl p-4 border border-orange-200 dark:border-orange-800">
                               <div className="flex items-center space-x-2">
-                                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-pink-600 rounded-full flex items-center justify-center flex-shrink-0">
                                   <MapPin className="w-4 h-4 text-white" />
                             </div>
                                 <div className="min-w-0 flex-1">
-                                  <p className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-1">Location</p>
+                                  <p className="text-xs font-medium text-orange-700 dark:text-orange-300 mb-1">Location</p>
                                   <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
                                     {provider.locationCity}, {provider.locationState}
                                   </p>
@@ -2179,31 +2203,31 @@ export default function ProvidersPage() {
                         </div>
                         
                         {/* Quick Tips */}
-                        <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/20 dark:via-indigo-900/20 dark:to-purple-900/20 rounded-xl p-4 border border-blue-200/50 dark:border-blue-800/50 w-full">
+                        <div className="bg-gradient-to-r from-orange-50 via-pink-50 to-orange-50 dark:from-orange-900/20 dark:via-pink-900/20 dark:to-orange-900/20 rounded-xl p-4 border border-orange-200/50 dark:border-orange-800/50 w-full">
                           <div className="flex items-center justify-center space-x-2 mb-3">
-                            <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                            <div className="w-6 h-6 bg-gradient-to-r from-orange-500 to-pink-600 rounded-lg flex items-center justify-center">
                               <Lightbulb className="w-3 h-3 text-white" />
                             </div>
-                            <h4 className="text-sm font-bold text-blue-900 dark:text-blue-100">Quick Tips</h4>
+                            <h4 className="text-sm font-bold text-orange-900 dark:text-orange-100">Quick Tips</h4>
                           </div>
                           
-                          <div className="grid grid-cols-1 gap-2 text-xs text-blue-800 dark:text-blue-200">
+                          <div className="grid grid-cols-1 gap-2 text-xs text-orange-800 dark:text-orange-200">
                             <div className="flex items-center space-x-2">
-                              <div className="w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                              <div className="w-3 h-3 bg-gradient-to-r from-orange-500 to-pink-600 rounded-full flex items-center justify-center flex-shrink-0">
                                 <span className="text-white text-xs font-bold">1</span>
                               </div>
                               <span>Try broader search terms</span>
                             </div>
                             
                             <div className="flex items-center space-x-2">
-                              <div className="w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                              <div className="w-3 h-3 bg-gradient-to-r from-orange-500 to-pink-600 rounded-full flex items-center justify-center flex-shrink-0">
                                 <span className="text-white text-xs font-bold">2</span>
                               </div>
                               <span>Expand your search radius</span>
                             </div>
                             
                             <div className="flex items-center space-x-2">
-                              <div className="w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                              <div className="w-3 h-3 bg-gradient-to-r from-orange-500 to-pink-600 rounded-full flex items-center justify-center flex-shrink-0">
                                 <span className="text-white text-xs font-bold">3</span>
                               </div>
                               <span>Check back later for new providers</span>
@@ -2331,38 +2355,38 @@ export default function ProvidersPage() {
                 </div>
                 
                 {/* Compact Helpful Tips */}
-                <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/20 dark:via-indigo-900/20 dark:to-purple-900/20 rounded-xl p-4 border border-blue-200/50 dark:border-blue-800/50">
+                <div className="bg-gradient-to-r from-orange-50 via-pink-50 to-orange-50 dark:from-orange-900/20 dark:via-pink-900/20 dark:to-orange-900/20 rounded-xl p-4 border border-orange-200/50 dark:border-orange-800/50">
                   <div className="flex items-center justify-center space-x-2 mb-3">
-                    <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                    <div className="w-6 h-6 bg-gradient-to-r from-orange-500 to-pink-600 rounded-lg flex items-center justify-center">
                       <Lightbulb className="w-3 h-3 text-white" />
                     </div>
-                    <h4 className="text-sm font-bold text-blue-900 dark:text-blue-100">Search Tips</h4>
+                    <h4 className="text-sm font-bold text-orange-900 dark:text-orange-100">Search Tips</h4>
                   </div>
                   
-                  <div className="grid grid-cols-1 gap-2 text-xs text-blue-800 dark:text-blue-200">
+                  <div className="grid grid-cols-1 gap-2 text-xs text-orange-800 dark:text-orange-200">
                     <div className="flex items-start space-x-2">
-                      <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <div className="w-4 h-4 bg-gradient-to-r from-orange-500 to-pink-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                         <span className="text-white text-xs font-bold">1</span>
                       </div>
                       <span>Try broader terms like "plumber" or "electrician"</span>
                     </div>
                     
                     <div className="flex items-start space-x-2">
-                      <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <div className="w-4 h-4 bg-gradient-to-r from-orange-500 to-pink-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                         <span className="text-white text-xs font-bold">2</span>
                       </div>
                       <span>Search for specific services like "pipe repair"</span>
                     </div>
                     
                     <div className="flex items-start space-x-2">
-                      <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <div className="w-4 h-4 bg-gradient-to-r from-orange-500 to-pink-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                         <span className="text-white text-xs font-bold">3</span>
                       </div>
                       <span>Expand your search radius for more options</span>
                     </div>
                     
                     <div className="flex items-start space-x-2">
-                      <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <div className="w-4 h-4 bg-gradient-to-r from-orange-500 to-pink-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                         <span className="text-white text-xs font-bold">4</span>
                       </div>
                       <span>Check back later for new providers</span>

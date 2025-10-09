@@ -608,11 +608,17 @@ export default function ProviderDashboard() {
                   } else if (item.href === '/provider/bookings') {
                     router.push('/provider/bookings');
                     setSidebarOpen(false);
+                  } else if (item.href === '/provider/earnings') {
+                    router.push('/provider/earnings');
+                    setSidebarOpen(false);
                   } else if (item.href === '/provider/profile') {
                     router.push('/provider/profile');
                     setSidebarOpen(false);
                   } else if (item.href === '/provider/settings') {
                     router.push('/provider/settings');
+                    setSidebarOpen(false);
+                  } else if (item.href === '/provider/support') {
+                    router.push('/provider/support');
                     setSidebarOpen(false);
                   } else {
                     handleComingSoon(item.title);
@@ -880,6 +886,88 @@ export default function ProviderDashboard() {
               </div>
             </div>
           </div>
+
+          {/* Top Listing Status Card */}
+          {providerProfile && (
+            <div className="mb-8">
+              {providerProfile.topListingEndDate && new Date(providerProfile.topListingEndDate) > new Date() ? (
+                <div className="bg-gradient-to-r from-orange-500 to-pink-600 rounded-3xl shadow-2xl p-6 text-white border-2 border-orange-300 dark:border-pink-400 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12"></div>
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
+                          <Activity className="w-6 h-6 animate-pulse" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold">Top Listing Active</h3>
+                          <p className="text-sm text-white/90">Your profile is featured!</p>
+                        </div>
+                      </div>
+                      <div className="px-4 py-2 bg-white/20 rounded-full backdrop-blur-sm">
+                        <span className="text-sm font-bold">PREMIUM</span>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                      <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                        <p className="text-xs text-white/80 mb-1">Days Remaining</p>
+                        <p className="text-3xl font-bold">
+                          {Math.ceil((new Date(providerProfile.topListingEndDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))}
+                        </p>
+                      </div>
+                      <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                        <p className="text-xs text-white/80 mb-1">Ends On</p>
+                        <p className="text-lg font-bold">
+                          {new Date(providerProfile.topListingEndDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </p>
+                      </div>
+                      <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                        <p className="text-xs text-white/80 mb-1">Priority Level</p>
+                        <p className="text-lg font-bold flex items-center">
+                          <Award className="w-5 h-5 mr-2" />
+                          Level {providerProfile.listingPriority || 1}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="mt-4 p-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+                      <p className="text-xs text-white/90">
+                        <span className="font-semibold">✨ Benefits:</span> Your profile appears at the top of search results, increasing visibility and bookings.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200 dark:border-slate-700 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-100 to-pink-100 dark:from-orange-900/20 dark:to-pink-900/20 rounded-full -mr-16 -mt-16"></div>
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-xl">
+                          <Activity className="w-6 h-6 text-slate-400" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-slate-900 dark:text-slate-50">Top Listing Inactive</h3>
+                          <p className="text-sm text-slate-600 dark:text-slate-400">Boost your visibility</p>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                      Upgrade to Premium to get featured at the top of search results and increase your bookings by up to 3x!
+                    </p>
+                    <Link 
+                      href="/provider/settings"
+                      className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-600 text-white rounded-xl font-semibold hover:opacity-90 transition-all duration-300 shadow-lg hover:shadow-xl"
+                    >
+                      <Award className="w-5 h-5" />
+                      <span>Upgrade to Premium</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Rating & Profile Cards */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">

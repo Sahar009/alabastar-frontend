@@ -33,7 +33,8 @@ import {
   Trash2,
   Download,
   Plus,
-  XCircle
+  XCircle,
+  Video
 } from "lucide-react";
 
 export default function ProviderProfile() {
@@ -52,6 +53,11 @@ export default function ProviderProfile() {
     totalReferrals: 0,
     totalCommissions: 0
   });
+  const [featureLimits, setFeatureLimits] = useState<any>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -64,7 +70,10 @@ export default function ProviderProfile() {
     locationState: '',
     latitude: '',
     longitude: '',
-    portfolio: [] as string[]
+    portfolio: [] as string[],
+    videoUrl: '',
+    videoThumbnail: '',
+    videoDuration: 0
   });
 
   // Fetch provider profile data
@@ -154,6 +163,9 @@ export default function ProviderProfile() {
 
       // Fetch rating data
       await fetchProviderRating(detailedProfile.id, token);
+
+      // Fetch feature limits
+      await fetchFeatureLimits(detailedProfile.id, token);
     } catch (error) {
       console.error('Error fetching profile:', error);
       toast.error('Error loading profile');
@@ -209,6 +221,28 @@ export default function ProviderProfile() {
       }
     } catch (error) {
       console.error('Error fetching documents:', error);
+    }
+  };
+
+  // Fetch feature limits
+  const fetchFeatureLimits = async (providerId: string, token: string) => {
+    try {
+      const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${base}/api/providers/${providerId}/feature-limits`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Feature limits:', data.data);
+        setFeatureLimits(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching feature limits:', error);
     }
   };
 
@@ -292,13 +326,22 @@ export default function ProviderProfile() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Check photo limit for brand images
+    if (type === 'brand_image' && featureLimits) {
+      if (featureLimits.currentPhotoCount >= featureLimits.features.maxPhotos) {
+        toast.error(`Photo limit reached! You have ${featureLimits.currentPhotoCount}/${featureLimits.features.maxPhotos} photos. Upgrade to add more.`);
+        setShowUpgradeModal(true);
+        return;
+      }
+    }
+
     try {
       setUploadingDoc(true);
       const token = localStorage.getItem('token');
       const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('documents', file); // Changed from 'file' to 'documents'
       formData.append('type', type);
 
       const response = await fetch(`${base}/api/providers/${providerProfile.id}/documents`, {
@@ -312,14 +355,94 @@ export default function ProviderProfile() {
       if (response.ok) {
         toast.success('Document uploaded successfully!');
         await fetchDocuments(providerProfile.id, token);
+        await fetchFeatureLimits(providerProfile.id, token); // Refresh limits
       } else {
-        throw new Error('Failed to upload document');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to upload document');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading document:', error);
-      toast.error('Failed to upload document');
+      toast.error(error.message || 'Failed to upload document');
     } finally {
       setUploadingDoc(false);
+    }
+  };
+
+  // Handle video upload
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check if Premium plan
+    if (!featureLimits || featureLimits.features.maxVideos === 0) {
+      toast.error('Video upload is a Premium feature!');
+      setShowUpgradeModal(true);
+      return;
+    }
+
+    // Check if already has video
+    if (featureLimits.hasVideo) {
+      toast.error('You already have a video. Delete the existing one first.');
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('video/')) {
+      toast.error('Please upload a valid video file');
+      return;
+    }
+
+    // Validate file size (max 50MB)
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error('Video file size must be less than 50MB');
+      return;
+    }
+
+    try {
+      setUploadingVideo(true);
+      toast.loading('Uploading video... This may take a moment.');
+
+      // For now, just show coming soon
+      // TODO: Implement Cloudinary video upload
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      toast.dismiss();
+      toast('🚧 Video upload integration coming soon! Backend is ready.', { duration: 4000 });
+      
+    } catch (error: any) {
+      toast.dismiss();
+      console.error('Error uploading video:', error);
+      toast.error(error.message || 'Failed to upload video');
+    } finally {
+      setUploadingVideo(false);
+    }
+  };
+
+  // Handle video delete
+  const handleVideoDelete = async () => {
+    if (!confirm('Are you sure you want to delete this video?')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+      const response = await fetch(`${base}/api/providers/${providerProfile.id}/video`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        toast.success('Video deleted successfully!');
+        await fetchProfile(); // Refresh profile
+      } else {
+        throw new Error('Failed to delete video');
+      }
+    } catch (error: any) {
+      console.error('Error deleting video:', error);
+      toast.error(error.message || 'Failed to delete video');
     }
   };
 
@@ -796,6 +919,214 @@ export default function ProviderProfile() {
               </div>
             </div>
 
+            {/* Brand Images Section */}
+            <div className="bg-gradient-to-br from-white via-pink-50 to-white dark:from-slate-800 dark:via-pink-900/20 dark:to-slate-800 rounded-3xl shadow-xl p-8 border border-slate-200/50 dark:border-slate-700/50">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-50 flex items-center">
+                    <ImageIcon className="w-6 h-6 mr-2 text-[#ec4899]" />
+                    Brand Images
+                  </h3>
+                  {featureLimits && (
+                    <div className="mt-2">
+                      <div className="flex items-center space-x-3">
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between text-sm mb-1">
+                            <span className="text-slate-600 dark:text-slate-400 font-medium">
+                              {featureLimits.currentPhotoCount || 0} / {featureLimits.features.maxPhotos || 5} photos used
+                            </span>
+                            <span className="text-[#ec4899] font-semibold">
+                              {featureLimits.photosRemaining || 0} remaining
+                            </span>
+                          </div>
+                          <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
+                            <div 
+                              className="bg-gradient-to-r from-pink-600 to-orange-500 h-full rounded-full transition-all duration-500"
+                              style={{ width: `${((featureLimits.currentPhotoCount || 0) / (featureLimits.features.maxPhotos || 5)) * 100}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {featureLimits && featureLimits.photosRemaining > 0 && (
+                  <label className="px-4 py-2 bg-gradient-to-r from-pink-600 to-orange-500 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-pink-500/25 transition-all duration-300 transform hover:scale-105 cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleDocumentUpload(e, 'brand_image')}
+                      className="hidden"
+                      disabled={uploadingDoc}
+                    />
+                    <div className="flex items-center space-x-2">
+                      <Plus className="w-4 h-4" />
+                      <span>{uploadingDoc ? 'Uploading...' : 'Add Photo'}</span>
+                    </div>
+                  </label>
+                )}
+              </div>
+
+              {/* Brand Images Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-4">
+                {documents.filter(doc => doc.type === 'brand_image').map((image) => (
+                  <div key={image.id} className="relative group">
+                    <div className="aspect-square rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-700 border-2 border-transparent group-hover:border-pink-500 transition-all duration-300">
+                      <img 
+                        src={image.url} 
+                        alt="Brand" 
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      />
+                    </div>
+                    {/* Action Buttons */}
+                    <div className="absolute top-2 right-2 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <label className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            
+                            // Delete old image first
+                            try {
+                              await handleDeleteDocument(image.id);
+                              // Then upload new one
+                              const fakeEvent = {
+                                target: { files: [file] }
+                              } as any;
+                              await handleDocumentUpload(fakeEvent, 'brand_image');
+                            } catch (error) {
+                              console.error('Error replacing image:', error);
+                            }
+                          }}
+                          className="hidden"
+                          disabled={uploadingDoc}
+                        />
+                        <Edit3 className="w-4 h-4" />
+                      </label>
+                      <button
+                        onClick={() => handleDeleteDocument(image.id)}
+                        className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Upgrade Prompt if limit reached */}
+              {featureLimits && featureLimits.photosRemaining === 0 && (
+                <div className="p-4 bg-gradient-to-r from-orange-50 to-pink-50 dark:from-orange-900/20 dark:to-pink-900/20 border border-orange-200 dark:border-orange-800 rounded-xl">
+                  <div className="flex items-start space-x-3">
+                    <AlertCircle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-1">
+                        Photo Limit Reached
+                      </p>
+                      <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
+                        You've used all {featureLimits.features.maxPhotos} photos in your {featureLimits.planName} plan. 
+                        Upgrade to Premium for up to 10 photos!
+                      </p>
+                      <button
+                        onClick={() => setShowUpgradeModal(true)}
+                        className="px-4 py-2 bg-gradient-to-r from-pink-600 to-orange-500 text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-pink-500/25 transition-all duration-300 text-sm"
+                      >
+                        Upgrade to Premium
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Business Video Section */}
+            <div className="bg-gradient-to-br from-white via-purple-50 to-white dark:from-slate-800 dark:via-purple-900/20 dark:to-slate-800 rounded-3xl shadow-xl p-8 border border-slate-200/50 dark:border-slate-700/50">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-50 flex items-center">
+                    <Camera className="w-6 h-6 mr-2 text-purple-600" />
+                    Business Video
+                    {featureLimits && featureLimits.features.maxVideos > 0 && (
+                      <span className="ml-3 px-3 py-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-bold rounded-full">
+                        PREMIUM
+                      </span>
+                    )}
+                  </h3>
+                  {featureLimits && featureLimits.features.maxVideos > 0 && (
+                    <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                      Upload a promotional video (max {featureLimits.features.videoMaxDuration} seconds)
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {featureLimits && featureLimits.features.maxVideos > 0 ? (
+                <>
+                  {featureLimits.hasVideo && featureLimits.videoDetails ? (
+                    <div className="space-y-4">
+                      <div className="relative aspect-video rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-700">
+                        <video 
+                          src={featureLimits.videoDetails.url} 
+                          poster={featureLimits.videoDetails.thumbnail}
+                          controls
+                          className="w-full h-full"
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-slate-600 dark:text-slate-400">
+                          Duration: {featureLimits.videoDetails.duration}s
+                        </span>
+                        <button
+                          onClick={handleVideoDelete}
+                          className="px-4 py-2 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-all duration-300 flex items-center space-x-2"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          <span>Delete Video</span>
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center px-6 py-12 border-2 border-dashed border-purple-300 dark:border-purple-700 rounded-2xl cursor-pointer hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-all duration-200">
+                      <input
+                        type="file"
+                        accept="video/*"
+                        onChange={handleVideoUpload}
+                        className="hidden"
+                        disabled={uploadingVideo}
+                      />
+                      <Camera className="w-12 h-12 text-purple-400 mb-4" />
+                      <p className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                        {uploadingVideo ? 'Uploading video...' : 'Upload Your Business Video'}
+                      </p>
+                      <p className="text-sm text-slate-600 dark:text-slate-400 text-center">
+                        Max {featureLimits.features.videoMaxDuration} seconds • MP4, MOV, AVI • Max 50MB
+                      </p>
+                    </label>
+                  )}
+                </>
+              ) : (
+                <div className="p-6 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200 dark:border-purple-800 rounded-xl text-center">
+                  <div className="inline-flex p-4 bg-purple-100 dark:bg-purple-900/30 rounded-2xl mb-4">
+                    <Camera className="w-8 h-8 text-purple-600" />
+                  </div>
+                  <h4 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">
+                    Video Upload is a Premium Feature
+                  </h4>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                    Upgrade to Premium to showcase your business with a 90-second promotional video
+                  </p>
+                  <button
+                    onClick={() => setShowUpgradeModal(true)}
+                    className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-300 transform hover:scale-105"
+                  >
+                    Upgrade to Premium
+                  </button>
+                </div>
+              )}
+            </div>
+
             {/* Documents Section */}
             <div className="bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 rounded-3xl shadow-xl p-8 border border-slate-200/50 dark:border-slate-700/50">
               <div className="flex items-center justify-between mb-6">
@@ -867,7 +1198,7 @@ export default function ProviderProfile() {
 
               {/* Documents List */}
               <div className="space-y-3">
-                {documents.length === 0 ? (
+                {documents.filter(doc => doc.type !== 'brand_image').length === 0 ? (
                   <div className="text-center py-8">
                     <FileText className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
                     <p className="text-slate-600 dark:text-slate-400">No documents uploaded yet</p>
@@ -876,7 +1207,7 @@ export default function ProviderProfile() {
                     </p>
                   </div>
                 ) : (
-                  documents.map((doc) => (
+                  documents.filter(doc => doc.type !== 'brand_image').map((doc) => (
                     <div
                       key={doc.id}
                       className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-700 rounded-xl hover:shadow-md transition-all duration-200"
@@ -921,6 +1252,96 @@ export default function ProviderProfile() {
           </div>
         </div>
       </div>
+
+      {/* Upgrade Modal */}
+      {showUpgradeModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-3xl max-w-2xl w-full shadow-2xl shadow-pink-500/20 border border-white/20 dark:border-slate-700/50">
+            <div className="p-8">
+              <div className="text-center mb-6">
+                <div className="inline-flex p-4 bg-gradient-to-r from-pink-100 to-orange-100 dark:from-pink-900/30 dark:to-orange-900/30 rounded-2xl mb-4">
+                  <Award className="w-12 h-12 text-[#ec4899]" />
+                </div>
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-pink-600 to-orange-500 bg-clip-text text-transparent mb-2">
+                  Upgrade to Premium
+                </h2>
+                <p className="text-slate-600 dark:text-slate-400">
+                  Unlock more features and grow your business faster
+                </p>
+              </div>
+
+              {/* Feature Comparison */}
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+                  <h4 className="font-bold text-slate-900 dark:text-slate-100 mb-3">Basic Plan</h4>
+                  <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
+                    <li className="flex items-center space-x-2">
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                      <span>5 photos max</span>
+                    </li>
+                    <li className="flex items-center space-x-2">
+                      <XCircle className="w-4 h-4 text-red-500" />
+                      <span>No video</span>
+                    </li>
+                    <li className="flex items-center space-x-2">
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                      <span>2 weeks top listing</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="p-4 bg-gradient-to-br from-pink-50 to-orange-50 dark:from-pink-900/20 dark:to-orange-900/20 rounded-xl border-2 border-pink-300 dark:border-pink-700">
+                  <h4 className="font-bold text-[#ec4899] mb-3 flex items-center">
+                    Premium Plan
+                    <Star className="w-4 h-4 ml-2 fill-current" />
+                  </h4>
+                  <ul className="space-y-2 text-sm text-slate-700 dark:text-slate-300">
+                    <li className="flex items-center space-x-2">
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                      <span className="font-semibold">10 photos max</span>
+                    </li>
+                    <li className="flex items-center space-x-2">
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                      <span className="font-semibold">1 video (90s)</span>
+                    </li>
+                    <li className="flex items-center space-x-2">
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                      <span className="font-semibold">2 months top listing</span>
+                    </li>
+                    <li className="flex items-center space-x-2">
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                      <span className="font-semibold">All rewards access</span>
+                    </li>
+                    <li className="flex items-center space-x-2">
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                      <span className="font-semibold">TV + Radio promotion</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setShowUpgradeModal(false)}
+                  className="flex-1 px-6 py-3 border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-xl font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-all duration-300"
+                >
+                  Maybe Later
+                </button>
+                <button
+                  onClick={() => {
+                    setShowUpgradeModal(false);
+                    router.push('/provider/settings?tab=subscription');
+                  }}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-pink-600 to-orange-500 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-pink-500/25 transition-all duration-300 transform hover:scale-105"
+                >
+                  Upgrade Now
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
