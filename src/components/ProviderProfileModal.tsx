@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 import { X, Star, MapPin, Clock, Phone, Mail, MessageCircle, Heart, Share2, Shield, Award, Calendar, Zap } from "lucide-react";
 import { Provider } from "../types/provider";
 import Avatar from "./Avatar";
+import { useAuth } from "../contexts/AuthContext";
+import { useRouter } from "next/navigation";
 
 // Custom Naira symbol component
 const NairaIcon = ({ className }: { className?: string }) => (
@@ -72,17 +74,24 @@ const generateMockPortfolio = () => [
 ];
 
 export default function ProviderProfileModal({ provider, isOpen, onClose, onBook, onContact }: ProviderProfileModalProps) {
+  const router = useRouter();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'overview' | 'portfolio' | 'reviews'>('overview');
   const [reviews, setReviews] = useState<Review[]>([]);
   const [portfolioImages, setPortfolioImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
 
   // Fetch provider details when modal opens
   useEffect(() => {
     if (isOpen && provider) {
       fetchProviderDetails();
+      if (user) {
+        checkFavoriteStatus();
+      }
     }
-  }, [isOpen, provider]);
+  }, [isOpen, provider, user]);
 
   const fetchProviderDetails = async () => {
     if (!provider) return;
@@ -177,6 +186,112 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
         console.log('Direct images:', directImages);
         setPortfolioImages(directImages);
       }
+    }
+  };
+
+  // Check if provider is favorited
+  const checkFavoriteStatus = async () => {
+    if (!provider || !user) return;
+    
+    try {
+      const raw = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const base = raw.endsWith('/api') ? raw : `${raw.replace(/\/$/, '')}/api`;
+      
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch(`${base}/favorites/check/${provider.id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setIsFavorited(data.data.isFavorited);
+      }
+    } catch (error) {
+      console.error('Error checking favorite status:', error);
+    }
+  };
+
+  // Toggle favorite status
+  const handleToggleFavorite = async () => {
+    if (!provider) return;
+
+    // Check if user is logged in
+    if (!user) {
+      const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+      router.push(`/login?returnUrl=${returnUrl}`);
+      return;
+    }
+
+    setIsTogglingFavorite(true);
+    
+    try {
+      const raw = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const base = raw.endsWith('/api') ? raw : `${raw.replace(/\/$/, '')}/api`;
+      
+      const token = localStorage.getItem('token');
+      if (!token) {
+        const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+        router.push(`/login?returnUrl=${returnUrl}`);
+        return;
+      }
+
+      const response = await fetch(`${base}/favorites/toggle`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ providerId: provider.id })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setIsFavorited(data.data.isFavorited);
+        
+        // Show success message
+        const message = data.data.action === 'added' 
+          ? '❤️ Added to favorites!' 
+          : '💔 Removed from favorites';
+        
+        // You can add a toast notification here if you have one
+        console.log(message);
+      } else {
+        const errorData = await response.json();
+        console.error('Error toggling favorite:', errorData.message);
+        alert(errorData.message || 'Failed to update favorites');
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+      alert('Failed to update favorites. Please try again.');
+    } finally {
+      setIsTogglingFavorite(false);
+    }
+  };
+
+  // Handle share
+  const handleShare = async () => {
+    if (!provider) return;
+
+    const shareData = {
+      title: provider.businessName || 'Service Provider',
+      text: `Check out ${provider.businessName} - ${getCategoryLabel(provider.category)} in ${provider.locationCity}`,
+      url: window.location.href
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        // Fallback: Copy to clipboard
+        await navigator.clipboard.writeText(window.location.href);
+        alert('Link copied to clipboard!');
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
     }
   };
 
@@ -295,10 +410,23 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
               </button>
               
               <div className="flex gap-2">
-                <button className="flex-1 sm:flex-none px-3 sm:px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-sm flex items-center justify-center">
-                  <Heart className="w-4 h-4" />
+                <button 
+                  onClick={handleToggleFavorite}
+                  disabled={isTogglingFavorite}
+                  className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 border rounded-xl transition-all text-sm flex items-center justify-center ${
+                    isFavorited
+                      ? 'bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30'
+                      : 'border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                  } ${isTogglingFavorite ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+                >
+                  <Heart className={`w-4 h-4 ${isFavorited ? 'fill-current' : ''}`} />
                 </button>
-                <button className="flex-1 sm:flex-none px-3 sm:px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-sm flex items-center justify-center">
+                <button 
+                  onClick={handleShare}
+                  className="flex-1 sm:flex-none px-3 sm:px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-sm flex items-center justify-center"
+                  title="Share provider"
+                >
                   <Share2 className="w-4 h-4" />
                 </button>
               </div>
