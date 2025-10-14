@@ -81,6 +81,7 @@ export default function ProviderDashboard() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [notificationsLoading, setNotificationsLoading] = useState(false);
 
   // Fetch unread notification count
@@ -102,6 +103,32 @@ export default function ProviderDashboard() {
       }
     } catch (error) {
       console.error('Error fetching unread count:', error);
+    }
+  };
+
+  // Fetch unread messages count
+  const fetchUnreadMessagesCount = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const response = await fetch(`${base}/api/messages/conversations`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const totalUnread = (data.data?.conversations || []).reduce(
+          (sum: number, conv: any) => sum + (conv.unreadCount || 0), 
+          0
+        );
+        setUnreadMessagesCount(totalUnread);
+      }
+    } catch (error) {
+      console.error('Error fetching unread messages count:', error);
     }
   };
 
@@ -409,11 +436,15 @@ export default function ProviderDashboard() {
     // Fetch provider rating data
     fetchProviderRating();
 
-    // Fetch notifications
+    // Fetch notifications and messages
     fetchUnreadCount();
+    fetchUnreadMessagesCount();
     
-    // Poll for new notifications every 30 seconds
-    const interval = setInterval(fetchUnreadCount, 30000);
+    // Poll for new notifications and messages every 30 seconds
+    const interval = setInterval(() => {
+      fetchUnreadCount();
+      fetchUnreadMessagesCount();
+    }, 30000);
 
     return () => clearInterval(interval);
   }, []);
@@ -456,7 +487,7 @@ export default function ProviderDashboard() {
       title: "Messages",
       icon: MessageSquare,
       href: "/provider/messages",
-      badge: 3 // Mock unread messages
+      badge: unreadMessagesCount > 0 ? unreadMessagesCount : null
     },
     {
       title: "Profile",
@@ -498,7 +529,7 @@ export default function ProviderDashboard() {
     {
       title: "Messages",
       icon: MessageSquare,
-      onClick: () => handleComingSoon("Messages"),
+      onClick: () => router.push('/provider/messages'),
       color: "bg-purple-500",
       description: "Customer communications"
     },
@@ -610,6 +641,9 @@ export default function ProviderDashboard() {
                     setSidebarOpen(false);
                   } else if (item.href === '/provider/earnings') {
                     router.push('/provider/earnings');
+                    setSidebarOpen(false);
+                  } else if (item.href === '/provider/messages') {
+                    router.push('/provider/messages');
                     setSidebarOpen(false);
                   } else if (item.href === '/provider/profile') {
                     router.push('/provider/profile');
