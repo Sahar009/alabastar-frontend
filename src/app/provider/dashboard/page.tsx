@@ -522,7 +522,7 @@ export default function ProviderDashboard() {
     {
       title: "Earnings",
       icon: DollarSign,
-      onClick: () => handleComingSoon("Earnings Dashboard"),
+      onClick: () => router.push('/provider/earnings'),
       color: "bg-green-500",
       description: "Track your income"
     },
