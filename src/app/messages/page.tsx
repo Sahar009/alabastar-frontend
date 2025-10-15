@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { 
   Search, 
@@ -49,7 +49,7 @@ interface Conversation {
   lastMessageAt: string;
 }
 
-export default function MessagesPage() {
+function MessagesPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const selectedConversationId = searchParams?.get('conversation');
@@ -795,6 +795,18 @@ export default function MessagesPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function MessagesPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-slate-600">Loading messages...</div>
+      </div>
+    }>
+      <MessagesPageContent />
+    </Suspense>
   );
 }
 

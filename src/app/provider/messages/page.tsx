@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { 
   Search, 
@@ -57,7 +57,7 @@ interface Conversation {
   lastMessageAt: string;
 }
 
-export default function ProviderMessagesPage() {
+function ProviderMessagesPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const selectedConversationId = searchParams?.get('conversation');
@@ -927,6 +927,18 @@ export default function ProviderMessagesPage() {
         />
       )}
     </div>
+  );
+}
+
+export default function ProviderMessagesPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-slate-900">
+        <div className="text-slate-600">Loading messages...</div>
+      </div>
+    }>
+      <ProviderMessagesPageContent />
+    </Suspense>
   );
 }
 
