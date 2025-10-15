@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { 
   Search, 
@@ -40,6 +40,11 @@ interface Message {
   isEdited: boolean;
   sender: User;
   readReceipts?: any[];
+  messageType?: string;
+  mediaUrl?: string;
+  mediaType?: string;
+  fileName?: string;
+  fileSize?: number;
 }
 
 interface Conversation {
@@ -52,7 +57,7 @@ interface Conversation {
   lastMessageAt: string;
 }
 
-export default function ProviderMessagesPage() {
+function ProviderMessagesPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const selectedConversationId = searchParams?.get('conversation');
@@ -68,10 +73,13 @@ export default function ProviderMessagesPage() {
   const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Navigation items
   const navigationItems = [
@@ -258,30 +266,114 @@ export default function ProviderMessagesPage() {
   };
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedConversation || sending) return;
+    if ((!newMessage.trim() && !selectedFile) || !selectedConversation || sending) return;
 
     setSending(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/messages/conversations/${selectedConversation.id}/messages`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            messageType: 'text',
-            content: newMessage.trim()
-          })
-        }
-      );
+      
+      if (selectedFile) {
+        // Send file message
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        formData.append('messageType', 'file');
+        formData.append('content', newMessage.trim() || 'Shared a file');
 
-      const result = await response.json();
-      if (result.success) {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/messages/conversations/${selectedConversation.id}/messages`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            },
+            body: formData
+          }
+        );
+
+        const result = await response.json();
+        console.log('File message response:', result);
+        
+        // Always clear the input and file selection
+        setNewMessage("");
+        setSelectedFile(null);
+        stopTyping();
+        
+        if (result.success && result.data && result.data.message) {
+          // Add the sent message to the UI immediately
+          const sentMessage = result.data.message;
+          // Ensure the message has required properties
+          if (sentMessage.senderId && sentMessage.id) {
+            setMessages(prev => [...prev, sentMessage]);
+            
+            // Update conversation list with latest message
+            setConversations(prev => prev.map(conv => 
+              conv.id === selectedConversation.id 
+                ? { 
+                    ...conv, 
+                    messages: [sentMessage], 
+                    lastMessageAt: sentMessage.createdAt,
+                    unreadCount: 0 // Reset unread count for sent messages
+                  }
+                : conv
+            ));
+            
+            scrollToBottom();
+          } else {
+            console.error('Invalid message structure:', sentMessage);
+          }
+        } else {
+          console.error('Failed to send file message:', result);
+        }
+      } else {
+        // Send text message
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/messages/conversations/${selectedConversation.id}/messages`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              messageType: 'text',
+              content: newMessage.trim()
+            })
+          }
+        );
+
+        const result = await response.json();
+        console.log('Text message response:', result);
+        
+        // Always clear the input
         setNewMessage("");
         stopTyping();
+        
+        if (result.success && result.data && result.data.message) {
+          // Add the sent message to the UI immediately
+          const sentMessage = result.data.message;
+          // Ensure the message has required properties
+          if (sentMessage.senderId && sentMessage.id) {
+            setMessages(prev => [...prev, sentMessage]);
+            
+            // Update conversation list with latest message
+            setConversations(prev => prev.map(conv => 
+              conv.id === selectedConversation.id 
+                ? { 
+                    ...conv, 
+                    messages: [sentMessage], 
+                    lastMessageAt: sentMessage.createdAt,
+                    unreadCount: 0 // Reset unread count for sent messages
+                  }
+                : conv
+            ));
+            
+            scrollToBottom();
+          } else {
+            console.error('Invalid message structure:', sentMessage);
+          }
+        } else {
+          console.error('Failed to send text message:', result);
+        }
       }
     } catch (error) {
       console.error('Error sending message:', error);
@@ -315,9 +407,12 @@ export default function ProviderMessagesPage() {
   };
 
   const scrollToBottom = () => {
-    setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
+    if (messagesEndRef.current) {
+      const messagesContainer = messagesEndRef.current.parentElement;
+      if (messagesContainer) {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+    }
   };
 
   const filteredConversations = conversations.filter(conv => {
@@ -360,6 +455,20 @@ export default function ProviderMessagesPage() {
     });
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+    }
+  };
+
+  const handleEmojiClick = (emoji: string) => {
+    setNewMessage(prev => prev + emoji);
+    setShowEmojiPicker(false);
+  };
+
+  const commonEmojis = ['😀', '😂', '😍', '🥰', '😎', '🤔', '👍', '❤️', '🔥', '💯', '🎉', '😢', '😡', '🤷‍♂️', '👏'];
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-slate-900">
@@ -395,7 +504,7 @@ export default function ProviderMessagesPage() {
                   } else if (item.href === '/provider/bookings') {
                     router.push('/provider/bookings');
                   } else if (item.href === '/provider/earnings') {
-                    handleComingSoon('Earnings');
+                    router.push('/provider/earnings');
                   } else if (item.href === '/provider/profile') {
                     router.push('/provider/profile');
                   } else if (item.href === '/provider/settings') {
@@ -570,73 +679,208 @@ export default function ProviderMessagesPage() {
 
                 <div className="flex items-center gap-2">
                   <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors">
-                    <Phone className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-                  </button>
-                  <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors">
-                    <Video className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-                  </button>
-                  <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors">
                     <MoreVertical className="w-5 h-5 text-slate-600 dark:text-slate-400" />
                   </button>
                 </div>
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50 dark:bg-slate-900">
-                {messages.map((message, index) => {
-                  const isOwnMessage = message.senderId === currentUser?.id;
-                  const showDate = index === 0 || formatDate(messages[index - 1].createdAt) !== formatDate(message.createdAt);
+              <div 
+                className="flex-1 overflow-y-auto p-4 space-y-4 relative" 
+                style={{ 
+                  backgroundImage: 'url("/chat-bg.jpeg")', 
+                  backgroundSize: 'cover', 
+                  backgroundPosition: 'center', 
+                  backgroundRepeat: 'no-repeat',
+                  backgroundAttachment: 'fixed'
+                }}
+              >
+                {/* Semi-transparent overlay for better readability */}
+                <div className="absolute inset-0 bg-black/5 dark:bg-black/10 pointer-events-none"></div>
+                
+                <div className="relative z-10">
+                  {messages.map((message, index) => {
+                    // Add safety check for message object
+                    if (!message || !message.senderId) {
+                      console.error('Invalid message object:', message);
+                      return null;
+                    }
+                    
+                    const isOwnMessage = message.senderId === currentUser?.id;
+                    const showDate = index === 0 || formatDate(messages[index - 1].createdAt) !== formatDate(message.createdAt);
 
-                  return (
-                    <div key={message.id}>
-                      {showDate && (
-                        <div className="flex justify-center my-4">
-                          <span className="px-3 py-1 bg-white dark:bg-slate-800 rounded-full text-xs text-slate-600 dark:text-slate-400 shadow-sm">
-                            {formatDate(message.createdAt)}
-                          </span>
-                        </div>
-                      )}
-                      
-                      <div className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
-                        <div
-                          className={`max-w-[70%] rounded-lg px-4 py-2 ${
-                            isOwnMessage
-                              ? 'bg-pink-600 text-white rounded-br-none'
-                              : 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-bl-none shadow-sm'
-                          }`}
-                        >
-                          <p className="text-sm break-words">{message.content}</p>
-                          <div className={`flex items-center justify-end gap-1 mt-1 text-xs ${
-                            isOwnMessage ? 'text-white/70' : 'text-slate-500'
-                          }`}>
-                            <span>{formatTime(message.createdAt)}</span>
-                            {isOwnMessage && (
-                              <div>
-                                {message.readReceipts?.length ? (
-                                  <CheckCheck className="w-4 h-4 text-blue-400" />
-                                ) : (
-                                  <Check className="w-4 h-4" />
+                    return (
+                      <div key={message.id} className="mb-4">
+                        {showDate && (
+                          <div className="flex justify-center my-6">
+                            <span className="px-3 py-1 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-full text-xs text-slate-600 dark:text-slate-400 shadow-sm">
+                              {formatDate(message.createdAt)}
+                            </span>
+                          </div>
+                        )}
+                        
+                        <div className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} mb-2`}>
+                          <div
+                            className={`max-w-[70%] rounded-lg px-4 py-3 backdrop-blur-sm ${
+                              isOwnMessage
+                                ? 'bg-pink-600/95 text-white rounded-br-none shadow-lg'
+                                : 'bg-white/95 dark:bg-slate-800/95 text-slate-900 dark:text-slate-100 rounded-bl-none shadow-lg'
+                            }`}
+                          >
+                            {message.messageType === 'image' && message.mediaUrl ? (
+                              <div className="space-y-2">
+                                <img 
+                                  src={message.mediaUrl} 
+                                  alt={message.fileName || 'Shared image'} 
+                                  className="max-w-full h-auto rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                                  onClick={() => window.open(message.mediaUrl, '_blank')}
+                                />
+                                {message.content && message.content !== 'Shared a file' && (
+                                  <p className="text-sm break-words">{message.content}</p>
                                 )}
                               </div>
+                            ) : message.messageType === 'video' && message.mediaUrl ? (
+                              <div className="space-y-2">
+                                <video 
+                                  src={message.mediaUrl} 
+                                  controls 
+                                  className="max-w-full h-auto rounded-lg"
+                                  preload="metadata"
+                                >
+                                  Your browser does not support the video tag.
+                                </video>
+                                {message.content && message.content !== 'Shared a file' && (
+                                  <p className="text-sm break-words">{message.content}</p>
+                                )}
+                              </div>
+                            ) : message.messageType === 'audio' && message.mediaUrl ? (
+                              <div className="space-y-2">
+                                <audio 
+                                  src={message.mediaUrl} 
+                                  controls 
+                                  className="w-full"
+                                >
+                                  Your browser does not support the audio tag.
+                                </audio>
+                                {message.content && message.content !== 'Shared a file' && (
+                                  <p className="text-sm break-words">{message.content}</p>
+                                )}
+                              </div>
+                            ) : message.messageType === 'file' && message.mediaUrl ? (
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2 p-3 bg-slate-100 dark:bg-slate-700 rounded-lg">
+                                  <Paperclip className="w-4 h-4 text-slate-600" />
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
+                                      {message.fileName || 'Shared file'}
+                                    </p>
+                                    {message.fileSize && (
+                                      <p className="text-xs text-slate-500">
+                                        {(message.fileSize / 1024 / 1024).toFixed(2)} MB
+                                      </p>
+                                    )}
+                                  </div>
+                                  <a 
+                                    href={message.mediaUrl} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-pink-600 hover:text-pink-700 text-sm font-medium"
+                                  >
+                                    Download
+                                  </a>
+                                </div>
+                                {message.content && message.content !== 'Shared a file' && (
+                                  <p className="text-sm break-words">{message.content}</p>
+                                )}
+                              </div>
+                            ) : (
+                              <p className="text-sm break-words">{message.content}</p>
                             )}
+                            <div className={`flex items-center justify-end gap-1 mt-2 text-xs ${
+                              isOwnMessage ? 'text-white/70' : 'text-slate-500'
+                            }`}>
+                              <span>{formatTime(message.createdAt)}</span>
+                              {isOwnMessage && (
+                                <div>
+                                  {message.readReceipts?.length ? (
+                                    <CheckCheck className="w-4 h-4 text-blue-400" />
+                                  ) : (
+                                    <Check className="w-4 h-4" />
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
-                <div ref={messagesEndRef} />
+                    );
+                  })}
+                  <div ref={messagesEndRef} />
+                </div>
               </div>
 
               {/* Message Input */}
               <div className="p-4 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700">
+                {/* File Preview */}
+                {selectedFile && (
+                  <div className="mb-3 p-3 bg-slate-100 dark:bg-slate-700 rounded-lg flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Paperclip className="w-4 h-4 text-slate-600" />
+                      <span className="text-sm text-slate-700 dark:text-slate-300 truncate">
+                        {selectedFile.name}
+                      </span>
+                      <span className="text-xs text-slate-500">
+                        ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => setSelectedFile(null)}
+                      className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Emoji Picker */}
+                {showEmojiPicker && (
+                  <div className="mb-3 p-3 bg-white dark:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-600">
+                    <div className="grid grid-cols-8 gap-2">
+                      {commonEmojis.map((emoji, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleEmojiClick(emoji)}
+                          className="p-2 hover:bg-slate-100 dark:hover:bg-slate-600 rounded-lg text-lg transition-colors"
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex items-center gap-2">
-                  <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors">
+                  <button 
+                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
+                  >
                     <Smile className="w-5 h-5 text-slate-600 dark:text-slate-400" />
                   </button>
-                  <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors">
+                  
+                  <button 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
+                  >
                     <Paperclip className="w-5 h-5 text-slate-600 dark:text-slate-400" />
                   </button>
+                  
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt"
+                  />
                   
                   <input
                     type="text"
@@ -649,7 +893,7 @@ export default function ProviderMessagesPage() {
                   
                   <button
                     onClick={handleSendMessage}
-                    disabled={!newMessage.trim() || sending}
+                    disabled={(!newMessage.trim() && !selectedFile) || sending}
                     className="p-3 bg-pink-600 hover:bg-pink-700 disabled:bg-slate-300 dark:disabled:bg-slate-600 rounded-full transition-colors"
                   >
                     <Send className="w-5 h-5 text-white" />
@@ -683,6 +927,18 @@ export default function ProviderMessagesPage() {
         />
       )}
     </div>
+  );
+}
+
+export default function ProviderMessagesPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-slate-900">
+        <div className="text-slate-600">Loading messages...</div>
+      </div>
+    }>
+      <ProviderMessagesPageContent />
+    </Suspense>
   );
 }
 
