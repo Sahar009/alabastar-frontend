@@ -496,6 +496,11 @@ export default function ProviderDashboard() {
       active: false
     },
     {
+      title: "Subscription",
+      icon: CreditCard,
+      href: "/provider/subscription"
+    },
+    {
       title: "Settings",
       icon: Settings,
       href: "/provider/settings"
@@ -647,6 +652,9 @@ export default function ProviderDashboard() {
                     setSidebarOpen(false);
                   } else if (item.href === '/provider/profile') {
                     router.push('/provider/profile');
+                    setSidebarOpen(false);
+                  } else if (item.href === '/provider/subscription') {
+                    router.push('/provider/subscription');
                     setSidebarOpen(false);
                   } else if (item.href === '/provider/settings') {
                     router.push('/provider/settings');

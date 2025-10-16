@@ -559,7 +559,7 @@ export default function BecomeProviderPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-extrabold text-slate-900 dark:text-slate-50">Become a Provider</h1>
-          <p className="mt-2 text-slate-600 dark:text-slate-300">Join our network of trusted service providers</p>
+          <p className="mt-2 text-slate-600 dark:text-slate-300">Join our network of trusted businesses and providers</p>
           
           {/* Provider Sign In Link */}
           <div className="mt-4">

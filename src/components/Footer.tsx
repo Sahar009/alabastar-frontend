@@ -34,25 +34,24 @@ export default function Footer() {
             <div>
               <h4 className="text-white font-semibold mb-4">Company</h4>
               <ul className="space-y-3 text-sm">
-                <li><Link href="#about" className="text-white/80 hover:text-white transition-colors">About</Link></li>
-                <li><Link href="#blog" className="text-white/80 hover:text-white transition-colors">Blog</Link></li>
-                <li><Link href="#contact" className="text-white/80 hover:text-white transition-colors">Contact</Link></li>
+                <li><Link href="/about" className="text-white/80 hover:text-white transition-colors">About</Link></li>
+                <li><Link href="/contact" className="text-white/80 hover:text-white transition-colors">Contact</Link></li>
               </ul>
             </div>
             <div>
               <h4 className="text-white font-semibold mb-4">Products</h4>
               <ul className="space-y-3 text-sm">
-                <li><Link href="#services" className="text-white/80 hover:text-white transition-colors">Find Services</Link></li>
-                <li><Link href="#providers" className="text-white/80 hover:text-white transition-colors">Become a Provider</Link></li>
-                <li><Link href="#marketplace" className="text-white/80 hover:text-white transition-colors">Marketplace</Link></li>
+                <li><Link href="/providers" className="text-white/80 hover:text-white transition-colors">Find Services</Link></li>
+                <li><Link href="/become-provider" className="text-white/80 hover:text-white transition-colors">Become a Provider</Link></li>
+                <li><Link href="/providers" className="text-white/80 hover:text-white transition-colors">Marketplace</Link></li>
               </ul>
             </div>
             <div>
               <h4 className="text-white font-semibold mb-4">Legal</h4>
               <ul className="space-y-3 text-sm">
-                <li><Link href="#privacy" className="text-white/80 hover:text-white transition-colors">Privacy</Link></li>
-                <li><Link href="#terms" className="text-white/80 hover:text-white transition-colors">Terms</Link></li>
-                <li><Link href="#safety" className="text-white/80 hover:text-white transition-colors">Safety</Link></li>
+                <li><Link href="/privacy" className="text-white/80 hover:text-white transition-colors">Privacy</Link></li>
+                <li><Link href="/terms" className="text-white/80 hover:text-white transition-colors">Terms</Link></li>
+                <li><Link href="/safety" className="text-white/80 hover:text-white transition-colors">Safety</Link></li>
               </ul>
             </div>
           </div>
