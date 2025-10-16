@@ -494,7 +494,7 @@ export default function HomePage() {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100">
-              Most Popular Services
+              Most Popular Categories
             </h2>
             <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
               <ArrowRight size={12} className="text-white rotate-45" />

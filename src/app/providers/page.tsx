@@ -980,11 +980,11 @@ export default function ProvidersPage() {
       
 
               {/* Enhanced Search Section */}
-              <div className="bg-gradient-to-br from-white via-slate-50 to-blue-50 dark:from-slate-800 dark:via-slate-900 dark:to-blue-900/20 rounded-3xl shadow-2xl border border-slate-200/50 dark:border-slate-700/50 p-6 mb-8 relative overflow-hidden">
+              <div className="bg-gradient-to-br from-white via-slate-50 to-pink-50 dark:from-slate-800 dark:via-slate-900 dark:to-pink-900/20 rounded-3xl shadow-2xl border border-slate-200/50 dark:border-slate-700/50 p-6 mb-8 relative overflow-hidden">
                 {/* Background Pattern */}
                 <div className="absolute inset-0 opacity-5 dark:opacity-10">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#2563EB] to-[#14B8A6] rounded-full blur-2xl transform translate-x-16 -translate-y-16"></div>
-                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-[#14B8A6] to-[#2563EB] rounded-full blur-xl transform -translate-x-12 translate-y-12"></div>
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-pink-600 to-orange-500 rounded-full blur-2xl transform translate-x-16 -translate-y-16"></div>
+                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-orange-500 to-pink-600 rounded-full blur-xl transform -translate-x-12 translate-y-12"></div>
                 </div>
                 
                 {/* Header with Enhanced Design */}
@@ -1105,10 +1105,10 @@ export default function ProvidersPage() {
                             <button
                               key={index}
                               onClick={() => handleSuggestionClick(suggestion)}
-                              className="w-full px-3 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-gradient-to-r hover:from-[#2563EB]/10 hover:to-[#14B8A6]/10 dark:hover:from-[#2563EB]/20 dark:hover:to-[#14B8A6]/20 transition-all rounded-lg flex items-center space-x-2 group"
+                              className="w-full px-3 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-gradient-to-r hover:from-pink-600/10 hover:to-orange-500/10 dark:hover:from-pink-600/20 dark:hover:to-orange-500/20 transition-all rounded-lg flex items-center space-x-2 group"
                             >
-                              <div className="w-6 h-6 bg-gradient-to-r from-[#2563EB]/20 to-[#14B8A6]/20 rounded-lg flex items-center justify-center group-hover:from-[#2563EB]/30 group-hover:to-[#14B8A6]/30 transition-all">
-                                <Search className="w-3 h-3 text-[#2563EB]" />
+                              <div className="w-6 h-6 bg-gradient-to-r from-pink-600/20 to-orange-500/20 rounded-lg flex items-center justify-center group-hover:from-pink-600/30 group-hover:to-orange-500/30 transition-all">
+                                <Search className="w-3 h-3 text-pink-600" />
                               </div>
                               <span className="font-medium">{suggestion}</span>
                             </button>
@@ -1236,7 +1236,7 @@ export default function ProvidersPage() {
                       )}
 
                       {/* Background gradient overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-[#2563EB]/5 to-[#14B8A6]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"></div>
+                      <div className="absolute inset-0 bg-gradient-to-br from-pink-600/5 to-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"></div>
                       
                       {/* Content */}
                       <div className="relative z-10">
@@ -1289,11 +1289,29 @@ export default function ProvidersPage() {
                           </div>
                         </div>
                         
-                        {/* Description */}
-                        {provider.bio && (
-                          <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 leading-relaxed">
-                            {provider.bio.length > 80 ? provider.bio.substring(0, 80) + '...' : provider.bio}
-                          </p>
+                        {/* Subcategories */}
+                        {provider.subcategories && provider.subcategories.length > 0 && (
+                          <div className="mb-4">
+                            <div className="flex items-center space-x-2 mb-2">
+                              <div className="w-2 h-2 bg-gradient-to-r from-pink-600 to-orange-500 rounded-full animate-pulse"></div>
+                              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Services</span>
+                            </div>
+                            <div className="flex flex-wrap gap-1.5">
+                              {provider.subcategories.slice(0, 3).map((subcategory, index) => (
+                                <span
+                                  key={index}
+                                  className="px-2 py-1 bg-gradient-to-r from-pink-600/10 to-orange-500/10 text-pink-600 text-xs font-medium rounded-full border border-pink-600/20"
+                                >
+                                  {subcategory}
+                                </span>
+                              ))}
+                              {provider.subcategories.length > 3 && (
+                                <span className="px-2 py-1 bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 text-slate-600 dark:text-slate-400 text-xs font-medium rounded-full border border-slate-300 dark:border-slate-600">
+                                  +{provider.subcategories.length - 3} more
+                                </span>
+                              )}
+                            </div>
+                          </div>
                         )}
 
                         {/* Brand Images Gallery */}
@@ -1321,12 +1339,12 @@ export default function ProvidersPage() {
                                 </div>
                               ))}
                               {provider.brandImages.length > 6 && (
-                                <div className="aspect-square rounded-lg bg-gradient-to-br from-[#2563EB]/10 to-[#14B8A6]/10 dark:from-[#2563EB]/20 dark:to-[#14B8A6]/20 border border-[#2563EB]/30 dark:border-[#14B8A6]/30 shadow-sm flex items-center justify-center cursor-pointer hover:scale-105 transition-all duration-300">
+                                <div className="aspect-square rounded-lg bg-gradient-to-br from-pink-600/10 to-orange-500/10 dark:from-pink-600/20 dark:to-orange-500/20 border border-pink-600/30 dark:border-orange-500/30 shadow-sm flex items-center justify-center cursor-pointer hover:scale-105 transition-all duration-300">
                                   <div className="text-center">
-                                    <div className="w-6 h-6 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-full flex items-center justify-center mx-auto mb-1">
+                                    <div className="w-6 h-6 bg-gradient-to-r from-pink-600 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-1">
                                       <span className="text-white font-bold text-xs">+</span>
                                     </div>
-                                    <span className="text-xs font-bold text-[#2563EB] dark:text-[#14B8A6]">{provider.brandImages.length - 6}</span>
+                                    <span className="text-xs font-bold text-pink-600 dark:text-orange-500">{provider.brandImages.length - 6}</span>
                                   </div>
                                 </div>
                               )}
@@ -1451,7 +1469,7 @@ export default function ProvidersPage() {
         </div>
 
           {/* How to Search Advert Section */}
-          <div className="relative bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 rounded-3xl shadow-2xl overflow-hidden mb-8">
+          <div className="relative bg-gradient-to-br from-slate-900 via-pink-900 to-orange-900 rounded-3xl shadow-2xl overflow-hidden mb-8">
             {/* Background Image */}
             <div className="absolute inset-0">
               <img
@@ -1459,7 +1477,7 @@ export default function ProvidersPage() {
                 alt="Search Guide Background"
                 className="w-full h-full object-cover opacity-20"
               />
-              <div className="absolute inset-0 bg-gradient-to-br from-slate-900/80 via-blue-900/80 to-indigo-900/80"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-900/80 via-pink-900/80 to-orange-900/80"></div>
             </div>
             
             {/* Content */}
@@ -1547,7 +1565,7 @@ export default function ProvidersPage() {
                 <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                   <div className="text-center">
                     <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                      <Clock className="w-6 h-6 text-[#14B8A6]" />
+                      <Clock className="w-6 h-6 text-orange-400" />
                     </div>
                     <h4 className="text-white font-semibold mb-2">Quick Response</h4>
                     <p className="text-slate-400 text-sm">Get responses within minutes</p>
@@ -1555,7 +1573,7 @@ export default function ProvidersPage() {
                   
                   <div className="text-center">
                     <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                      <Shield className="w-6 h-6 text-[#2563EB]" />
+                      <Shield className="w-6 h-6 text-pink-400" />
                     </div>
                     <h4 className="text-white font-semibold mb-2">Verified Providers</h4>
                     <p className="text-slate-400 text-sm">All providers are background checked</p>
@@ -1860,7 +1878,7 @@ export default function ProvidersPage() {
                     )}
 
                     {/* Background gradient overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#2563EB]/5 to-[#14B8A6]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl"></div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-pink-600/5 to-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl"></div>
                     
                     {/* Content */}
                     <div className="relative z-10">
@@ -2013,10 +2031,10 @@ export default function ProvidersPage() {
                                           />
                                         </div>
                                         {/* Enhanced hover overlay */}
-                                        <div className="absolute inset-0 bg-gradient-to-br from-[#2563EB]/0 to-[#14B8A6]/0 group-hover:from-[#2563EB]/20 group-hover:to-[#14B8A6]/20 transition-all duration-300 rounded-xl flex items-center justify-center">
+                                        <div className="absolute inset-0 bg-gradient-to-br from-pink-600/0 to-orange-500/0 group-hover:from-pink-600/20 group-hover:to-orange-500/20 transition-all duration-300 rounded-xl flex items-center justify-center">
                                           <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:scale-110">
                                             <div className="w-8 h-8 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
-                                              <div className="w-3 h-3 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-full"></div>
+                                              <div className="w-3 h-3 bg-gradient-to-r from-pink-600 to-orange-500 rounded-full"></div>
                                             </div>
                                           </div>
                                         </div>
@@ -2024,12 +2042,12 @@ export default function ProvidersPage() {
                                     ))}
                                     {/* More indicator if there are more images */}
                                     {(provider.brandImages && provider.brandImages.length > 3) && (
-                                      <div className="w-full h-20 sm:h-24 rounded-lg bg-gradient-to-br from-[#2563EB]/10 to-[#14B8A6]/10 dark:from-[#2563EB]/20 dark:to-[#14B8A6]/20 border border-[#2563EB]/30 dark:border-[#14B8A6]/30 shadow-md flex items-center justify-center group cursor-pointer hover:scale-105 transition-all duration-300">
+                                      <div className="w-full h-20 sm:h-24 rounded-lg bg-gradient-to-br from-pink-600/10 to-orange-500/10 dark:from-pink-600/20 dark:to-orange-500/20 border border-pink-600/30 dark:border-orange-500/30 shadow-md flex items-center justify-center group cursor-pointer hover:scale-105 transition-all duration-300">
                                         <div className="text-center">
-                                          <div className="w-6 h-6 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-full flex items-center justify-center mx-auto mb-1">
+                                          <div className="w-6 h-6 bg-gradient-to-r from-pink-600 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-1">
                                             <span className="text-white font-bold text-xs">+</span>
                                     </div>
-                                          <span className="text-xs font-bold text-[#2563EB] dark:text-[#14B8A6]">{provider.brandImages.length - 3} more</span>
+                                          <span className="text-xs font-bold text-pink-600 dark:text-orange-500">{provider.brandImages.length - 3} more</span>
                                         </div>
                                       </div>
                                     )}
@@ -2062,18 +2080,28 @@ export default function ProvidersPage() {
                             </div> */}
                           </div>
                           
-                          {/* Provider Description */}
-                          {provider.bio && (
+                          {/* Provider Subcategories */}
+                          {provider.subcategories && provider.subcategories.length > 0 && (
                             <div className="mb-4">
-                              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                                {(() => {
-                                  const words = provider.bio.split(' ');
-                                  if (words.length <= 20) {
-                                    return provider.bio;
-                                  }
-                                  return words.slice(0, 20).join(' ') + '...';
-                                })()}
-                              </p>
+                              <div className="flex items-center space-x-2 mb-2">
+                                <div className="w-2 h-2 bg-gradient-to-r from-pink-600 to-orange-500 rounded-full animate-pulse"></div>
+                                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Services</span>
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                {provider.subcategories.slice(0, 4).map((subcategory, index) => (
+                                  <span
+                                    key={index}
+                                    className="px-3 py-1 bg-gradient-to-r from-pink-600/10 to-orange-500/10 text-pink-600 text-xs font-medium rounded-full border border-pink-600/20"
+                                  >
+                                    {subcategory}
+                                  </span>
+                                ))}
+                                {provider.subcategories.length > 4 && (
+                                  <span className="px-3 py-1 bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 text-slate-600 dark:text-slate-400 text-xs font-medium rounded-full border border-slate-300 dark:border-slate-600">
+                                    +{provider.subcategories.length - 4} more
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           )}
                         </div>
@@ -2121,11 +2149,11 @@ export default function ProvidersPage() {
                 ))
                 ) : (
                   <div className="col-span-full flex justify-center">
-                    <div className="bg-gradient-to-br from-white via-slate-50 to-blue-50 dark:from-slate-800 dark:via-slate-900 dark:to-blue-900/20 rounded-3xl shadow-2xl border border-slate-200/50 dark:border-slate-700/50 p-8 text-center max-w-lg w-full relative overflow-hidden">
+                    <div className="bg-gradient-to-br from-white via-slate-50 to-pink-50 dark:from-slate-800 dark:via-slate-900 dark:to-pink-900/20 rounded-3xl shadow-2xl border border-slate-200/50 dark:border-slate-700/50 p-8 text-center max-w-lg w-full relative overflow-hidden">
                       {/* Background Pattern */}
                       <div className="absolute inset-0 opacity-5 dark:opacity-10">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#2563EB] to-[#14B8A6] rounded-full blur-2xl transform translate-x-16 -translate-y-16"></div>
-                        <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-[#14B8A6] to-[#2563EB] rounded-full blur-xl transform -translate-x-12 translate-y-12"></div>
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-pink-600 to-orange-500 rounded-full blur-2xl transform translate-x-16 -translate-y-16"></div>
+                        <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-orange-500 to-pink-600 rounded-full blur-xl transform -translate-x-12 translate-y-12"></div>
                       </div>
                       
                       <div className="relative z-10 flex flex-col items-center space-y-6">
@@ -2145,7 +2173,7 @@ export default function ProvidersPage() {
                             </div>
                           </div>
                           {/* Floating elements */}
-                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-full flex items-center justify-center animate-bounce">
+                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-pink-600 to-orange-500 rounded-full flex items-center justify-center animate-bounce">
                             <MapPin className="w-2 h-2 text-white" />
                           </div>
                           <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center animate-bounce" style={{animationDelay: '0.5s'}}>
@@ -2250,11 +2278,11 @@ export default function ProvidersPage() {
         {/* Enhanced No Results Modal - Compact */}
         {showNoResultsModal && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-gradient-to-br from-white via-slate-50 to-blue-50 dark:from-slate-800 dark:via-slate-900 dark:to-blue-900/20 rounded-3xl shadow-2xl max-w-lg w-full mx-4 relative overflow-hidden">
+            <div className="bg-gradient-to-br from-white via-slate-50 to-pink-50 dark:from-slate-800 dark:via-slate-900 dark:to-pink-900/20 rounded-3xl shadow-2xl max-w-lg w-full mx-4 relative overflow-hidden">
               {/* Background Pattern */}
               <div className="absolute inset-0 opacity-5 dark:opacity-10">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#2563EB] to-[#14B8A6] rounded-full blur-xl transform translate-x-12 -translate-y-12"></div>
-                <div className="absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-tr from-[#14B8A6] to-[#2563EB] rounded-full blur-lg transform -translate-x-8 translate-y-8"></div>
+                <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-pink-600 to-orange-500 rounded-full blur-xl transform translate-x-12 -translate-y-12"></div>
+                <div className="absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-tr from-orange-500 to-pink-600 rounded-full blur-lg transform -translate-x-8 translate-y-8"></div>
               </div>
               
               <div className="relative z-10 p-6">
@@ -2286,7 +2314,7 @@ export default function ProvidersPage() {
                       </div>
                     </div>
                     {/* Floating elements */}
-                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-full flex items-center justify-center animate-bounce">
+                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-pink-600 to-orange-500 rounded-full flex items-center justify-center animate-bounce">
                       <MapPin className="w-2.5 h-2.5 text-white" />
                     </div>
                     <div className="absolute -bottom-1 -left-1 w-4 h-4 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center animate-bounce" style={{animationDelay: '0.5s'}}>
@@ -2302,7 +2330,7 @@ export default function ProvidersPage() {
                   {/* Compact Message Card */}
                   <div className="bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm rounded-xl p-4 mb-4 shadow-lg border border-slate-200/50 dark:border-slate-600/50">
                     <div className="flex items-center justify-center space-x-2 mb-2">
-                      <div className="w-6 h-6 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-lg flex items-center justify-center">
+                      <div className="w-6 h-6 bg-gradient-to-r from-pink-600 to-orange-500 rounded-lg flex items-center justify-center">
                         <AlertCircle className="w-3 h-3 text-white" />
                       </div>
                       <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Search Results</span>
@@ -2311,11 +2339,11 @@ export default function ProvidersPage() {
                     <p className="text-xs text-slate-600 dark:text-slate-400 mb-2">
                       {selectedCategory ? (
                         <>
-                          No available <span className="font-semibold text-[#2563EB]">{getCategoryLabel(selectedCategory).toLowerCase()}</span> in your area
+                          No available <span className="font-semibold text-pink-600">{getCategoryLabel(selectedCategory).toLowerCase()}</span> in your area
                         </>
                       ) : (
                         <>
-                          No providers matching <span className="font-semibold text-[#2563EB]">"{searchQuery}"</span>
+                          No providers matching <span className="font-semibold text-pink-600">"{searchQuery}"</span>
                         </>
                       )}
                     </p>
