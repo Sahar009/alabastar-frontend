@@ -29,6 +29,7 @@ interface AuthContextType {
   user: User | null;
   customer: Customer | null;
   firebaseUser: FirebaseUser | null;
+  token: string | null; // Authentication token
   loading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   loginWithGoogle: () => Promise<boolean>;
@@ -43,6 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -54,6 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (token && userData) {
       setUser(JSON.parse(userData));
+      setToken(token);
       if (customerData) {
         setCustomer(JSON.parse(customerData));
       }
@@ -114,6 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const data = await response.json();
         setUser(data.data.user);
         setCustomer(data.data.customer);
+        setToken(data.data.token);
         localStorage.setItem('token', data.data.token);
         localStorage.setItem('user', JSON.stringify(data.data.user));
         if (data.data.customer) {
@@ -143,6 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await response.json();
 
       if (response.ok) {
+        setToken(data.data.token);
         localStorage.setItem('token', data.data.token);
         localStorage.setItem('user', JSON.stringify(data.data.user));
         if (data.data.customer) {
@@ -219,6 +224,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem('customer');
       setUser(null);
       setCustomer(null);
+      setToken(null);
       setFirebaseUser(null);
       
       toast.success('Logged out successfully');
@@ -231,6 +237,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem('customer');
       setUser(null);
       setCustomer(null);
+      setToken(null);
       setFirebaseUser(null);
       toast.success('Logged out successfully');
       router.push('/');
@@ -278,6 +285,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     customer,
     firebaseUser,
+    token,
     loading,
     login,
     loginWithGoogle,

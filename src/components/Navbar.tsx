@@ -544,7 +544,7 @@ export default function Navbar() {
                   </div>
                 </>
               ) : (
-                <Link href="/login" className="text-slate-700 hover:text-orange-600 dark:text-slate-200 dark:hover:text-orange-400 transition-colors">Sign In</Link>
+                <Link href="/signin" className="text-slate-700 hover:text-orange-600 dark:text-slate-200 dark:hover:text-orange-400 transition-colors">Sign In</Link>
               )}
               <Link href="/providers" className="inline-flex items-center rounded-full bg-pink-600 hover:bg-pink-700 px-4 py-2 text-white font-semibold shadow-sm hover:shadow-md transition-all active:scale-[.98]">Book a Service</Link>
             </div>
@@ -631,7 +631,7 @@ function MobileMenu({ user, onLogout }: { user: User | null; onLogout: () => voi
               <button onClick={() => { onLogout(); setIsOpen(false); }} className="w-full text-left rounded-lg px-3 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20">Sign Out</button>
             </>
           ) : (
-            <Link href="/login" className="block rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-orange-900/20 dark:hover:text-orange-400 transition-colors" onClick={() => setIsOpen(false)}>Sign In</Link>
+            <Link href="/signin" className="block rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-orange-900/20 dark:hover:text-orange-400 transition-colors" onClick={() => setIsOpen(false)}>Sign In</Link>
           )}
           <Link href="/providers" className="block rounded-lg px-3 py-2 text-white text-center bg-pink-600 hover:bg-pink-700 font-semibold" onClick={() => setIsOpen(false)}>Book a Service</Link>
         </div>

@@ -3,6 +3,7 @@ import "./globals.css";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import AppToaster from "../components/Toaster";
+import ProfileCompletionWrapper from "../components/ProfileCompletionWrapper";
 import { AuthProvider } from "../contexts/AuthContext";
 import { ReduxProvider } from "../store/Provider";
 
@@ -83,6 +84,7 @@ export default function RootLayout({
           <AuthProvider>
             <Navbar />
             <AppToaster />
+            <ProfileCompletionWrapper />
             <main>{children}</main>
             <Footer />
           </AuthProvider>
