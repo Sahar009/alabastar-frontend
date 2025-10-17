@@ -1,10 +1,10 @@
 "use client";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { Upload, User, Mail, Phone, FileText, Award, Camera, X, Plus, Tag, Image, Eye, EyeOff, Gift, Check } from "lucide-react";
-import type React from "react";
 import LocationPicker from "../../components/LocationPicker";
+import { useAuth } from "../../contexts/AuthContext";
 
 // Custom Naira symbol component
 const NairaIcon = ({ className }: { className?: string }) => (
@@ -16,6 +16,7 @@ const NairaIcon = ({ className }: { className?: string }) => (
 
 export default function BecomeProviderPage() {
   const router = useRouter();
+  const { user, token } = useAuth();
   const [formData, setFormData] = useState({
     // User data
     fullName: "",
@@ -67,6 +68,8 @@ export default function BecomeProviderPage() {
   const [subscriptionPlans, setSubscriptionPlans] = useState<any[]>([]);
   const [loadingPlans, setLoadingPlans] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
+  const [savingStep, setSavingStep] = useState(false);
+  const [registrationProgress, setRegistrationProgress] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const brandImageInputRef = useRef<HTMLInputElement>(null);
 
@@ -106,6 +109,159 @@ export default function BecomeProviderPage() {
     carpet_cleaning: ['Steam Cleaning', 'Dry Cleaning', 'Stain Removal', 'Odor Treatment', 'Protection']
   };
 
+
+  // Save registration step to backend
+  const saveRegistrationStep = async (stepNumber: number, stepData: any) => {
+    try {
+      setSavingStep(true);
+      const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      
+      if (stepNumber === 1) {
+        // Stage 1: Create user account (POST)
+        const response = await fetch(`${base}/api/providers/register/step/${stepNumber}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(stepData)
+        });
+
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+          console.log(`Step ${stepNumber} saved successfully - User account created`);
+          
+          // Store the authentication data
+          if (data.data.token && data.data.user) {
+            localStorage.setItem('token', data.data.token);
+            localStorage.setItem('user', JSON.stringify(data.data.user));
+            
+            // Update the auth context (if available)
+            // Note: This will require a page refresh to update the auth context
+            // Or we can trigger a login event
+            
+            setRegistrationProgress(data.data.registrationProgress);
+            toast.success(`Step ${stepNumber} completed! Account created successfully.`);
+            
+            // Refresh the page to update auth context
+            window.location.reload();
+          }
+        } else {
+          console.error('Error creating account:', data.message);
+          toast.error(`Failed to create account: ${data.message}`);
+        }
+      } else {
+        // Stages 2-4: Update existing user's progress (PUT)
+        const currentToken = token || localStorage.getItem('token');
+        
+        if (!currentToken) {
+          toast.error('Authentication required. Please start over.');
+          return;
+        }
+        
+        const response = await fetch(`${base}/api/providers/register/progress`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${currentToken}`
+          },
+          body: JSON.stringify({
+            currentStep: stepNumber,
+            stepData: {
+              [`step${stepNumber}`]: stepData
+            }
+          })
+        });
+
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+          console.log(`Step ${stepNumber} saved successfully`);
+          setRegistrationProgress(data.data);
+          toast.success(`Step ${stepNumber} saved successfully!`);
+        } else {
+          console.error('Error saving step:', data.message);
+          toast.error(`Failed to save step ${stepNumber}: ${data.message}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error saving registration step:', error);
+      toast.error('Failed to save progress. Please try again.');
+    } finally {
+      setSavingStep(false);
+    }
+  };
+
+  // Load existing registration progress
+  const loadRegistrationProgress = async () => {
+    if (user && token) {
+      // User is authenticated, load from backend
+      try {
+      const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${base}/api/providers/register/progress`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        setRegistrationProgress(data.data);
+        
+        // If user has existing progress, load it into form
+        if (data.data.stepData && Object.keys(data.data.stepData).length > 0) {
+          const allStepData = {
+            ...data.data.stepData.step1,
+            ...data.data.stepData.step2,
+            ...data.data.stepData.step3,
+            ...data.data.stepData.step4,
+            ...data.data.stepData.step5
+          };
+          
+          setFormData(prev => ({ ...prev, ...allStepData }));
+          
+          // Set current step to the highest completed step + 1
+          setCurrentStep(Math.min(data.data.currentStep + 1, 5));
+          
+          // Load uploaded files if they exist
+          if (allStepData.documents) {
+            setUploadedFiles(allStepData.documents.map((doc: any) => ({
+              url: doc.url,
+              type: doc.type,
+              name: doc.name || 'Document',
+              preview: doc.url
+            })));
+          }
+          
+          if (allStepData.brandImages) {
+            setUploadedBrandImages(allStepData.brandImages.map((img: any) => ({
+              url: img.url,
+              type: img.type,
+              name: img.name || 'Brand Image',
+              preview: img.url
+            })));
+          }
+          
+          // Load subscription plan if selected
+          if (allStepData.subscriptionPlanId) {
+            const plan = subscriptionPlans.find(p => p.id === allStepData.subscriptionPlanId);
+            if (plan) {
+              setSelectedPlan(plan);
+              setRegistrationFee(plan.price);
+            }
+          }
+          
+          toast.success(`Welcome back! Continuing from step ${data.data.currentStep}`);
+        }
+      } else {
+        console.error('Error loading progress:', data.message);
+      }
+    } catch (error) {
+      console.error('Error loading registration progress:', error);
+    }
+    }
+  };
 
   const formatPhoneNumber = (value: string) => {
     // Remove all non-digit characters
@@ -417,31 +573,18 @@ export default function BecomeProviderPage() {
       return;
     }
     
-    if (formData.password !== formData.confirmPassword) {
-      toast.error('Passwords do not match');
+    // Validate final step
+    if (!formData.subscriptionPlanId) {
+      toast.error('Please select a subscription plan');
       return;
     }
-
-    if (!location.city || !location.state) {
-      toast.error('Please select your location');
-      return;
-    }
-
-    if (uploadedFiles.length === 0) {
-      toast.error('Please upload at least one document');
-      return;
-    }
-
-    if (uploadedBrandImages.length === 0) {
-      toast.error('Please upload at least one brand image');
-      return;
-    }
-
+    
     // If we reach here, it means we need to initialize payment
+    // All previous steps should have been saved already
     await initializePayment();
   };
 
-  const nextStep = () => {
+  const nextStep = async () => {
     // Validate current step before moving to next
     if (currentStep === 1) {
       // Check required fields for step 1
@@ -453,6 +596,19 @@ export default function BecomeProviderPage() {
         toast.error('Passwords do not match');
         return;
       }
+      
+      // Save step 1 data
+      await saveRegistrationStep(1, {
+        fullName: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        alternativePhone: formData.alternativePhone,
+        password: formData.password,
+        confirmPassword: formData.confirmPassword,
+        businessName: formData.businessName,
+        referralCode: formData.referralCode
+      });
+      
     } else if (currentStep === 2) {
       // Check required fields for step 2
       if (!formData.category) {
@@ -481,6 +637,18 @@ export default function BecomeProviderPage() {
           locationCity: trimmedState
         }));
       }
+      
+      // Save step 2 data
+      await saveRegistrationStep(2, {
+        category: formData.category,
+        subcategories: formData.subcategories,
+        bio: formData.bio,
+        locationCity: formData.locationCity,
+        locationState: formData.locationState,
+        latitude: formData.latitude,
+        longitude: formData.longitude
+      });
+      
     } else if (currentStep === 3) {
       // Check required fields for step 3
       if (uploadedFiles.length === 0) {
@@ -491,19 +659,42 @@ export default function BecomeProviderPage() {
         toast.error('Please upload at least one brand image');
         return;
       }
+      
+      // Save step 3 data
+      await saveRegistrationStep(3, {
+        documents: uploadedFiles.map(file => ({
+          type: file.type,
+          url: file.url,
+          name: file.name
+        })),
+        brandImages: uploadedBrandImages.map(file => ({
+          type: file.type,
+          url: file.url,
+          name: file.name
+        }))
+      });
+      
     } else if (currentStep === 4) {
       // Check required fields for step 4 (subscription plan)
       if (!formData.subscriptionPlanId) {
         toast.error('Please select a subscription plan');
         return;
       }
+      
+      // Save step 4 data
+      await saveRegistrationStep(4, {
+        subscriptionPlanId: formData.subscriptionPlanId
+      });
     }
     
     if (currentStep < 5) setCurrentStep(currentStep + 1);
   };
 
   const prevStep = () => {
-    if (currentStep > 1) setCurrentStep(currentStep - 1);
+    // Don't allow going back to step 1 if user is authenticated (account already created)
+    if (currentStep > 1 && !(currentStep === 2 && user)) {
+      setCurrentStep(currentStep - 1);
+    }
   };
 
   const initializePayment = async () => {
@@ -549,8 +740,13 @@ export default function BecomeProviderPage() {
     }
   };
 
+  // Load registration progress when component mounts or user/token changes
+  useEffect(() => {
+    loadRegistrationProgress();
+  }, [user, token]);
+
   // Fetch subscription plans on component mount
-  React.useEffect(() => {
+  useEffect(() => {
     fetchSubscriptionPlans();
   }, []);
 
@@ -559,7 +755,7 @@ export default function BecomeProviderPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-extrabold text-slate-900 dark:text-slate-50">Become a Provider</h1>
-          <p className="mt-2 text-slate-600 dark:text-slate-300">Join our network of trusted service providers</p>
+          <p className="mt-2 text-slate-600 dark:text-slate-300">Join our network of trusted businesses and providers</p>
           
           {/* Provider Sign In Link */}
           <div className="mt-4">
@@ -825,6 +1021,23 @@ export default function BecomeProviderPage() {
 
           {currentStep === 2 && (
             <div className="space-y-6">
+              {/* Success message for authenticated users */}
+              {user && (
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4">
+                  <div className="flex items-center">
+                    <div className="w-5 h-5 bg-green-500 rounded-full mr-3 flex items-center justify-center">
+                      <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-semibold text-green-800 dark:text-green-200">Account Created Successfully!</h3>
+                      <p className="text-sm text-green-700 dark:text-green-300">Your provider account has been created. Continue with your service details below.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Service Details</h2>
               
               <div>
@@ -1460,7 +1673,7 @@ export default function BecomeProviderPage() {
           )}
 
           <div className="flex justify-between mt-8">
-            {currentStep > 1 && (
+            {currentStep > 1 && !(currentStep === 2 && user) && (
               <button
                 type="button"
                 onClick={prevStep}
@@ -1468,6 +1681,14 @@ export default function BecomeProviderPage() {
               >
                 Previous
               </button>
+            )}
+            
+            {/* Show message for step 2 when user is authenticated */}
+            {currentStep === 2 && user && (
+              <div className="flex items-center text-sm text-slate-600 dark:text-slate-400">
+                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                Account created! You can't go back to step 1.
+              </div>
             )}
             
             <div className="ml-auto">

@@ -3,13 +3,13 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import type { JSX } from "react";
-import { Wrench, Zap, Truck, Fan, Hammer, PaintRoller, Bug, Shirt, Ruler, Camera, Sparkles, Search, ShieldCheck, Star, Apple, Play, Users, Settings, MapPin, ArrowRight, CheckCircle, UserPlus, Navigation, Cog } from "lucide-react";
+import { Wrench, Zap, Truck, Fan, Hammer, PaintRoller, Bug, Shirt, Ruler, Camera, Sparkles, Search, ShieldCheck, Star, Apple, Play, Users, Settings, MapPin, ArrowRight, CheckCircle, UserPlus, Navigation, Cog, Pill, Store, GraduationCap, Home, Scale, Bed } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import FAQComponent from "@/components/FAQ";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-export default function Home() {
+export default function HomePage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<string | null>(null);
@@ -322,18 +322,19 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full py-8 sm:py-12 lg:py-16">
-          <div className="max-w-4xl">
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full py-8 sm:py-12 lg:py-12">
+          <div className="max-w-5xl">
             {/* Main heading - Responsive typography */}
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold leading-tight text-white mb-4 sm:mb-6">
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-extrabold leading-tight text-white mb-4 sm:mb-6">
               <span className="block">Connect with</span>
-              <span className="block">trusted service</span>
-              <span className="block">providers</span>
+              <span className="block">trusted business owners,</span>
+              <span className="block">retail shops, and service providers
+              </span>
             </h1>
             
             {/* Subtitle - Responsive text */}
             <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/90 mb-6 sm:mb-8 max-w-2xl leading-relaxed">
-              Book skilled professionals for plumbing, electrical work, cleaning, carpentry and more. 
+            Book skilled professionals, merchants, and artisans for all your needs. 
               Secure payments, verified providers, instant booking.
             </p>
 
@@ -374,47 +375,47 @@ export default function Home() {
             <div className="mb-6  sm:mb-8">
               <div className="flex sm:flex-wrap gap-2 sm:gap-4 overflow-x-auto pb-2 sm:pb-0 scrollbar-hide pt-3">
               <button 
-                onClick={() => handleCategorySelect('plumbing')}
+                onClick={() => handleCategorySelect('pharmacy')}
                   className={`flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 rounded-2xl sm:rounded-3xl transition-all duration-300 hover:scale-105 shadow-lg text-xs sm:text-sm font-medium whitespace-nowrap flex-shrink-0 ${
-                  selectedCategory === 'plumbing' 
+                  selectedCategory === 'pharmacy' 
                     ? 'bg-gradient-to-r from-pink-600 to-orange-500 text-white' 
                     : 'bg-gradient-to-r from-pink-600 to-orange-500 hover:bg-orange-500 text-white'
                 }`}
               >
-                <span>Plumbing</span>
+                <span>Pharmacy</span>
                   <ArrowRight size={12} className="sm:w-4 sm:h-4" />
               </button>
               <button 
-                onClick={() => handleCategorySelect('electrical')}
+                onClick={() => handleCategorySelect('schools')}
                   className={`flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 rounded-2xl sm:rounded-3xl transition-all duration-300 hover:scale-105 shadow-lg text-xs sm:text-sm font-medium whitespace-nowrap flex-shrink-0 ${
-                  selectedCategory === 'electrical' 
+                  selectedCategory === 'schools' 
                     ? 'bg-gradient-to-r from-pink-600 to-orange-500 text-white' 
                     : 'bg-gradient-to-r from-pink-600 to-orange-500 hover:bg-orange-500 text-white'
                 }`}
               >
-                <span>Electrical</span>
+                <span>Schools</span>
                   <ArrowRight size={12} className="sm:w-4 sm:h-4" />
               </button>
               <button 
-                onClick={() => handleCategorySelect('cleaning')}
+                onClick={() => handleCategorySelect('Retail stores')}
                   className={`flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 rounded-2xl sm:rounded-3xl transition-all duration-300 hover:scale-105 shadow-lg text-xs sm:text-sm font-medium whitespace-nowrap flex-shrink-0 ${
-                  selectedCategory === 'cleaning' 
+                  selectedCategory === 'Retail stores' 
                     ? 'bg-gradient-to-r from-pink-600 to-orange-500 text-white' 
                     : 'bg-gradient-to-r from-pink-600 to-orange-500 hover:bg-orange-500 text-white'
                 }`}
               >
-                <span>Cleaning</span>
+                <span>Retail stores</span>
                   <ArrowRight size={12} className="sm:w-4 sm:h-4" />
               </button>
               <button 
-                onClick={() => handleCategorySelect('carpentry')}
+                onClick={() => handleCategorySelect('Estate')}
                   className={`flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 rounded-2xl sm:rounded-3xl transition-all duration-300 hover:scale-105 shadow-lg text-xs sm:text-sm font-medium whitespace-nowrap flex-shrink-0 ${
-                  selectedCategory === 'carpentry' 
+                  selectedCategory === 'Estate' 
                     ? 'bg-gradient-to-r from-pink-600 to-orange-500 text-white' 
                     : 'bg-gradient-to-r from-pink-600 to-orange-500 hover:bg-orange-500 text-white'
                 }`}
               >
-                <span>Carpentry</span>
+                <span>Estate Agents</span>
                   <ArrowRight size={12} className="sm:w-4 sm:h-4" />
               </button>
               <button 
@@ -487,15 +488,13 @@ export default function Home() {
       </section>
 
    
-
-      {/* Manual Scroll Categories */}
       {/* Most Popular Services Section */}
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-20">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100">
-              Most Popular Services
+              Most Popular Categories
             </h2>
             <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
               <ArrowRight size={12} className="text-white rotate-45" />
@@ -517,6 +516,62 @@ export default function Home() {
             className="flex gap-6 overflow-x-auto scrollbar-hide pb-4"
             style={{ scrollSnapType: 'x mandatory' }}
           >
+            {/* Pharmacy */}
+            <div className="group cursor-pointer relative overflow-hidden rounded-2xl h-64 w-64 flex-shrink-0 transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                 onClick={() => handleCategorySelect('Pharmacy')}
+                 style={{ scrollSnapAlign: 'start' }}>
+              <div className="absolute inset-0 bg-gradient-to-b from-red-500/40 to-pink-500/40"></div>
+              <div className="absolute inset-0 bg-black/15 group-hover:bg-black/8 transition-all duration-300"></div>
+              
+              {/* Background Image */}
+              <div className="absolute inset-0 opacity-60">
+                <Image
+                  src="/images/pharmacy.jpg"
+                  alt="Pharmacy"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              
+              {/* Icon */}
+              <div className="relative z-10 flex flex-col items-center justify-center h-full">
+                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <Pill className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-white font-bold text-lg uppercase tracking-wide">
+                  Pharmacy
+                </h3>
+              </div>
+            </div>
+
+            {/* Legal */}
+            <div className="group cursor-pointer relative overflow-hidden rounded-2xl h-64 w-64 flex-shrink-0 transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                 onClick={() => handleCategorySelect('Legal')}
+                 style={{ scrollSnapAlign: 'start' }}>
+              <div className="absolute inset-0 bg-gradient-to-b from-blue-500/40 to-indigo-500/40"></div>
+              <div className="absolute inset-0 bg-black/15 group-hover:bg-black/8 transition-all duration-300"></div>
+              
+              {/* Background Image */}
+              <div className="absolute inset-0 opacity-60">
+                <Image
+                  src="/images/legal.jpg"
+                  alt="Legal"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              
+              {/* Icon */}
+              <div className="relative z-10 flex flex-col items-center justify-center h-full">
+                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <Scale className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-white font-bold text-lg uppercase tracking-wide">
+                  Legal
+                </h3>
+              </div>
+            </div>
+
             {/* Carpentry */}
             <div className="group cursor-pointer relative overflow-hidden rounded-2xl h-64 w-64 flex-shrink-0 transition-all duration-300 hover:scale-105 hover:shadow-2xl"
                  onClick={() => handleCategorySelect('Carpentry')}
@@ -541,6 +596,34 @@ export default function Home() {
                 </div>
                 <h3 className="text-white font-bold text-lg uppercase tracking-wide">
                   Carpentry
+                </h3>
+              </div>
+            </div>
+
+            {/* Schools */}
+            <div className="group cursor-pointer relative overflow-hidden rounded-2xl h-64 w-64 flex-shrink-0 transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                 onClick={() => handleCategorySelect('Schools')}
+                 style={{ scrollSnapAlign: 'start' }}>
+              <div className="absolute inset-0 bg-gradient-to-b from-green-500/40 to-emerald-500/40"></div>
+              <div className="absolute inset-0 bg-black/15 group-hover:bg-black/8 transition-all duration-300"></div>
+              
+              {/* Background Image */}
+              <div className="absolute inset-0 opacity-60">
+                <Image
+                  src="/images/school.jpg"
+                  alt="Schools"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              
+              {/* Icon */}
+              <div className="relative z-10 flex flex-col items-center justify-center h-full">
+                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <GraduationCap className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-white font-bold text-lg uppercase tracking-wide">
+                  Schools
                 </h3>
               </div>
             </div>
@@ -573,6 +656,34 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Hotel and Lounges */}
+            <div className="group cursor-pointer relative overflow-hidden rounded-2xl h-64 w-64 flex-shrink-0 transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                 onClick={() => handleCategorySelect('Hotel and Lounges')}
+                 style={{ scrollSnapAlign: 'start' }}>
+              <div className="absolute inset-0 bg-gradient-to-b from-purple-500/40 to-pink-500/40"></div>
+              <div className="absolute inset-0 bg-black/15 group-hover:bg-black/8 transition-all duration-300"></div>
+              
+              {/* Background Image */}
+              <div className="absolute inset-0 opacity-60">
+                <Image
+                  src="/images/hotel.jpg"
+                  alt="Hotel and Lounges"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              
+              {/* Icon */}
+              <div className="relative z-10 flex flex-col items-center justify-center h-full">
+                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <Bed className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-white font-bold text-lg uppercase tracking-wide">
+                  Hotel & Lounges
+                </h3>
+              </div>
+            </div>
+
             {/* Electrician */}
             <div className="group cursor-pointer relative overflow-hidden rounded-2xl h-64 w-64 flex-shrink-0 transition-all duration-300 hover:scale-105 hover:shadow-2xl"
                  onClick={() => handleCategorySelect('Electrician')}
@@ -601,6 +712,34 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Retail Stores */}
+            <div className="group cursor-pointer relative overflow-hidden rounded-2xl h-64 w-64 flex-shrink-0 transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                 onClick={() => handleCategorySelect('Retail Stores')}
+                 style={{ scrollSnapAlign: 'start' }}>
+              <div className="absolute inset-0 bg-gradient-to-b from-teal-500/40 to-cyan-500/40"></div>
+              <div className="absolute inset-0 bg-black/15 group-hover:bg-black/8 transition-all duration-300"></div>
+              
+              {/* Background Image */}
+              <div className="absolute inset-0 opacity-60">
+                <Image
+                  src="/images/slider3.jpg"
+                  alt="Retail Stores"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              
+              {/* Icon */}
+              <div className="relative z-10 flex flex-col items-center justify-center h-full">
+                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <Store className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-white font-bold text-lg uppercase tracking-wide">
+                  Retail Stores
+                </h3>
+              </div>
+            </div>
+
             {/* Painter */}
             <div className="group cursor-pointer relative overflow-hidden rounded-2xl h-64 w-64 flex-shrink-0 transition-all duration-300 hover:scale-105 hover:shadow-2xl"
                  onClick={() => handleCategorySelect('Painter')}
@@ -611,7 +750,7 @@ export default function Home() {
               {/* Background Image */}
               <div className="absolute inset-0 opacity-60">
                 <Image
-                  src="/images/painter.png"
+                  src="/images/painter.jpg"
                   alt="Painter"
                   fill
                   className="object-cover"
@@ -625,6 +764,34 @@ export default function Home() {
                 </div>
                 <h3 className="text-white font-bold text-lg uppercase tracking-wide">
                   Painter
+                </h3>
+              </div>
+            </div>
+
+            {/* Estate Agency */}
+            <div className="group cursor-pointer relative overflow-hidden rounded-2xl h-64 w-64 flex-shrink-0 transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                 onClick={() => handleCategorySelect('Estate Agency')}
+                 style={{ scrollSnapAlign: 'start' }}>
+              <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/40 to-blue-500/40"></div>
+              <div className="absolute inset-0 bg-black/15 group-hover:bg-black/8 transition-all duration-300"></div>
+              
+              {/* Background Image */}
+              <div className="absolute inset-0 opacity-60">
+                <Image
+                  src="/images/astateagent.jpg"
+                  alt="Estate Agency"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              
+              {/* Icon */}
+              <div className="relative z-10 flex flex-col items-center justify-center h-full">
+                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <Home className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-white font-bold text-lg uppercase tracking-wide">
+                  Estate Agency
                 </h3>
               </div>
             </div>
@@ -788,8 +955,7 @@ export default function Home() {
                 for every need
               </h3>
               <p className="text-white/90 text-sm sm:text-base mb-4 text-center max-w-xl mx-auto leading-relaxed">
-                From home repairs to professional services, Alabastar connects you with verified experts 
-                who deliver excellence in every project.
+              From daily consumables to professional services, Alabastar connects you with reliable businesses and verified providers offering desired products and services whenever and wherever needed
               </p>
             </div>
             
@@ -916,7 +1082,8 @@ export default function Home() {
                       Secure Payment & Quality Guarantee
                     </h3>
                     <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                      Enjoy secure payments with our escrow system and our 100% satisfaction guarantee. If you're not completely satisfied, we'll make it right or refund your money.
+                    We have protocols and guidelines in place to constantly improve customer satisfaction and optimise payment security.
+Our dedicated customer service team is ready and willing to offer assistance whenever the need arises.
                     </p>
                   </div>
                 </div>
@@ -967,12 +1134,12 @@ export default function Home() {
             <div className="relative flex items-center justify-center space-x-4">
               {/* Circular image */}
               <div className="relative z-20">
-                <div className="w-50 h-50 rounded-full overflow-hidden shadow-xl border-4 border-white dark:border-slate-800">
+                <div className="w-48 h-48 rounded-2xl overflow-hidden shadow-xl border-4 border-white dark:border-slate-800">
                   <Image
                     src="/images/mechanic.png"
                     alt="Professional handshake"
-                    width={200}
-                    height={200}
+                    width={192}
+                    height={192}
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -981,23 +1148,23 @@ export default function Home() {
               {/* Vertical rectangular images */}
               <div className="space-y-4">
                 {/* First vertical image */}
-                <div className="w-30 h-40 rounded-2xl overflow-hidden shadow-lg border-2 border-white dark:border-slate-800 relative z-10">
+                <div className="w-32 h-48 rounded-2xl overflow-hidden shadow-lg border-2 border-white dark:border-slate-800 relative z-10">
                   <Image
                     src="/images/slider5.jpg"
                     alt="Professional working on laptop"
-                    width={96}
-                    height={128}
+                    width={128}
+                    height={192}
                     className="w-full h-full object-cover"
                   />
                 </div>
 
                 {/* Second vertical image */}
-                <div className="w-30 h-40 rounded-2xl overflow-hidden shadow-lg border-2 border-white dark:border-slate-800 relative z-10">
+                <div className="w-32 h-48 rounded-2xl overflow-hidden shadow-lg border-2 border-white dark:border-slate-800 relative z-10">
                   <Image
                     src="/images/plumber.png"
                     alt="Professional writing notes"
-                    width={96}
-                    height={128}
+                    width={128}
+                    height={192}
                     className="w-full h-full object-cover"
                   />
                 </div>

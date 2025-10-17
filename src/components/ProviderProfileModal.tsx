@@ -329,6 +329,27 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
     return cat ? cat.label : category;
   };
 
+  const getTimeOnApp = (createdAt: string) => {
+    if (!createdAt) return 'Recently joined';
+    
+    const now = new Date();
+    const created = new Date(createdAt);
+    const diffInMs = now.getTime() - created.getTime();
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+    const diffInMonths = Math.floor(diffInDays / 30);
+    const diffInYears = Math.floor(diffInDays / 365);
+    
+    if (diffInYears > 0) {
+      return `${diffInYears} year${diffInYears > 1 ? 's' : ''}`;
+    } else if (diffInMonths > 0) {
+      return `${diffInMonths} month${diffInMonths > 1 ? 's' : ''}`;
+    } else if (diffInDays > 0) {
+      return `${diffInDays} day${diffInDays > 1 ? 's' : ''}`;
+    } else {
+      return 'Today';
+    }
+  };
+
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-2 sm:p-4">
@@ -337,9 +358,9 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
         <div className="relative p-4 sm:p-6 border-b border-slate-200 dark:border-slate-700">
           <button
             onClick={onClose}
-            className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors z-10"
+            className="absolute top-1 right-1 p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors z-20"
           >
-            <X className="w-4 h-4 sm:w-5 sm:h-5" />
+            <X className="w-5 h-5" />
           </button>
           
           <div className="flex flex-col lg:flex-row gap-6">
@@ -377,7 +398,7 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
                 </div>
                 
                 <p className="text-sm sm:text-base lg:text-lg text-slate-600 dark:text-slate-400 mb-2">
-                  {getCategoryLabel(provider.category)} • {provider.yearsOfExperience} years experience
+                  {getCategoryLabel(provider.category)} • {getTimeOnApp(provider.createdAt)} on the app
                 </p>
                 
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
@@ -402,7 +423,7 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
                 disabled={!provider.isAvailable}
                 className={`px-4 sm:px-6 py-3 rounded-xl font-semibold text-sm transition-all w-full sm:w-auto ${
                   provider.isAvailable
-                    ? 'bg-gradient-to-r from-[#2563EB] to-[#14B8A6] text-white hover:opacity-90 hover:scale-105 shadow-lg hover:shadow-xl'
+                    ? 'bg-gradient-to-r from-pink-600 to-orange-500 text-white hover:opacity-90 hover:scale-105 shadow-lg hover:shadow-xl'
                     : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed'
                 }`}
               >
@@ -438,7 +459,7 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
         {provider.brandImages && provider.brandImages.length > 0 && (
           <div className="px-4 sm:px-6 py-4 border-b border-slate-200 dark:border-slate-700">
             <div className="flex items-center space-x-2 mb-3">
-              <div className="w-3 h-3 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-full animate-pulse"></div>
+              <div className="w-3 h-3 bg-gradient-to-r from-pink-600 to-orange-500 rounded-full animate-pulse"></div>
               <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">Brand Portfolio</h3>
             </div>
             
@@ -459,10 +480,10 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
                     />
                   </div>
                   {/* Hover overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#2563EB]/0 to-[#14B8A6]/0 group-hover:from-[#2563EB]/20 group-hover:to-[#14B8A6]/20 transition-all duration-300 rounded-lg flex items-center justify-center">
+                  <div className="absolute inset-0 bg-gradient-to-br from-pink-600/0 to-orange-500/0 group-hover:from-pink-600/20 group-hover:to-orange-500/20 transition-all duration-300 rounded-lg flex items-center justify-center">
                     <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:scale-110">
                       <div className="w-6 h-6 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
-                        <div className="w-2 h-2 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-full"></div>
+                        <div className="w-2 h-2 bg-gradient-to-r from-pink-600 to-orange-500 rounded-full"></div>
                       </div>
                     </div>
                   </div>
@@ -472,13 +493,13 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
               {/* More indicator */}
               {provider.brandImages.length > 4 && (
                 <div 
-                  className="w-full h-16 sm:h-20 rounded-lg bg-gradient-to-br from-[#2563EB]/10 to-[#14B8A6]/10 dark:from-[#2563EB]/20 dark:to-[#14B8A6]/20 border border-[#2563EB]/30 dark:border-[#14B8A6]/30 shadow-md flex items-center justify-center group hover:scale-105 transition-all duration-300"
+                  className="w-full h-16 sm:h-20 rounded-lg bg-gradient-to-br from-pink-600/10 to-orange-500/10 dark:from-pink-600/20 dark:to-orange-500/20 border border-pink-600/30 dark:border-orange-500/30 shadow-md flex items-center justify-center group hover:scale-105 transition-all duration-300"
                 >
                   <div className="text-center">
-                    <div className="w-6 h-6 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-full flex items-center justify-center mx-auto mb-1">
+                    <div className="w-6 h-6 bg-gradient-to-r from-pink-600 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-1">
                       <span className="text-white font-bold text-xs">+</span>
                     </div>
-                    <span className="text-xs font-bold text-[#2563EB] dark:text-[#14B8A6]">{provider.brandImages.length - 4} more</span>
+                    <span className="text-xs font-bold text-pink-600 dark:text-orange-500">{provider.brandImages.length - 4} more</span>
                   </div>
                 </div>
               )}
@@ -500,7 +521,7 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
             {/* Brand Images - Using same logic from providers page */}
             <div>
               <div className="flex items-center space-x-2 mb-3">
-                <div className="w-3 h-3 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-full animate-pulse"></div>
+                <div className="w-3 h-3 bg-gradient-to-r from-pink-600 to-orange-500 rounded-full animate-pulse"></div>
                 <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-slate-100">Brand Images</h3>
               </div>
               
@@ -553,10 +574,10 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
                             />
                           </div>
                           {/* Enhanced hover overlay */}
-                          <div className="absolute inset-0 bg-gradient-to-br from-[#2563EB]/0 to-[#14B8A6]/0 group-hover:from-[#2563EB]/20 group-hover:to-[#14B8A6]/20 transition-all duration-300 rounded-xl flex items-center justify-center">
+                          <div className="absolute inset-0 bg-gradient-to-br from-pink-600/0 to-orange-500/0 group-hover:from-pink-600/20 group-hover:to-orange-500/20 transition-all duration-300 rounded-xl flex items-center justify-center">
                             <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:scale-110">
                               <div className="w-8 h-8 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
-                                <div className="w-3 h-3 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-full"></div>
+                                <div className="w-3 h-3 bg-gradient-to-r from-pink-600 to-orange-500 rounded-full"></div>
                               </div>
                             </div>
                           </div>
@@ -564,12 +585,12 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
                       ))}
                       {/* More indicator if there are more images */}
                       {(provider.brandImages && provider.brandImages.length > 3) && (
-                        <div className="w-full h-20 sm:h-24 rounded-xl bg-gradient-to-br from-[#2563EB]/10 to-[#14B8A6]/10 dark:from-[#2563EB]/20 dark:to-[#14B8A6]/20 border border-[#2563EB]/30 dark:border-[#14B8A6]/30 shadow-lg flex items-center justify-center group cursor-pointer hover:scale-105 transition-all duration-300">
+                        <div className="w-full h-20 sm:h-24 rounded-xl bg-gradient-to-br from-pink-600/10 to-orange-500/10 dark:from-pink-600/20 dark:to-orange-500/20 border border-pink-600/30 dark:border-orange-500/30 shadow-lg flex items-center justify-center group cursor-pointer hover:scale-105 transition-all duration-300">
                           <div className="text-center">
-                            <div className="w-8 h-8 bg-gradient-to-r from-[#2563EB] to-[#14B8A6] rounded-full flex items-center justify-center mx-auto mb-1">
+                            <div className="w-8 h-8 bg-gradient-to-r from-pink-600 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-1">
                               <span className="text-white font-bold text-sm">+</span>
                             </div>
-                            <span className="text-xs font-bold text-[#2563EB] dark:text-[#14B8A6]">{provider.brandImages.length - 3} more</span>
+                            <span className="text-xs font-bold text-pink-600 dark:text-orange-500">{provider.brandImages.length - 3} more</span>
                           </div>
                         </div>
                       )}
@@ -586,7 +607,7 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
                 {provider.subcategories.map((service, index) => (
                   <span
                     key={index}
-                    className="px-2 sm:px-3 py-1 bg-gradient-to-r from-[#2563EB]/10 to-[#14B8A6]/10 text-[#2563EB] text-xs sm:text-sm font-medium rounded-full border border-[#2563EB]/20"
+                    className="px-2 sm:px-3 py-1 bg-gradient-to-r from-pink-600/10 to-orange-500/10 text-pink-600 text-xs sm:text-sm font-medium rounded-full border border-pink-600/20"
                   >
                     {service}
                   </span>

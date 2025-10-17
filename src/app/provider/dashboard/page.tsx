@@ -83,6 +83,41 @@ export default function ProviderDashboard() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [notificationsLoading, setNotificationsLoading] = useState(false);
+  const [profileCompletionChecked, setProfileCompletionChecked] = useState(false);
+
+  // Check if user has completed profile registration
+  const checkProfileCompletion = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${base}/api/providers/register/progress`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          const progress = result.data;
+          
+          // If user has incomplete registration, redirect to become-provider
+          if (progress && !progress.isComplete) {
+            console.log('Profile incomplete, redirecting to become-provider');
+            router.push('/become-provider');
+            return;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error checking profile completion:', error);
+    } finally {
+      setProfileCompletionChecked(true);
+    }
+  };
 
   // Fetch unread notification count
   const fetchUnreadCount = async () => {
@@ -262,12 +297,18 @@ export default function ProviderDashboard() {
           }
         } else {
           console.error('Profile fetch failed - no data:', profileData);
-          toast.error('Failed to load provider profile');
+          // Don't show error toast if profile doesn't exist yet (incomplete registration)
+          if (profileData.message !== 'Provider not found') {
+            toast.error('Failed to load provider profile');
+          }
         }
       } else {
         const errorData = await profileResponse.json();
         console.error('Profile fetch error:', errorData);
-        toast.error(`Error loading profile: ${errorData.message || 'Unknown error'}`);
+        // Don't show error toast if profile doesn't exist yet (incomplete registration)
+        if (errorData.message !== 'Provider not found') {
+          toast.error(`Error loading profile: ${errorData.message || 'Unknown error'}`);
+        }
       }
     } catch (error) {
       console.error('Error fetching referral data:', error);
@@ -357,6 +398,12 @@ export default function ProviderDashboard() {
             }
           }
         }
+        // Don't show error if provider profile doesn't exist yet (incomplete registration)
+      } else {
+        const errorData = await profileResponse.json();
+        if (errorData.message !== 'Provider not found') {
+          console.error('Profile fetch error in rating:', errorData);
+        }
       }
     } catch (error) {
       console.error('Error fetching provider rating:', error);
@@ -436,6 +483,9 @@ export default function ProviderDashboard() {
     // Fetch provider rating data
     fetchProviderRating();
 
+    // Check profile completion first
+    checkProfileCompletion();
+
     // Fetch notifications and messages
     fetchUnreadCount();
     fetchUnreadMessagesCount();
@@ -494,6 +544,11 @@ export default function ProviderDashboard() {
       icon: User,
       href: "/provider/profile",
       active: false
+    },
+    {
+      title: "Subscription",
+      icon: CreditCard,
+      href: "/provider/subscription"
     },
     {
       title: "Settings",
@@ -562,6 +617,18 @@ export default function ProviderDashboard() {
 
   const allActivities = [...recentActivities, ...mockActivities].slice(0, 4);
 
+  // Show loading while checking profile completion
+  if (!profileCompletionChecked) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600 mx-auto mb-4"></div>
+          <p className="text-slate-600 dark:text-slate-400">Checking profile completion...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex">
       {/* Mobile sidebar overlay */}
@@ -584,7 +651,7 @@ export default function ProviderDashboard() {
                 <Award className="w-7 h-7 text-white group-hover:rotate-12 transition-transform duration-300" />
               </div>
               <div>
-              <Image src="/brand/logo.png" alt="Alabastar" width={100} height={70} priority />
+              {/* <Image src="/brand/logo.png" alt="Alabastar" width={100} height={70} priority /> */}
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Provider Portal</p>
               </div>
             </div>
@@ -647,6 +714,9 @@ export default function ProviderDashboard() {
                     setSidebarOpen(false);
                   } else if (item.href === '/provider/profile') {
                     router.push('/provider/profile');
+                    setSidebarOpen(false);
+                  } else if (item.href === '/provider/subscription') {
+                    router.push('/provider/subscription');
                     setSidebarOpen(false);
                   } else if (item.href === '/provider/settings') {
                     router.push('/provider/settings');
