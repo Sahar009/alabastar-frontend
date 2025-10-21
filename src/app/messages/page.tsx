@@ -53,6 +53,8 @@ function MessagesPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const selectedConversationId = searchParams?.get('conversation');
+  const providerId = searchParams?.get('provider');
+  const bookingId = searchParams?.get('booking');
   
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -66,6 +68,7 @@ function MessagesPageContent() {
   const [sending, setSending] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [creatingConversation, setCreatingConversation] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
@@ -161,6 +164,50 @@ function MessagesPageContent() {
     }
   }, [selectedConversationId, conversations]);
 
+  // Handle provider parameter - create or find conversation with provider
+  useEffect(() => {
+    if (providerId && !selectedConversation) {
+      console.log('Provider ID:', providerId);
+      console.log('Conversations:', conversations);
+      console.log('Loading:', loading);
+      
+      // Wait for conversations to load
+      if (loading) {
+        console.log('Still loading conversations...');
+        return;
+      }
+      
+      // First, try to find existing conversation with this provider
+      const existingConv = conversations.find(conv => 
+        conv.participants.some(p => p.id === providerId)
+      );
+      
+      console.log('Existing conversation:', existingConv);
+      
+      if (existingConv) {
+        console.log('Selecting existing conversation:', existingConv.id);
+        handleSelectConversation(existingConv);
+      } else {
+        console.log('Creating new conversation with provider:', providerId);
+        setCreatingConversation(true);
+        // Create new conversation with provider
+        createOrFindConversation(providerId).then(conv => {
+          console.log('Created conversation:', conv);
+          setCreatingConversation(false);
+          if (conv) {
+            // Add to conversations list
+            setConversations(prev => [...prev, conv]);
+            handleSelectConversation(conv);
+          } else {
+            console.error('Failed to create conversation');
+            // Show error message to user
+            alert('Failed to start conversation with provider. Please try again.');
+          }
+        });
+      }
+    }
+  }, [providerId, conversations, selectedConversation, loading]);
+
   const fetchConversations = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -182,7 +229,41 @@ function MessagesPageContent() {
     }
   };
 
+  const createOrFindConversation = async (targetUserId: string) => {
+    try {
+      console.log('Creating/finding conversation with user:', targetUserId);
+      const token = localStorage.getItem('token');
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/messages/conversations`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            participantIds: [targetUserId],
+            type: 'direct'
+          })
+        }
+      );
+      
+      const result = await response.json();
+      console.log('Create conversation response:', result);
+      
+      if (result.success) {
+        return result.data.conversation;
+      } else {
+        console.error('Failed to create conversation:', result.message);
+      }
+    } catch (error) {
+      console.error('Error creating/finding conversation:', error);
+    }
+    return null;
+  };
+
   const handleSelectConversation = async (conversation: Conversation) => {
+    console.log('Selecting conversation:', conversation);
     setSelectedConversation(conversation);
     
     // Join conversation room
@@ -243,12 +324,18 @@ function MessagesPageContent() {
     try {
       const token = localStorage.getItem('token');
       
+      // Add booking context to first message if coming from booking
+      let messageContent = newMessage.trim();
+      if (bookingId && !messages.length && messageContent) {
+        messageContent = `Regarding booking #${bookingId}: ${messageContent}`;
+      }
+      
       if (selectedFile) {
         // Send file message
         const formData = new FormData();
         formData.append('file', selectedFile);
         formData.append('messageType', 'file');
-        formData.append('content', newMessage.trim() || 'Shared a file');
+        formData.append('content', messageContent || 'Shared a file');
 
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/messages/conversations/${selectedConversation.id}/messages`,
@@ -307,7 +394,7 @@ function MessagesPageContent() {
             },
             body: JSON.stringify({
               messageType: 'text',
-              content: newMessage.trim()
+              content: messageContent
             })
           }
         );
@@ -782,15 +869,31 @@ function MessagesPageContent() {
       ) : (
         <div className="hidden md:flex flex-1 items-center justify-center bg-slate-50 dark:bg-slate-900">
           <div className="text-center">
-            <div className="w-32 h-32 mx-auto mb-4 rounded-full bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center">
-              <User className="w-16 h-16 text-pink-600" />
-            </div>
-            <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-2">
-              Select a conversation
-            </h2>
-            <p className="text-slate-600 dark:text-slate-400">
-              Choose a conversation from the list to start messaging
-            </p>
+            {creatingConversation ? (
+              <>
+                <div className="w-32 h-32 mx-auto mb-4 rounded-full bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center">
+                  <div className="w-8 h-8 border-4 border-pink-600 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+                <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                  Starting conversation...
+                </h2>
+                <p className="text-slate-600 dark:text-slate-400">
+                  Please wait while we connect you with the provider
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="w-32 h-32 mx-auto mb-4 rounded-full bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center">
+                  <User className="w-16 h-16 text-pink-600" />
+                </div>
+                <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                  Select a conversation
+                </h2>
+                <p className="text-slate-600 dark:text-slate-400">
+                  Choose a conversation from the list to start messaging
+                </p>
+              </>
+            )}
           </div>
         </div>
       )}
