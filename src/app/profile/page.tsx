@@ -8,7 +8,7 @@ import { useAuth } from "../../contexts/AuthContext";
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { user, customer, loading, updateProfile, logout } = useAuth();
+  const { user, customer, providerProfile, loading, updateProfile, logout } = useAuth();
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
@@ -170,6 +170,77 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
+
+            {/* Provider Profile Section */}
+            {providerProfile && (
+              <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 dark:border-white/10 p-8 mt-6">
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-6">Business Information</h2>
+                
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">
+                      <MapPin className="inline w-4 h-4 mr-2" />
+                      Business Name
+                    </label>
+                    <p className="text-slate-900 dark:text-slate-100 py-3">{providerProfile.businessName}</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">
+                      <Mail className="inline w-4 h-4 mr-2" />
+                      Business Email
+                    </label>
+                    <p className="text-slate-900 dark:text-slate-100 py-3">{providerProfile.businessEmail}</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">
+                      <Phone className="inline w-4 h-4 mr-2" />
+                      Business Phone
+                    </label>
+                    <p className="text-slate-900 dark:text-slate-100 py-3">{providerProfile.businessPhone}</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">
+                      <MapPin className="inline w-4 h-4 mr-2" />
+                      Business Address
+                    </label>
+                    <p className="text-slate-900 dark:text-slate-100 py-3">{providerProfile.businessAddress}</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">
+                      <Shield className="inline w-4 h-4 mr-2" />
+                      Verification Status
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${
+                        providerProfile.verificationStatus === 'verified' ? 'bg-green-500' : 
+                        providerProfile.verificationStatus === 'pending' ? 'bg-yellow-500' : 'bg-red-500'
+                      }`}></div>
+                      <span className="text-slate-900 dark:text-slate-100 capitalize">{providerProfile.verificationStatus}</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">
+                      Experience
+                    </label>
+                    <p className="text-slate-900 dark:text-slate-100 py-3">{providerProfile.yearsOfExperience} years</p>
+                  </div>
+
+                  {providerProfile.description && (
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">
+                        Description
+                      </label>
+                      <p className="text-slate-900 dark:text-slate-100 py-3">{providerProfile.description}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Sidebar */}
@@ -178,20 +249,50 @@ export default function ProfilePage() {
             <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 dark:border-white/10 p-6">
               <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">Quick Actions</h3>
               <div className="space-y-3">
-                <Link
-                  href="/providers"
-                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-                >
-                  <MapPin className="w-5 h-5 text-pink-600" />
-                  <span className="text-slate-700 dark:text-slate-300">Browse Services</span>
-                </Link>
-                <Link
-                  href="/bookings"
-                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-                >
-                  <Settings className="w-5 h-5 text-orange-500" />
-                  <span className="text-slate-700 dark:text-slate-300">My Bookings</span>
-                </Link>
+                {providerProfile ? (
+                  // Provider Actions
+                  <>
+                    <Link
+                      href="/provider/dashboard"
+                      className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                    >
+                      <Settings className="w-5 h-5 text-pink-600" />
+                      <span className="text-slate-700 dark:text-slate-300">Provider Dashboard</span>
+                    </Link>
+                    <Link
+                      href="/provider/bookings"
+                      className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                    >
+                      <Settings className="w-5 h-5 text-orange-500" />
+                      <span className="text-slate-700 dark:text-slate-300">My Bookings</span>
+                    </Link>
+                    <Link
+                      href="/provider/services"
+                      className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                    >
+                      <MapPin className="w-5 h-5 text-blue-500" />
+                      <span className="text-slate-700 dark:text-slate-300">Manage Services</span>
+                    </Link>
+                  </>
+                ) : (
+                  // Customer Actions
+                  <>
+                    <Link
+                      href="/providers"
+                      className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                    >
+                      <MapPin className="w-5 h-5 text-pink-600" />
+                      <span className="text-slate-700 dark:text-slate-300">Browse Services</span>
+                    </Link>
+                    <Link
+                      href="/bookings"
+                      className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                    >
+                      <Settings className="w-5 h-5 text-orange-500" />
+                      <span className="text-slate-700 dark:text-slate-300">My Bookings</span>
+                    </Link>
+                  </>
+                )}
                 <button
                   onClick={handleLogout}
                   className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors"

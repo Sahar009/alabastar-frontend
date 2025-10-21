@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import toast from "react-hot-toast";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Upload, User, Mail, Phone, FileText, Award, Camera, X, Plus, Tag, Image, Eye, EyeOff, Gift, Check } from "lucide-react";
 import LocationPicker from "../../components/LocationPicker";
 import { useAuth } from "../../contexts/AuthContext";
@@ -16,6 +16,7 @@ const NairaIcon = ({ className }: { className?: string }) => (
 
 export default function BecomeProviderPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, token } = useAuth();
   const [formData, setFormData] = useState({
     // User data
@@ -739,6 +740,20 @@ export default function BecomeProviderPage() {
       setIsProcessingPayment(false);
     }
   };
+
+  // Handle payment return from Paystack
+  useEffect(() => {
+    const reference = searchParams.get('reference');
+    const trxref = searchParams.get('trxref');
+    
+    // If user is returning from payment, redirect to success page
+    if (reference || trxref) {
+      const paymentReference = reference || trxref;
+      console.log('Payment return detected, redirecting to success page with reference:', paymentReference);
+      router.push(`/provider/registration/success?reference=${paymentReference}`);
+      return;
+    }
+  }, [searchParams, router]);
 
   // Load registration progress when component mounts or user/token changes
   useEffect(() => {
