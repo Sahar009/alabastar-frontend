@@ -20,6 +20,7 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
 
   const handleCompleteProfile = () => {
     setIsCompleting(true);
+    onClose(); // Close the modal first
     router.push('/become-provider');
   };
 

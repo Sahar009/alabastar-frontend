@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import useLocation from "../../../hooks/useLocation";
+import { useAuth } from "../../../contexts/AuthContext";
 import { 
   ArrowLeft,
   User,
@@ -40,8 +41,7 @@ import {
 export default function ProviderProfile() {
   const router = useRouter();
   const { detectLocation: detectUserLocation, detecting: detectingLocation } = useLocation();
-  const [user, setUser] = useState<any>(null);
-  const [providerProfile, setProviderProfile] = useState<any>(null);
+  const { user, providerProfile, loading: authLoading, updateProfile } = useAuth();
   const [documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -76,101 +76,152 @@ export default function ProviderProfile() {
     videoDuration: 0
   });
 
-  // Fetch provider profile data
-  const fetchProfile = async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
-      const storedUser = localStorage.getItem('user');
-      
-      if (!token) {
-        toast.error('Please sign in to view profile');
+  // Initialize form data from AuthContext
+  useEffect(() => {
+    console.log('Provider Profile useEffect - authLoading:', authLoading, 'user:', user, 'providerProfile:', providerProfile);
+    
+    if (!authLoading) {
+      if (!user) {
+        // User not authenticated, redirect to login
+        console.log('No user found, redirecting to signin');
         router.push('/provider/signin');
         return;
       }
 
-      if (storedUser) {
-        const userData = JSON.parse(storedUser);
-        setUser(userData);
+      // User is authenticated, set loading to false
+      console.log('User authenticated, setting loading to false');
+      setLoading(false);
+
+      if (providerProfile) {
+        // Provider profile exists, populate form data
+        console.log('Provider profile found, populating form data');
+        const newFormData = {
+          fullName: user.fullName || '',
+          email: user.email || '',
+          phone: user.phone || '',
+          businessName: providerProfile.businessName || '',
+          bio: providerProfile.description || '',
+          category: providerProfile.category || '',
+          subcategories: providerProfile.subcategories || [],
+          locationCity: providerProfile.businessAddress?.split(',')[0] || '',
+          locationState: providerProfile.businessAddress?.split(',')[1] || '',
+          latitude: providerProfile.latitude || '',
+          longitude: providerProfile.longitude || '',
+          portfolio: providerProfile.portfolio || [],
+          videoUrl: providerProfile.videoUrl || '',
+          videoThumbnail: providerProfile.videoThumbnail || '',
+          videoDuration: providerProfile.videoDuration || 0
+        };
+        
+        setFormData(newFormData);
+        
+        // Set stats from profile
+        setStats({
+          rating: 0,
+          reviews: 0,
+          totalReferrals: providerProfile.totalReferrals || 0,
+          totalCommissions: parseFloat(providerProfile.totalCommissionsEarned || '0') || 0
+        });
+        
+        // Fetch comprehensive provider data from API
+        if (providerProfile.id) {
+          fetchProviderData(providerProfile.id);
+        }
+      } else {
+        // User exists but no provider profile - show basic form
+        console.log('User found but no provider profile, showing basic form');
+        const newFormData = {
+          fullName: user.fullName || '',
+          email: user.email || '',
+          phone: user.phone || '',
+          businessName: '',
+          bio: '',
+          category: '',
+          subcategories: [],
+          locationCity: '',
+          locationState: '',
+          latitude: '',
+          longitude: '',
+          portfolio: [],
+          videoUrl: '',
+          videoThumbnail: '',
+          videoDuration: 0
+        };
+        
+        setFormData(newFormData);
       }
-      
-      // Fetch profile using the current user's token (no need for providerId)
+    }
+  }, [authLoading, user, providerProfile, router]);
+
+  // Fetch comprehensive provider data from API
+  const fetchProviderData = async (providerId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
       const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const response = await fetch(`${base}/api/providers/profile`, {
-        method: 'GET',
+      
+      // Fetch comprehensive provider profile data
+      const profileResponse = await fetch(`${base}/api/providers/profile/${providerId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Profile fetch error:', errorData);
-        toast.error(errorData.message || 'Failed to load profile');
-        return;
-      }
+      if (profileResponse.ok) {
+        const profileData = await profileResponse.json();
+        if (profileData.success && profileData.data) {
+          const providerData = profileData.data;
+          
+          // Update form data with comprehensive provider information
+          setFormData(prev => ({
+            ...prev,
+            fullName: providerData.user?.fullName || prev.fullName,
+            email: providerData.user?.email || prev.email,
+            phone: providerData.user?.phone || prev.phone,
+            businessName: providerData.businessName || prev.businessName,
+            bio: providerData.description || prev.bio,
+            category: providerData.category || prev.category,
+            subcategories: providerData.subcategories || prev.subcategories,
+            locationCity: providerData.locationCity || prev.locationCity,
+            locationState: providerData.locationState || prev.locationState,
+            latitude: providerData.latitude || prev.latitude,
+            longitude: providerData.longitude || prev.longitude,
+            portfolio: providerData.portfolio || prev.portfolio,
+            videoUrl: providerData.videoUrl || prev.videoUrl,
+            videoThumbnail: providerData.videoThumbnail || prev.videoThumbnail,
+            videoDuration: providerData.videoDuration || prev.videoDuration
+          }));
 
-      const responseData = await response.json();
-      console.log('Profile API Response:', responseData);
-      const detailedProfile = responseData.data;
-      
-      if (!detailedProfile) {
-        console.error('No profile data in response');
-        toast.error('Failed to load profile data');
-        return;
-      }
+          // Update stats with comprehensive data
+          setStats(prevStats => ({
+            ...prevStats,
+            rating: providerData.averageRating || 0,
+            reviews: providerData.totalReviews || 0,
+            totalReferrals: providerData.totalReferrals || 0,
+            totalCommissions: parseFloat(providerData.totalCommissionsEarned || '0') || 0
+          }));
 
-      // Update form data with detailed profile
-      const userData = detailedProfile.User || detailedProfile.user || {};
-      
-      const newFormData = {
-        fullName: userData.fullName || '',
-        email: userData.email || '',
-        phone: userData.phone || '',
-        businessName: detailedProfile.businessName || '',
-        bio: detailedProfile.bio || '',
-        category: detailedProfile.category || '',
-        subcategories: detailedProfile.subcategories || [],
-        locationCity: detailedProfile.locationCity || '',
-        locationState: detailedProfile.locationState || '',
-        latitude: detailedProfile.latitude || '',
-        longitude: detailedProfile.longitude || '',
-        portfolio: detailedProfile.portfolio || []
-      };
-      
-      console.log('Setting form data:', newFormData);
-      setFormData(newFormData);
-      setProviderProfile(detailedProfile);
+          // Update documents if available
+          if (providerData.documents && providerData.documents.length > 0) {
+            setDocuments(providerData.documents);
+          }
 
-      // Set stats from profile
-      setStats({
-        rating: 0,
-        reviews: 0,
-        totalReferrals: detailedProfile.totalReferrals || 0,
-        totalCommissions: parseFloat(detailedProfile.totalCommissionsEarned) || 0
-      });
-
-      // Set documents from the profile response
-      if (detailedProfile.ProviderDocuments) {
-        console.log('Setting documents from profile response:', detailedProfile.ProviderDocuments);
-        setDocuments(detailedProfile.ProviderDocuments);
+          console.log('Comprehensive provider data loaded:', providerData);
+        }
       } else {
-        // Fallback: Fetch documents separately if not included
-        console.log('Fetching documents separately');
-        await fetchDocuments(detailedProfile.id, token);
+        console.error('Failed to fetch provider profile:', profileResponse.status);
       }
 
-      // Fetch rating data
-      await fetchProviderRating(detailedProfile.id, token);
-
-      // Fetch feature limits
-      await fetchFeatureLimits(detailedProfile.id, token);
+      // Also fetch additional data in parallel
+      await Promise.all([
+        fetchDocuments(providerId, token),
+        fetchProviderRating(providerId, token),
+        fetchFeatureLimits(providerId, token)
+      ]);
     } catch (error) {
-      console.error('Error fetching profile:', error);
-      toast.error('Error loading profile');
-    } finally {
-      setLoading(false);
+      console.error('Error fetching provider data:', error);
     }
   };
 
@@ -246,10 +297,6 @@ export default function ProviderProfile() {
     }
   };
 
-  useEffect(() => {
-    fetchProfile();
-  }, []);
-
   // Update profile
   const handleUpdateProfile = async () => {
     try {
@@ -287,8 +334,14 @@ export default function ProviderProfile() {
       toast.success('Profile updated successfully!');
       setEditing(false);
       
-      // Refresh profile data
-      await fetchProfile();
+      // Refresh profile data by updating AuthContext
+      await updateProfile({
+        fullName: formData.fullName,
+        phone: formData.phone
+      });
+      
+      // Refresh comprehensive provider data
+      await fetchProviderData(providerProfile.id);
     } catch (error) {
       console.error('Error updating profile:', error);
       toast.error('Failed to update profile');
@@ -344,7 +397,7 @@ export default function ProviderProfile() {
       formData.append('documents', file); // Changed from 'file' to 'documents'
       formData.append('type', type);
 
-      const response = await fetch(`${base}/api/providers/${providerProfile.id}/documents`, {
+      const response = await fetch(`${base}/api/providers/${providerProfile?.id}/documents`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -354,8 +407,12 @@ export default function ProviderProfile() {
 
       if (response.ok) {
         toast.success('Document uploaded successfully!');
-        await fetchDocuments(providerProfile.id, token);
-        await fetchFeatureLimits(providerProfile.id, token); // Refresh limits
+        if (providerProfile?.id && token) {
+          await fetchDocuments(providerProfile.id, token);
+          await fetchFeatureLimits(providerProfile.id, token); // Refresh limits
+          // Also refresh comprehensive provider data
+          await fetchProviderData(providerProfile.id);
+        }
       } else {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to upload document');
@@ -427,7 +484,7 @@ export default function ProviderProfile() {
       const token = localStorage.getItem('token');
       const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-      const response = await fetch(`${base}/api/providers/${providerProfile.id}/video`, {
+      const response = await fetch(`${base}/api/providers/${providerProfile?.id}/video`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -436,7 +493,13 @@ export default function ProviderProfile() {
 
       if (response.ok) {
         toast.success('Video deleted successfully!');
-        await fetchProfile(); // Refresh profile
+        // Refresh profile data by updating AuthContext
+        await updateProfile({});
+        
+        // Refresh comprehensive provider data
+        if (providerProfile?.id) {
+          await fetchProviderData(providerProfile.id);
+        }
       } else {
         throw new Error('Failed to delete video');
       }
@@ -452,9 +515,14 @@ export default function ProviderProfile() {
 
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Authentication token not found');
+        return;
+      }
+      
       const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-      const response = await fetch(`${base}/api/providers/${providerProfile.id}/documents/${documentId}`, {
+      const response = await fetch(`${base}/api/providers/${providerProfile?.id}/documents/${documentId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -463,7 +531,11 @@ export default function ProviderProfile() {
 
       if (response.ok) {
         toast.success('Document deleted successfully!');
-        await fetchDocuments(providerProfile.id, token);
+        if (providerProfile?.id) {
+          await fetchDocuments(providerProfile.id, token);
+          // Also refresh comprehensive provider data
+          await fetchProviderData(providerProfile.id);
+        }
       } else {
         throw new Error('Failed to delete document');
       }
@@ -503,7 +575,7 @@ export default function ProviderProfile() {
     }
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center">
         <div className="text-center">
@@ -514,18 +586,18 @@ export default function ProviderProfile() {
     );
   }
 
-  // Show error if no profile data after loading
-  if (!loading && !providerProfile) {
+  // Show error if no user data after loading
+  if (!authLoading && !loading && !user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <p className="text-slate-600 dark:text-slate-400 font-medium">Failed to load profile data</p>
+          <p className="text-slate-600 dark:text-slate-400 font-medium">Please sign in to view your profile</p>
           <button
-            onClick={fetchProfile}
+            onClick={() => router.push('/provider/signin')}
             className="mt-4 px-6 py-2 bg-[#ec4899] text-white rounded-xl hover:shadow-lg transition-all"
           >
-            Retry
+            Sign In
           </button>
         </div>
       </div>

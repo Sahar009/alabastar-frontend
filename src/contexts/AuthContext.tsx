@@ -25,9 +25,32 @@ interface Customer {
   };
 }
 
+interface ProviderProfile {
+  id: string;
+  businessName: string;
+  businessAddress: string;
+  businessPhone: string;
+  businessEmail: string;
+  verificationStatus: string;
+  yearsOfExperience: number;
+  description: string;
+  services: any[];
+  category?: string;
+  subcategories?: string[];
+  latitude?: string;
+  longitude?: string;
+  portfolio?: string[];
+  videoUrl?: string;
+  videoThumbnail?: string;
+  videoDuration?: number;
+  totalReferrals?: number;
+  totalCommissionsEarned?: string;
+}
+
 interface AuthContextType {
   user: User | null;
   customer: Customer | null;
+  providerProfile: ProviderProfile | null;
   firebaseUser: FirebaseUser | null;
   token: string | null; // Authentication token
   loading: boolean;
@@ -43,6 +66,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
+  const [providerProfile, setProviderProfile] = useState<ProviderProfile | null>(null);
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -53,12 +77,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
     const customerData = localStorage.getItem('customer');
+    const providerData = localStorage.getItem('providerProfile');
 
     if (token && userData) {
       setUser(JSON.parse(userData));
       setToken(token);
       if (customerData) {
         setCustomer(JSON.parse(customerData));
+      }
+      if (providerData) {
+        setProviderProfile(JSON.parse(providerData));
       }
       setLoading(false);
       return;
@@ -80,9 +108,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // User is signed out from Firebase
         setUser(null);
         setCustomer(null);
+        setProviderProfile(null);
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         localStorage.removeItem('customer');
+        localStorage.removeItem('providerProfile');
       }
       
       setLoading(false);
@@ -117,11 +147,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const data = await response.json();
         setUser(data.data.user);
         setCustomer(data.data.customer);
+        setProviderProfile(data.data.providerProfile);
         setToken(data.data.token);
         localStorage.setItem('token', data.data.token);
         localStorage.setItem('user', JSON.stringify(data.data.user));
         if (data.data.customer) {
           localStorage.setItem('customer', JSON.stringify(data.data.customer));
+        }
+        if (data.data.providerProfile) {
+          localStorage.setItem('providerProfile', JSON.stringify(data.data.providerProfile));
         }
       } else {
         console.error('Backend auth failed:', await response.text());
@@ -153,8 +187,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (data.data.customer) {
           localStorage.setItem('customer', JSON.stringify(data.data.customer));
         }
+        if (data.data.providerProfile) {
+          localStorage.setItem('providerProfile', JSON.stringify(data.data.providerProfile));
+        }
         setUser(data.data.user);
         setCustomer(data.data.customer);
+        setProviderProfile(data.data.providerProfile);
         toast.success('Login successful!');
         return true;
       } else {
@@ -222,8 +260,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       localStorage.removeItem('customer');
+      localStorage.removeItem('providerProfile');
       setUser(null);
       setCustomer(null);
+      setProviderProfile(null);
       setToken(null);
       setFirebaseUser(null);
       
@@ -235,8 +275,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       localStorage.removeItem('customer');
+      localStorage.removeItem('providerProfile');
       setUser(null);
       setCustomer(null);
+      setProviderProfile(null);
       setToken(null);
       setFirebaseUser(null);
       toast.success('Logged out successfully');
@@ -264,9 +306,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (response.ok) {
         setUser(responseData.data.user);
         setCustomer(responseData.data.customer);
+        setProviderProfile(responseData.data.providerProfile);
         localStorage.setItem('user', JSON.stringify(responseData.data.user));
         if (responseData.data.customer) {
           localStorage.setItem('customer', JSON.stringify(responseData.data.customer));
+        }
+        if (responseData.data.providerProfile) {
+          localStorage.setItem('providerProfile', JSON.stringify(responseData.data.providerProfile));
         }
         toast.success('Profile updated successfully');
         return true;
@@ -284,6 +330,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = {
     user,
     customer,
+    providerProfile,
     firebaseUser,
     token,
     loading,

@@ -1,169 +1,162 @@
 "use client";
-import { useEffect, useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import toast from "react-hot-toast";
-import { CheckCircle, Loader2, AlertCircle } from "lucide-react";
+import React, { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { CheckCircle, Loader2, AlertCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
 
-function RegistrationSuccessContent() {
+export default function RegistrationSuccessPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
-  const [message, setMessage] = useState('');
+  const [status, setStatus] = useState('processing'); // processing, success, error
+  const [message, setMessage] = useState('Processing your payment...');
 
   useEffect(() => {
-    const verifyPayment = async () => {
-      try {
-        const reference = searchParams.get('reference') || searchParams.get('trxref');
+    const reference = searchParams.get('reference');
+    const trxref = searchParams.get('trxref');
+    
+    // Use trxref if reference is not available (Paystack sometimes uses trxref)
+    const paymentReference = reference || trxref;
+    
+    if (!paymentReference) {
+      setStatus('error');
+      setMessage('Payment reference not found');
+      return;
+    }
+
+    // Complete the provider registration
+    completeRegistration(paymentReference);
+  }, [searchParams]);
+
+  const completeRegistration = async (reference: string) => {
+    try {
+      setStatus('processing');
+      setMessage('Completing your registration...');
+
+      const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${base}/api/payments/complete-registration/${reference}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setStatus('success');
+        setMessage('Registration completed successfully!');
+        toast.success('Welcome! Your provider account has been activated.');
         
-        if (!reference) {
-          setStatus('error');
-          setMessage('Payment reference not found');
-          return;
-        }
-
-        // Verify payment with backend
-        const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-        const response = await fetch(`${base}/api/payments/verify/${reference}`, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' }
-        });
-
-        const data = await response.json();
-
-        if (response.ok && data.success) {
-          setStatus('success');
-          setMessage('Payment successful! Your provider account has been created.');
-          
-          // Show success toast
-          toast.success('Registration completed successfully! Welcome to Alabastar!');
-          
-          // Auto-redirect to dashboard after 3 seconds
-          setTimeout(() => {
-            router.push('/provider/dashboard');
-          }, 3000);
-        } else {
-          setStatus('error');
-          setMessage(data.message || 'Payment verification failed');
-          toast.error('Payment verification failed. Please contact support.');
-        }
-      } catch (error) {
-        console.error('Payment verification error:', error);
+        // Redirect to provider dashboard after 3 seconds
+        setTimeout(() => {
+          router.push('/provider/dashboard');
+        }, 3000);
+      } else {
         setStatus('error');
-        setMessage('Network error. Please try again.');
-        toast.error('Network error. Please try again.');
+        setMessage(result.message || 'Failed to complete registration');
+        toast.error(result.message || 'Registration completion failed');
       }
-    };
+    } catch (error) {
+      console.error('Registration completion error:', error);
+      setStatus('error');
+      setMessage('Network error. Please try again.');
+      toast.error('Network error. Please try again.');
+    }
+  };
 
-    verifyPayment();
-  }, [searchParams, router]);
+  const handleRetry = () => {
+    const reference = searchParams.get('reference') || searchParams.get('trxref');
+    if (reference) {
+      completeRegistration(reference);
+    }
+  };
+
+  const handleGoToDashboard = () => {
+    router.push('/provider/dashboard');
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8 text-center">
-        {status === 'loading' && (
-          <>
-            <div className="w-16 h-16 mx-auto mb-6 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
-              <Loader2 className="w-8 h-8 text-blue-600 dark:text-blue-400 animate-spin" />
-            </div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">
-              Verifying Payment
-            </h1>
-            <p className="text-slate-600 dark:text-slate-400 mb-6">
-              Please wait while we verify your payment...
-            </p>
-            <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
-              <div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{ width: '60%' }}></div>
-            </div>
-          </>
-        )}
+      <div className="max-w-md w-full">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8 text-center">
+          {/* Status Icon */}
+          <div className="mb-6">
+            {status === 'processing' && (
+              <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mx-auto">
+                <Loader2 className="w-8 h-8 text-blue-600 dark:text-blue-400 animate-spin" />
+              </div>
+            )}
+            {status === 'success' && (
+              <div className="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto">
+                <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
+              </div>
+            )}
+            {status === 'error' && (
+              <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto">
+                <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
+              </div>
+            )}
+          </div>
 
-        {status === 'success' && (
-          <>
-            <div className="w-16 h-16 mx-auto mb-6 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center">
-              <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
-            </div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">
-              Payment Successful!
-            </h1>
-            <p className="text-slate-600 dark:text-slate-400 mb-6">
-              {message}
-            </p>
+          {/* Status Message */}
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">
+            {status === 'processing' && 'Processing Payment'}
+            {status === 'success' && 'Registration Complete!'}
+            {status === 'error' && 'Registration Failed'}
+          </h1>
+
+          <p className="text-slate-600 dark:text-slate-400 mb-6">
+            {message}
+          </p>
+
+          {/* Action Buttons */}
+          {status === 'success' && (
             <div className="space-y-3">
-              <div className="flex items-center justify-center space-x-2 text-green-600 dark:text-green-400">
-                <CheckCircle className="w-4 h-4" />
-                <span className="text-sm">Payment verified</span>
-              </div>
-              <div className="flex items-center justify-center space-x-2 text-green-600 dark:text-green-400">
-                <CheckCircle className="w-4 h-4" />
-                <span className="text-sm">Provider account created</span>
-              </div>
-              <div className="flex items-center justify-center space-x-2 text-green-600 dark:text-green-400">
-                <CheckCircle className="w-4 h-4" />
-                <span className="text-sm">Redirecting to dashboard...</span>
-              </div>
-            </div>
-            <div className="mt-6">
               <button
-                onClick={() => router.push('/provider/dashboard')}
-                className="w-full py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold hover:opacity-90 transition-opacity"
+                onClick={handleGoToDashboard}
+                className="w-full px-6 py-3 bg-gradient-to-r from-pink-600 to-orange-500 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-pink-500/25 transition-all duration-300 transform hover:scale-105"
               >
                 Go to Dashboard
               </button>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                Redirecting automatically in 3 seconds...
+              </p>
             </div>
-          </>
-        )}
+          )}
 
-        {status === 'error' && (
-          <>
-            <div className="w-16 h-16 mx-auto mb-6 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center">
-              <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
-            </div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">
-              Payment Failed
-            </h1>
-            <p className="text-slate-600 dark:text-slate-400 mb-6">
-              {message}
-            </p>
+          {status === 'error' && (
             <div className="space-y-3">
               <button
-                onClick={() => router.push('/become-provider')}
-                className="w-full py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold hover:opacity-90 transition-opacity"
+                onClick={handleRetry}
+                className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-300 transform hover:scale-105"
               >
                 Try Again
               </button>
               <button
-                onClick={() => router.push('/contact')}
-                className="w-full py-3 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-xl font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                onClick={() => router.push('/become-provider')}
+                className="w-full px-6 py-3 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-semibold hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
               >
-                Contact Support
+                Back to Registration
               </button>
             </div>
-          </>
-        )}
+          )}
+
+          {status === 'processing' && (
+            <div className="space-y-3">
+              <div className="text-sm text-slate-500 dark:text-slate-400">
+                Please wait while we complete your registration...
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Additional Info */}
+        <div className="mt-6 text-center">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Having trouble? Contact our support team for assistance.
+          </p>
+        </div>
       </div>
     </div>
   );
 }
-
-export default function RegistrationSuccessPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8 text-center">
-          <div className="w-16 h-16 mx-auto mb-6 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
-            <Loader2 className="w-8 h-8 text-blue-600 dark:text-blue-400 animate-spin" />
-          </div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">
-            Loading...
-          </h1>
-          <p className="text-slate-600 dark:text-slate-400">
-            Please wait while we prepare your page...
-          </p>
-        </div>
-      </div>
-    }>
-      <RegistrationSuccessContent />
-    </Suspense>
-  );
-}
-
