@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -52,7 +52,7 @@ interface Notification {
   imageUrl?: string;
 }
 
-export default function ProviderDashboard() {
+function ProviderDashboardContent() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [providerProfile, setProviderProfile] = useState<any>(null);
@@ -84,6 +84,8 @@ export default function ProviderDashboard() {
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [notificationsLoading, setNotificationsLoading] = useState(false);
   const [profileCompletionChecked, setProfileCompletionChecked] = useState(false);
+  const [recentActivities, setRecentActivities] = useState<any[]>([]);
+  const [activitiesLoading, setActivitiesLoading] = useState(false);
 
   // Check if user has completed profile registration
   const checkProfileCompletion = async () => {
@@ -104,9 +106,30 @@ export default function ProviderDashboard() {
         if (result.success) {
           const progress = result.data;
           
-          // If user has incomplete registration, redirect to become-provider
+          // If user has incomplete registration, try to fix it first
           if (progress && !progress.isComplete) {
-            console.log('Profile incomplete, redirecting to become-provider');
+            console.log('Profile incomplete, attempting to fix registration progress...');
+            
+            // Try to fix the registration progress (in case user paid but progress wasn't updated)
+            const fixResponse = await fetch(`${base}/api/providers/fix-registration-progress`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              }
+            });
+            
+            if (fixResponse.ok) {
+              const fixResult = await fixResponse.json();
+              if (fixResult.success && fixResult.data.isComplete) {
+                console.log('Registration progress fixed successfully');
+                toast.success('Registration completed! Welcome to your dashboard.');
+                return; // Don't redirect, user is now complete
+              }
+            }
+            
+            // If fix didn't work, redirect to become-provider
+            console.log('Profile still incomplete, redirecting to become-provider');
             router.push('/become-provider');
             return;
           }
@@ -320,6 +343,7 @@ export default function ProviderDashboard() {
   const refreshDashboardData = async () => {
     await Promise.all([
       fetchBookings(),
+      fetchRecentActivities(),
       fetchReferralData(),
       fetchProviderRating()
     ]);
@@ -410,6 +434,35 @@ export default function ProviderDashboard() {
     }
   };
 
+  // Fetch recent activities from dashboard API
+  const fetchRecentActivities = async () => {
+    try {
+      setActivitiesLoading(true);
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${base}/api/dashboard/activities?limit=4`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setRecentActivities(data.activities || []);
+      } else {
+        console.error('Failed to fetch recent activities:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error fetching recent activities:', error);
+    } finally {
+      setActivitiesLoading(false);
+    }
+  };
+
   // Fetch bookings from API
   const fetchBookings = async () => {
     try {
@@ -437,9 +490,9 @@ export default function ProviderDashboard() {
         // Calculate stats from real data
         const totalBookings = data.bookings?.length || 0;
         const completedBookings = data.bookings?.filter((booking: any) => booking.status === 'completed').length || 0;
-        const pendingBookings = data.bookings?.filter((booking: any) => booking.status === 'pending').length || 0;
+        const pendingBookings = data.bookings?.filter((booking: any) => booking.status === 'requested').length || 0;
         const totalEarnings = data.bookings?.reduce((sum: number, booking: any) => {
-          return booking.status === 'completed' ? sum + (booking.amount || 0) : sum;
+          return booking.status === 'completed' ? sum + (parseFloat(booking.totalAmount) || 0) : sum;
         }, 0) || 0;
 
         setStats(prevStats => ({
@@ -476,6 +529,9 @@ export default function ProviderDashboard() {
 
     // Fetch bookings and calculate real stats
     fetchBookings();
+
+    // Fetch recent activities
+    fetchRecentActivities();
 
     // Fetch referral data
     fetchReferralData();
@@ -597,25 +653,16 @@ export default function ProviderDashboard() {
     }
   ];
 
-  // Generate recent activities from real booking data
-  const recentActivities = bookings.slice(0, 4).map((booking: any) => {
-    const timeAgo = new Date(booking.createdAt).toLocaleDateString();
-    return {
-      type: "booking",
-      message: `Booking ${booking.status === 'pending' ? 'request' : booking.status} from ${booking.customer?.fullName || 'Customer'}`,
-      time: timeAgo,
-      status: booking.status,
-      booking: booking
-    };
-  });
-
-  // Add mock review and payment activities if no bookings
-  const mockActivities = [
-    { type: "review", message: "Received 5-star review from Sarah", time: "1 day ago", status: "completed" },
-    { type: "payment", message: "Payment received: ₦15,000", time: "2 days ago", status: "completed" }
+  // Use real activities from API, fallback to mock if none available
+  const allActivities = recentActivities.length > 0 ? recentActivities : [
+    { 
+      type: "booking", 
+      message: "No recent activities", 
+      time: "Just now", 
+      status: "info",
+      serviceType: "General"
+    }
   ];
-
-  const allActivities = [...recentActivities, ...mockActivities].slice(0, 4);
 
   // Show loading while checking profile completion
   if (!profileCompletionChecked) {
@@ -679,7 +726,7 @@ export default function ProviderDashboard() {
                   {user?.fullName || 'Provider'}
                 </p>
                 <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                  {user?.email || 'provider@example.com'}
+                  {user?.email || 'Email not set'}
                 </p>
               </div>
             </div>
@@ -687,12 +734,28 @@ export default function ProviderDashboard() {
               <div className={`px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm transition-all duration-200 ${
                 providerProfile?.verificationStatus === 'verified' 
                   ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 dark:from-green-900 dark:to-emerald-900 dark:text-green-200'
-                  : 'bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-800 dark:from-amber-900 dark:to-yellow-900 dark:text-amber-200'
+                  : providerProfile?.verificationStatus === 'pending'
+                  ? 'bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-800 dark:from-amber-900 dark:to-yellow-900 dark:text-amber-200'
+                  : providerProfile?.verificationStatus === 'rejected'
+                  ? 'bg-gradient-to-r from-red-100 to-red-100 text-red-800 dark:from-red-900 dark:to-red-900 dark:text-red-200'
+                  : 'bg-gradient-to-r from-slate-100 to-slate-100 text-slate-800 dark:from-slate-700 dark:to-slate-700 dark:text-slate-200'
               }`}>
-                {providerProfile?.verificationStatus === 'verified' ? '✓ Verified' : '⏳ Pending'}
+                {providerProfile?.verificationStatus === 'verified' ? '✓ Verified' : 
+                 providerProfile?.verificationStatus === 'pending' ? '⏳ Pending' :
+                 providerProfile?.verificationStatus === 'rejected' ? '❌ Rejected' : '📝 Not Submitted'}
               </div>
               <Shield className="w-4 h-4 text-slate-400" />
             </div>
+            
+            {/* Subscription Status */}
+            {(providerProfile?.paymentStatus === 'paid' || (providerProfile && user?.role === 'provider')) && (
+              <div className="mt-2 flex items-center space-x-2">
+                <div className="px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm transition-all duration-200 bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 dark:from-blue-900 dark:to-indigo-900 dark:text-blue-200">
+                  💎 Subscribed
+                </div>
+                <CreditCard className="w-4 h-4 text-blue-500" />
+              </div>
+            )}
           </div>
 
           {/* Navigation */}
@@ -935,7 +998,7 @@ export default function ProviderDashboard() {
                   <p className="text-4xl font-bold text-pink-600">{stats.totalBookings}</p>
                   <p className="text-xs text-green-600 dark:text-green-400 flex items-center mt-2 font-medium">
                     <TrendingUp className="w-3 h-3 mr-1 animate-pulse" />
-                    +12% from last month
+                    {stats.totalBookings > 0 ? `${Math.round((stats.completedBookings / stats.totalBookings) * 100)}% completion rate` : 'No bookings yet'}
                   </p>
                 </div>
                 <div className="p-4 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30 rounded-2xl group-hover:scale-110 transition-transform duration-300">
@@ -981,7 +1044,7 @@ export default function ProviderDashboard() {
                   <p className="text-4xl font-bold text-pink-600">₦{stats.totalEarnings.toLocaleString()}</p>
                   <p className="text-xs text-green-600 dark:text-green-400 flex items-center mt-2 font-medium">
                     <TrendingUp className="w-3 h-3 mr-1 animate-pulse" />
-                    +8% from last month
+                    {stats.completedBookings > 0 ? `${stats.completedBookings} completed bookings` : 'No completed bookings yet'}
                   </p>
                 </div>
                 <div className="p-4 bg-gradient-to-br from-emerald-100 to-green-200 dark:from-emerald-900/30 dark:to-green-800/30 rounded-2xl group-hover:scale-110 transition-transform duration-300">
@@ -1109,7 +1172,7 @@ export default function ProviderDashboard() {
               </div>
             </div>
 
-            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 border border-slate-200 dark:border-slate-700">
+            {/* <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 border border-slate-200 dark:border-slate-700">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">Verification Status</h3>
                 <Shield className="w-5 h-5 text-blue-500" />
@@ -1120,13 +1183,19 @@ export default function ProviderDashboard() {
                     ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                     : providerProfile?.verificationStatus === 'pending'
                     ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
-                    : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                    : providerProfile?.verificationStatus === 'rejected'
+                    ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                    : 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-200'
                 }`}>
                   {providerProfile?.verificationStatus === 'verified' ? 'Verified' : 
-                   providerProfile?.verificationStatus === 'pending' ? 'Pending Review' : 'Rejected'}
+                   providerProfile?.verificationStatus === 'pending' ? 'Pending Review' : 
+                   providerProfile?.verificationStatus === 'rejected' ? 'Rejected' : 'Not Submitted'}
                 </div>
                 {providerProfile?.verificationStatus === 'pending' && (
                   <AlertCircle className="w-4 h-4 text-amber-500" />
+                )}
+                {providerProfile?.verificationStatus === 'rejected' && (
+                  <AlertCircle className="w-4 h-4 text-red-500" />
                 )}
               </div>
               <p className="text-sm text-slate-600 dark:text-slate-400">
@@ -1134,9 +1203,11 @@ export default function ProviderDashboard() {
                   ? 'Your account is verified and active'
                   : providerProfile?.verificationStatus === 'pending'
                   ? 'Your documents are under review'
-                  : 'Please contact support for assistance'}
+                  : providerProfile?.verificationStatus === 'rejected'
+                  ? 'Please contact support for assistance'
+                  : 'Complete your profile verification to get verified'}
               </p>
-            </div>
+            </div> */}
 
             <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 border border-slate-200 dark:border-slate-700">
               <div className="flex items-center justify-between mb-4">
@@ -1146,15 +1217,19 @@ export default function ProviderDashboard() {
               <div className="space-y-2">
                 <div className="flex items-center space-x-2 text-sm">
                   <MapPin className="w-4 h-4 text-slate-400" />
-                  <span className="text-slate-600 dark:text-slate-400">Lagos, Nigeria</span>
+                  <span className="text-slate-600 dark:text-slate-400">
+                    {providerProfile?.locationCity && providerProfile?.locationState 
+                      ? `${providerProfile.locationCity}, ${providerProfile.locationState}`
+                      : 'Location not set'}
+                  </span>
                 </div>
                 <div className="flex items-center space-x-2 text-sm">
                   <Phone className="w-4 h-4 text-slate-400" />
-                  <span className="text-slate-600 dark:text-slate-400">{user?.phone || '+234 800 000 0000'}</span>
+                  <span className="text-slate-600 dark:text-slate-400">{user?.phone || 'Phone not set'}</span>
                 </div>
                 <div className="flex items-center space-x-2 text-sm">
                   <Mail className="w-4 h-4 text-slate-400" />
-                  <span className="text-slate-600 dark:text-slate-400">{user?.email || 'provider@example.com'}</span>
+                  <span className="text-slate-600 dark:text-slate-400">{user?.email || 'Email not set'}</span>
                 </div>
               </div>
             </div>
@@ -1321,7 +1396,7 @@ export default function ProviderDashboard() {
               </button>
             </div>
             <div className="space-y-4">
-                {loading ? (
+                {activitiesLoading ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600"></div>
                   <span className="ml-2 text-slate-600 dark:text-slate-400">Loading activities...</span>
@@ -1341,9 +1416,9 @@ export default function ProviderDashboard() {
                     <div className="flex-1">
                       <p className="font-medium text-slate-900 dark:text-slate-50">{activity.message}</p>
                       <p className="text-sm text-slate-500 dark:text-slate-400">{activity.time}</p>
-                      {'booking' in activity && activity.booking && (
+                      {activity.serviceType && (
                         <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                          Service: {activity.booking.serviceType || 'General Service'}
+                          Service: {activity.serviceType}
                         </p>
                       )}
                     </div>
@@ -1370,6 +1445,21 @@ export default function ProviderDashboard() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function ProviderDashboard() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600 mx-auto mb-4"></div>
+          <p className="text-slate-600 dark:text-slate-400">Loading dashboard...</p>
+        </div>
+      </div>
+    }>
+      <ProviderDashboardContent />
+    </Suspense>
   );
 }
 

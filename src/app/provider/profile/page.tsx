@@ -37,6 +37,8 @@ import {
   XCircle,
   Video
 } from "lucide-react";
+import DeleteConfirmationModal from "../../../components/DeleteConfirmationModal";
+import DocumentViewerModal from "../../../components/DocumentViewerModal";
 
 export default function ProviderProfile() {
   const router = useRouter();
@@ -58,6 +60,23 @@ export default function ProviderProfile() {
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
+  
+  // Delete modal states
+  const [deleteModal, setDeleteModal] = useState({
+    isOpen: false,
+    type: '', // 'document' | 'video'
+    itemId: '',
+    itemName: '',
+    isLoading: false
+  });
+  
+  // Document viewer modal states
+  const [documentViewer, setDocumentViewer] = useState({
+    isOpen: false,
+    documentUrl: '',
+    documentName: '',
+    documentType: ''
+  });
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -75,6 +94,9 @@ export default function ProviderProfile() {
     videoThumbnail: '',
     videoDuration: 0
   });
+  
+  // Local provider profile state (populated from API)
+  const [localProviderProfile, setLocalProviderProfile] = useState<any>(null);
 
   // Initialize form data from AuthContext
   useEffect(() => {
@@ -100,11 +122,11 @@ export default function ProviderProfile() {
           email: user.email || '',
           phone: user.phone || '',
           businessName: providerProfile.businessName || '',
-          bio: providerProfile.description || '',
+          bio: (providerProfile as any).bio || (providerProfile as any).description || '',
           category: providerProfile.category || '',
           subcategories: providerProfile.subcategories || [],
-          locationCity: providerProfile.businessAddress?.split(',')[0] || '',
-          locationState: providerProfile.businessAddress?.split(',')[1] || '',
+          locationCity: (providerProfile as any).locationCity || providerProfile.businessAddress?.split(',')[0] || '',
+          locationState: (providerProfile as any).locationState || providerProfile.businessAddress?.split(',')[1] || '',
           latitude: providerProfile.latitude || '',
           longitude: providerProfile.longitude || '',
           portfolio: providerProfile.portfolio || [],
@@ -123,17 +145,19 @@ export default function ProviderProfile() {
           totalCommissions: parseFloat(providerProfile.totalCommissionsEarned || '0') || 0
         });
         
-        // Fetch comprehensive provider data from API
-        if (providerProfile.id) {
-          fetchProviderData(providerProfile.id);
+        // Always fetch comprehensive provider data from API
+        // Use providerProfile.id if available, otherwise use user.id to find provider profile
+        const profileId = providerProfile.id || user.id;
+        if (profileId) {
+          fetchProviderData(profileId);
         }
       } else {
         // User exists but no provider profile - show basic form
         console.log('User found but no provider profile, showing basic form');
         const newFormData = {
-          fullName: user.fullName || '',
-          email: user.email || '',
-          phone: user.phone || '',
+          fullName: (user as any).fullName || '',
+          email: (user as any).email || '',
+          phone: (user as any).phone || '',
           businessName: '',
           bio: '',
           category: '',
@@ -149,25 +173,55 @@ export default function ProviderProfile() {
         };
         
         setFormData(newFormData);
+        
+        // Try to fetch provider data even if no profile in context
+        if (user.id) {
+          fetchProviderData(user.id);
+        }
       }
     }
   }, [authLoading, user, providerProfile, router]);
 
   // Fetch comprehensive provider data from API
-  const fetchProviderData = async (providerId: string) => {
+  const fetchProviderData = async (providerIdOrUserId: string) => {
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
 
       const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       
-      // Fetch comprehensive provider profile data
-      const profileResponse = await fetch(`${base}/api/providers/profile/${providerId}`, {
+      console.log('Fetching provider data for ID:', providerIdOrUserId);
+      console.log('API Base URL:', base);
+      
+      // Try to fetch by provider ID first, then by user ID
+      let profileResponse = await fetch(`${base}/api/providers/profile/${providerIdOrUserId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
+
+      // If not found by provider ID, try to find by user ID
+      if (!profileResponse.ok && profileResponse.status === 404) {
+        console.log('Provider not found by ID, trying to find by user ID...');
+        profileResponse = await fetch(`${base}/api/providers/profile/by-user/${providerIdOrUserId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+      }
+
+      // If still not found, try the direct profile endpoint
+      if (!profileResponse.ok && profileResponse.status === 404) {
+        console.log('Provider not found by user ID, trying direct profile endpoint...');
+        profileResponse = await fetch(`${base}/api/providers/profile`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+      }
 
       if (profileResponse.ok) {
         const profileData = await profileResponse.json();
@@ -177,11 +231,11 @@ export default function ProviderProfile() {
           // Update form data with comprehensive provider information
           setFormData(prev => ({
             ...prev,
-            fullName: providerData.user?.fullName || prev.fullName,
-            email: providerData.user?.email || prev.email,
-            phone: providerData.user?.phone || prev.phone,
+            fullName: providerData.User?.fullName || prev.fullName,
+            email: providerData.User?.email || prev.email,
+            phone: providerData.User?.phone || prev.phone,
             businessName: providerData.businessName || prev.businessName,
-            bio: providerData.description || prev.bio,
+            bio: providerData.bio || prev.bio,
             category: providerData.category || prev.category,
             subcategories: providerData.subcategories || prev.subcategories,
             locationCity: providerData.locationCity || prev.locationCity,
@@ -194,6 +248,11 @@ export default function ProviderProfile() {
             videoDuration: providerData.videoDuration || prev.videoDuration
           }));
 
+          // Set local provider profile state
+          setLocalProviderProfile(providerData);
+          
+          console.log('Provider data fetched successfully. Provider ID:', providerData.id);
+
           // Update stats with comprehensive data
           setStats(prevStats => ({
             ...prevStats,
@@ -203,23 +262,68 @@ export default function ProviderProfile() {
             totalCommissions: parseFloat(providerData.totalCommissionsEarned || '0') || 0
           }));
 
-          // Update documents if available
-          if (providerData.documents && providerData.documents.length > 0) {
-            setDocuments(providerData.documents);
+          // Update documents from portfolio data
+          const allDocuments: any[] = [];
+          
+          console.log('Processing portfolio data:', providerData.portfolio);
+          
+          // Add documents from portfolio
+          if (providerData.portfolio?.documents && Array.isArray(providerData.portfolio.documents)) {
+            console.log('Found portfolio documents:', providerData.portfolio.documents);
+            providerData.portfolio.documents.forEach((doc: any, index: number) => {
+              allDocuments.push({
+                id: `portfolio_doc_${index}`,
+                type: doc.type || 'id_card',
+                url: doc.url,
+                status: 'approved', // Portfolio documents are considered approved
+                createdAt: new Date().toISOString()
+              });
+            });
           }
+          
+          // Add brand images from portfolio
+          if (providerData.portfolio?.brandImages && Array.isArray(providerData.portfolio.brandImages)) {
+            console.log('Found portfolio brand images:', providerData.portfolio.brandImages);
+            providerData.portfolio.brandImages.forEach((img: any, index: number) => {
+              allDocuments.push({
+                id: `portfolio_brand_${index}`,
+                type: 'brand_image',
+                url: img.url,
+                status: 'approved', // Brand images are auto-approved
+                createdAt: new Date().toISOString()
+              });
+            });
+          }
+          
+          // Add ProviderDocuments if available
+          if (providerData.ProviderDocuments && providerData.ProviderDocuments.length > 0) {
+            console.log('Found ProviderDocuments:', providerData.ProviderDocuments);
+            providerData.ProviderDocuments.forEach((doc: any) => {
+              allDocuments.push({
+                id: doc.id,
+                type: doc.type,
+                url: doc.url,
+                status: doc.status,
+                createdAt: doc.createdAt
+              });
+            });
+          }
+          
+          console.log('Final processed documents:', allDocuments);
+          setDocuments(allDocuments);
 
           console.log('Comprehensive provider data loaded:', providerData);
+          console.log('Processed documents:', allDocuments);
+
+          // Also fetch additional data in parallel (but don't override portfolio documents)
+      await Promise.all([
+            fetchProviderRating(providerData.id, token),
+            fetchFeatureLimits(providerData.id, token)
+      ]);
         }
       } else {
         console.error('Failed to fetch provider profile:', profileResponse.status);
       }
-
-      // Also fetch additional data in parallel
-      await Promise.all([
-        fetchDocuments(providerId, token),
-        fetchProviderRating(providerId, token),
-        fetchFeatureLimits(providerId, token)
-      ]);
     } catch (error) {
       console.error('Error fetching provider data:', error);
     }
@@ -315,15 +419,15 @@ export default function ProviderProfile() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          businessName: formData.businessName,
-          bio: formData.bio,
-          category: formData.category,
-          subcategories: formData.subcategories,
-          locationCity: formData.locationCity,
-          locationState: formData.locationState,
-          latitude: formData.latitude,
-          longitude: formData.longitude,
-          portfolio: formData.portfolio
+          businessName: formData.businessName || '',
+          bio: formData.bio || '',
+          category: formData.category || '',
+          subcategories: formData.subcategories || [],
+          locationCity: formData.locationCity || '',
+          locationState: formData.locationState || '',
+          latitude: formData.latitude || '',
+          longitude: formData.longitude || '',
+          portfolio: formData.portfolio || []
         })
       });
 
@@ -368,8 +472,8 @@ export default function ProviderProfile() {
         ...prev,
         locationCity: locationData.city || '',
         locationState: locationData.state || '',
-        latitude: locationData.latitude.toString(),
-        longitude: locationData.longitude.toString()
+        latitude: locationData.latitude?.toString() || '',
+        longitude: locationData.longitude?.toString() || ''
       }));
     }
   };
@@ -381,8 +485,11 @@ export default function ProviderProfile() {
 
     // Check photo limit for brand images
     if (type === 'brand_image' && featureLimits) {
-      if (featureLimits.currentPhotoCount >= featureLimits.features.maxPhotos) {
-        toast.error(`Photo limit reached! You have ${featureLimits.currentPhotoCount}/${featureLimits.features.maxPhotos} photos. Upgrade to add more.`);
+      // Count actual brand images from documents state (includes portfolio images)
+      const currentBrandImageCount = documents.filter(doc => doc.type === 'brand_image').length;
+      
+      if (currentBrandImageCount >= featureLimits.features.maxPhotos) {
+        toast.error(`Photo limit reached! You have ${currentBrandImageCount}/${featureLimits.features.maxPhotos} photos. Upgrade to add more.`);
         setShowUpgradeModal(true);
         return;
       }
@@ -390,14 +497,28 @@ export default function ProviderProfile() {
 
     try {
       setUploadingDoc(true);
+      toast.loading(`Uploading ${type === 'brand_image' ? 'photo' : 'document'}...`, { id: 'upload' });
+      
       const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Authentication token not found', { id: 'upload' });
+        return;
+      }
       const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
       const formData = new FormData();
-      formData.append('documents', file); // Changed from 'file' to 'documents'
+      formData.append('documents', file);
       formData.append('type', type);
 
-      const response = await fetch(`${base}/api/providers/${providerProfile?.id}/documents`, {
+      // Use local provider profile ID if available, fallback to Auth context
+      const providerId = localProviderProfile?.id || providerProfile?.id;
+      
+      if (!providerId) {
+        toast.error('Provider profile not found. Please refresh the page.', { id: 'upload' });
+        return;
+      }
+
+      const response = await fetch(`${base}/api/providers/${providerId}/documents`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -405,23 +526,30 @@ export default function ProviderProfile() {
         body: formData
       });
 
-      if (response.ok) {
-        toast.success('Document uploaded successfully!');
-        if (providerProfile?.id && token) {
-          await fetchDocuments(providerProfile.id, token);
-          await fetchFeatureLimits(providerProfile.id, token); // Refresh limits
-          // Also refresh comprehensive provider data
-          await fetchProviderData(providerProfile.id);
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        toast.success(`${type === 'brand_image' ? 'Photo' : 'Document'} uploaded successfully!`, { id: 'upload' });
+        
+        // Refresh data
+        const providerId = localProviderProfile?.id || providerProfile?.id;
+        if (providerId && token) {
+          await Promise.all([
+            fetchDocuments(providerId, token),
+            fetchFeatureLimits(providerId, token),
+            fetchProviderData(providerId)
+          ]);
         }
       } else {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to upload document');
+        throw new Error(result.message || 'Failed to upload document');
       }
     } catch (error: any) {
       console.error('Error uploading document:', error);
-      toast.error(error.message || 'Failed to upload document');
+      toast.error(error.message || 'Failed to upload document', { id: 'upload' });
     } finally {
       setUploadingDoc(false);
+      // Reset the file input
+      e.target.value = '';
     }
   };
 
@@ -457,92 +585,257 @@ export default function ProviderProfile() {
 
     try {
       setUploadingVideo(true);
-      toast.loading('Uploading video... This may take a moment.');
+      toast.loading('Uploading video... This may take a moment.', { id: 'video-upload' });
 
-      // For now, just show coming soon
-      // TODO: Implement Cloudinary video upload
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      toast.dismiss();
-      toast('🚧 Video upload integration coming soon! Backend is ready.', { duration: 4000 });
+      const token = localStorage.getItem('token');
+      const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+      // Use local provider profile ID if available, fallback to Auth context
+      const providerId = localProviderProfile?.id || providerProfile?.id;
       
+      if (!providerId) {
+        toast.error('Provider profile not found. Please refresh the page.', { id: 'video-upload' });
+        return;
+      }
+
+      // Create FormData for video upload
+      const formData = new FormData();
+      formData.append('video', file);
+
+      const response = await fetch(`${base}/api/providers/${providerId}/video`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        toast.success('Video uploaded successfully!', { id: 'video-upload' });
+        
+        // Refresh data
+        if (providerId && token) {
+          await Promise.all([
+            fetchFeatureLimits(providerId, token),
+            fetchProviderData(providerId)
+          ]);
+        }
+      } else {
+        throw new Error(result.message || 'Failed to upload video');
+      }
     } catch (error: any) {
-      toast.dismiss();
       console.error('Error uploading video:', error);
-      toast.error(error.message || 'Failed to upload video');
+      toast.error(error.message || 'Failed to upload video', { id: 'video-upload' });
     } finally {
       setUploadingVideo(false);
+      // Reset the file input
+      e.target.value = '';
     }
   };
 
   // Handle video delete
   const handleVideoDelete = async () => {
-    if (!confirm('Are you sure you want to delete this video?')) {
-      return;
-    }
+    setDeleteModal({
+      isOpen: true,
+      type: 'video',
+      itemId: 'video',
+      itemName: 'Business Video',
+      isLoading: false
+    });
+  };
+
+  // Confirm video delete
+  const confirmVideoDelete = async () => {
+    setDeleteModal(prev => ({ ...prev, isLoading: true }));
 
     try {
       const token = localStorage.getItem('token');
       const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-      const response = await fetch(`${base}/api/providers/${providerProfile?.id}/video`, {
+      // Use local provider profile ID if available, fallback to Auth context
+      const providerId = localProviderProfile?.id || providerProfile?.id;
+      
+      if (!providerId) {
+        toast.error('Provider profile not found. Please refresh the page.');
+        return;
+      }
+
+      const response = await fetch(`${base}/api/providers/${providerId}/video`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
 
-      if (response.ok) {
+      const result = await response.json();
+
+      if (response.ok && result.success) {
         toast.success('Video deleted successfully!');
-        // Refresh profile data by updating AuthContext
-        await updateProfile({});
         
-        // Refresh comprehensive provider data
-        if (providerProfile?.id) {
-          await fetchProviderData(providerProfile.id);
+        // Refresh all data
+        if (providerId && token) {
+          await Promise.all([
+            fetchFeatureLimits(providerId, token),
+            fetchProviderData(providerId)
+          ]);
         }
+        
+        setDeleteModal({ isOpen: false, type: '', itemId: '', itemName: '', isLoading: false });
       } else {
-        throw new Error('Failed to delete video');
+        throw new Error(result.message || 'Failed to delete video');
       }
     } catch (error: any) {
       console.error('Error deleting video:', error);
       toast.error(error.message || 'Failed to delete video');
+      setDeleteModal(prev => ({ ...prev, isLoading: false }));
     }
   };
 
-  // Delete document
-  const handleDeleteDocument = async (documentId: string) => {
-    if (!confirm('Are you sure you want to delete this document?')) return;
+  // Handle document delete
+  const handleDeleteDocument = async (documentId: string, documentName?: string) => {
+    const doc = documents.find(d => d.id === documentId);
+    const itemName = documentName || doc?.type?.replace('_', ' ') || 'Document';
+    
+    setDeleteModal({
+      isOpen: true,
+      type: 'document',
+      itemId: documentId,
+      itemName: itemName,
+      isLoading: false
+    });
+  };
+
+  // Confirm document delete
+  const confirmDocumentDelete = async () => {
+    setDeleteModal(prev => ({ ...prev, isLoading: true }));
 
     try {
       const token = localStorage.getItem('token');
       if (!token) {
         toast.error('Authentication token not found');
+        setDeleteModal(prev => ({ ...prev, isLoading: false }));
         return;
       }
       
       const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-      const response = await fetch(`${base}/api/providers/${providerProfile?.id}/documents/${documentId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
+      // Check if this is a portfolio document (has fake ID like portfolio_brand_0)
+      const isPortfolioDocument = deleteModal.itemId.startsWith('portfolio_');
+      
+      let response;
+      
+      if (isPortfolioDocument) {
+        // For portfolio documents, we need to update the provider profile to remove the document from portfolio
+        console.log('Deleting portfolio document:', deleteModal.itemId);
+        
+        // Get the current provider data to update portfolio
+        const providerResponse = await fetch(`${base}/api/providers/profile`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (!providerResponse.ok) {
+          throw new Error('Failed to fetch provider data');
         }
-      });
-
-      if (response.ok) {
-        toast.success('Document deleted successfully!');
-        if (providerProfile?.id) {
-          await fetchDocuments(providerProfile.id, token);
-          // Also refresh comprehensive provider data
-          await fetchProviderData(providerProfile.id);
+        
+        const providerData = await providerResponse.json();
+        const currentPortfolio = providerData.data?.portfolio || {};
+        
+        // Determine if it's a brand image or regular document
+        const isBrandImage = deleteModal.itemId.includes('brand');
+        const portfolioArray = isBrandImage ? 'brandImages' : 'documents';
+        
+        // Remove the document from the portfolio
+        const updatedPortfolio = {
+          ...currentPortfolio,
+          [portfolioArray]: (currentPortfolio[portfolioArray] || []).filter((item: any, index: number) => {
+            const expectedId = isBrandImage ? `portfolio_brand_${index}` : `portfolio_doc_${index}`;
+            return expectedId !== deleteModal.itemId;
+          })
+        };
+        
+        // Update the provider profile with the new portfolio
+        const providerId = localProviderProfile?.id || providerProfile?.id;
+        console.log('Portfolio update - Provider ID:', providerId);
+        console.log('Portfolio update - Updated portfolio:', updatedPortfolio);
+        
+        if (!providerId) {
+          throw new Error('Provider profile not found');
         }
+        
+        response = await fetch(`${base}/api/providers/profile`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            portfolio: updatedPortfolio
+          })
+        });
+        
+        console.log('Portfolio update response status:', response.status);
       } else {
-        throw new Error('Failed to delete document');
+        // For regular database documents, use the normal delete API
+        const providerId = localProviderProfile?.id || providerProfile?.id;
+        if (!providerId) {
+          throw new Error('Provider profile not found');
+        }
+        
+        response = await fetch(`${base}/api/providers/${providerId}/documents/${deleteModal.itemId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
       }
-    } catch (error) {
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        toast.success('Document deleted successfully!');
+        
+        // Refresh all data
+        const providerId = localProviderProfile?.id || providerProfile?.id;
+        if (providerId) {
+          await Promise.all([
+            fetchFeatureLimits(providerId, token),
+            fetchProviderData(providerId)
+          ]);
+        }
+        
+        // Check if there's a pending upload after deletion
+        if ((window as any).pendingUpload) {
+          try {
+            await (window as any).pendingUpload();
+            (window as any).pendingUpload = null;
+          } catch (uploadError) {
+            console.error('Error uploading after deletion:', uploadError);
+          }
+        }
+        
+        setDeleteModal({ isOpen: false, type: '', itemId: '', itemName: '', isLoading: false });
+      } else {
+        throw new Error(result.message || 'Failed to delete document');
+      }
+    } catch (error: any) {
       console.error('Error deleting document:', error);
-      toast.error('Failed to delete document');
+      toast.error(error.message || 'Failed to delete document');
+      setDeleteModal(prev => ({ ...prev, isLoading: false }));
     }
+  };
+
+  // Handle document view
+  const handleViewDocument = (documentUrl: string, documentName: string, documentType: string) => {
+    setDocumentViewer({
+      isOpen: true,
+      documentUrl,
+      documentName,
+      documentType
+    });
   };
 
   // Get verification status color
@@ -607,10 +900,25 @@ export default function ProviderProfile() {
   console.log('Rendering profile with formData:', formData);
   console.log('Provider profile:', providerProfile);
   console.log('Documents:', documents);
+  console.log('Feature limits:', featureLimits);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Debug Section - Remove in production */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl">
+            <h3 className="text-sm font-bold text-yellow-800 dark:text-yellow-200 mb-2">Debug Info:</h3>
+            <div className="text-xs text-yellow-700 dark:text-yellow-300 space-y-1">
+              <p><strong>Documents count:</strong> {documents.length}</p>
+              <p><strong>Brand images:</strong> {documents.filter(doc => doc.type === 'brand_image').length}</p>
+              <p><strong>Other documents:</strong> {documents.filter(doc => doc.type !== 'brand_image').length}</p>
+              <p><strong>Provider profile ID:</strong> {localProviderProfile?.id || providerProfile?.id}</p>
+              <p><strong>Feature limits loaded:</strong> {featureLimits ? 'Yes' : 'No'}</p>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
@@ -876,12 +1184,88 @@ export default function ProviderProfile() {
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                           Subcategories
                         </label>
+                        
+                        {/* Display subcategories as cancelable tags */}
+                        {formData.subcategories && formData.subcategories.length > 0 ? (
+                          <div className="mb-3">
+                            <div className="flex flex-wrap gap-2">
+                              {formData.subcategories.map((subcategory, index) => (
+                                <span
+                                  key={index}
+                                  className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200"
+                                >
+                                  {subcategory}
+                                  {editing && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setFormData(prev => ({
+                                          ...prev,
+                                          subcategories: prev.subcategories.filter((_, i) => i !== index)
+                                        }));
+                                      }}
+                                      className="ml-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200"
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </button>
+                                  )}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        ) : (
                         <div className="flex items-center space-x-3 p-3 bg-slate-50 dark:bg-slate-700 rounded-xl">
                           <Briefcase className="w-4 h-4 text-slate-400" />
-                          <span className="text-slate-900 dark:text-slate-100">
-                            {formData.subcategories?.length > 0 ? formData.subcategories.join(', ') : 'None'}
-                          </span>
+                            <span className="text-slate-900 dark:text-slate-100">No subcategories specified</span>
                         </div>
+                        )}
+                        
+                        {/* Add new subcategory input when editing */}
+                        {editing && (
+                          <div className="mt-3">
+                            <div className="flex">
+                              <input
+                                type="text"
+                                placeholder="Add a subcategory..."
+                                className="flex-1 rounded-l-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-pink-500/50 focus:border-transparent"
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    const input = e.target as HTMLInputElement;
+                                    const newSubcategory = input.value.trim();
+                                    if (newSubcategory && !formData.subcategories.includes(newSubcategory)) {
+                                      setFormData(prev => ({
+                                        ...prev,
+                                        subcategories: [...prev.subcategories, newSubcategory]
+                                      }));
+                                      input.value = '';
+                                    }
+                                  }
+                                }}
+                              />
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+                                  const newSubcategory = input.value.trim();
+                                  if (newSubcategory && !formData.subcategories.includes(newSubcategory)) {
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      subcategories: [...prev.subcategories, newSubcategory]
+                                    }));
+                                    input.value = '';
+                                  }
+                                }}
+                                className="px-4 py-3 bg-gradient-to-r from-pink-600 to-orange-500 text-white rounded-r-xl hover:opacity-90 transition-opacity"
+                              >
+                                <Plus className="w-4 h-4" />
+                              </button>
+                            </div>
+                            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                              Press Enter or click + to add a subcategory
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
                     
@@ -1005,16 +1389,16 @@ export default function ProviderProfile() {
                         <div className="flex-1">
                           <div className="flex items-center justify-between text-sm mb-1">
                             <span className="text-slate-600 dark:text-slate-400 font-medium">
-                              {featureLimits.currentPhotoCount || 0} / {featureLimits.features.maxPhotos || 5} photos used
+                              {documents.filter(doc => doc.type === 'brand_image').length} / {featureLimits.features.maxPhotos || 5} photos used
                             </span>
                             <span className="text-[#ec4899] font-semibold">
-                              {featureLimits.photosRemaining || 0} remaining
+                              {Math.max(0, (featureLimits.features.maxPhotos || 5) - documents.filter(doc => doc.type === 'brand_image').length)} remaining
                             </span>
                           </div>
                           <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
                             <div 
                               className="bg-gradient-to-r from-pink-600 to-orange-500 h-full rounded-full transition-all duration-500"
-                              style={{ width: `${((featureLimits.currentPhotoCount || 0) / (featureLimits.features.maxPhotos || 5)) * 100}%` }}
+                              style={{ width: `${(documents.filter(doc => doc.type === 'brand_image').length / (featureLimits.features.maxPhotos || 5)) * 100}%` }}
                             />
                           </div>
                         </div>
@@ -1022,7 +1406,7 @@ export default function ProviderProfile() {
                     </div>
                   )}
                 </div>
-                {featureLimits && featureLimits.photosRemaining > 0 && (
+                {featureLimits && (featureLimits.features.maxPhotos || 5) - documents.filter(doc => doc.type === 'brand_image').length > 0 && (
                   <label className="px-4 py-2 bg-gradient-to-r from-pink-600 to-orange-500 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-pink-500/25 transition-all duration-300 transform hover:scale-105 cursor-pointer">
                     <input
                       type="file"
@@ -1032,7 +1416,11 @@ export default function ProviderProfile() {
                       disabled={uploadingDoc}
                     />
                     <div className="flex items-center space-x-2">
+                      {uploadingDoc ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
                       <Plus className="w-4 h-4" />
+                      )}
                       <span>{uploadingDoc ? 'Uploading...' : 'Add Photo'}</span>
                     </div>
                   </label>
@@ -1041,8 +1429,18 @@ export default function ProviderProfile() {
 
               {/* Brand Images Grid */}
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-4">
-                {documents.filter(doc => doc.type === 'brand_image').map((image) => (
+                {documents.filter(doc => doc.type === 'brand_image').length > 0 ? (
+                  documents.filter(doc => doc.type === 'brand_image').map((image) => (
                   <div key={image.id} className="relative group">
+                    {/* Delete Button - Always visible at top-right */}
+                    <button
+                      onClick={() => handleDeleteDocument(image.id, 'Brand Image')}
+                      className="absolute top-2 right-2 z-10 p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors shadow-md hover:shadow-lg"
+                      title="Delete image"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                    
                     <div className="aspect-square rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-700 border-2 border-transparent group-hover:border-pink-500 transition-all duration-300">
                       <img 
                         src={image.url} 
@@ -1050,9 +1448,17 @@ export default function ProviderProfile() {
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                       />
                     </div>
-                    {/* Action Buttons */}
-                    <div className="absolute top-2 right-2 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                      <label className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer">
+                    
+                    {/* Action Buttons - View and Edit */}
+                    <div className="absolute bottom-2 right-2 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <button
+                        onClick={() => handleViewDocument(image.url, 'Brand Image', image.type)}
+                        className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-md hover:shadow-lg"
+                        title="View image"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <label className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors cursor-pointer shadow-md hover:shadow-lg">
                         <input
                           type="file"
                           accept="image/*"
@@ -1060,14 +1466,27 @@ export default function ProviderProfile() {
                             const file = e.target.files?.[0];
                             if (!file) return;
                             
-                            // Delete old image first
+                            // Delete old image first, then upload new one
                             try {
-                              await handleDeleteDocument(image.id);
-                              // Then upload new one
+                              // Use the modal for deletion
+                              setDeleteModal({
+                                isOpen: true,
+                                type: 'document',
+                                itemId: image.id,
+                                itemName: 'Brand Image',
+                                isLoading: false
+                              });
+                              
+                              // Store the file to upload after deletion
+                              const uploadAfterDelete = async () => {
                               const fakeEvent = {
                                 target: { files: [file] }
                               } as any;
                               await handleDocumentUpload(fakeEvent, 'brand_image');
+                              };
+                              
+                              // Store the upload function to be called after successful deletion
+                              (window as any).pendingUpload = uploadAfterDelete;
                             } catch (error) {
                               console.error('Error replacing image:', error);
                             }
@@ -1077,19 +1496,22 @@ export default function ProviderProfile() {
                         />
                         <Edit3 className="w-4 h-4" />
                       </label>
-                      <button
-                        onClick={() => handleDeleteDocument(image.id)}
-                        className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
                     </div>
                   </div>
-                ))}
+                  ))
+                ) : (
+                  <div className="col-span-full text-center py-8">
+                    <ImageIcon className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+                    <p className="text-slate-600 dark:text-slate-400">No brand images uploaded yet</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-500 mt-1">
+                      Upload photos to showcase your work
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Upgrade Prompt if limit reached */}
-              {featureLimits && featureLimits.photosRemaining === 0 && (
+              {featureLimits && (featureLimits.features.maxPhotos || 5) - documents.filter(doc => doc.type === 'brand_image').length === 0 && (
                 <div className="p-4 bg-gradient-to-r from-orange-50 to-pink-50 dark:from-orange-900/20 dark:to-pink-900/20 border border-orange-200 dark:border-orange-800 rounded-xl">
                   <div className="flex items-start space-x-3">
                     <AlertCircle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
@@ -1150,13 +1572,22 @@ export default function ProviderProfile() {
                         <span className="text-sm text-slate-600 dark:text-slate-400">
                           Duration: {featureLimits.videoDetails.duration}s
                         </span>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleViewDocument(featureLimits.videoDetails.url, 'Business Video', 'video')}
+                            className="px-4 py-2 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition-all duration-300 flex items-center space-x-2 shadow-md hover:shadow-lg"
+                          >
+                            <Eye className="w-4 h-4" />
+                            <span>View Video</span>
+                          </button>
                         <button
                           onClick={handleVideoDelete}
-                          className="px-4 py-2 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-all duration-300 flex items-center space-x-2"
+                            className="px-4 py-2 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-all duration-300 flex items-center space-x-2 shadow-md hover:shadow-lg"
                         >
                           <Trash2 className="w-4 h-4" />
                           <span>Delete Video</span>
                         </button>
+                        </div>
                       </div>
                     </div>
                   ) : (
@@ -1301,17 +1732,16 @@ export default function ProviderProfile() {
                         </span>
                       </div>
                       <div className="flex items-center space-x-2 ml-4">
-                        <a
-                          href={doc.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <button
+                          onClick={() => handleViewDocument(doc.url, doc.type?.replace('_', ' ') || 'Document', doc.type || 'document')}
                           className="p-2 text-slate-600 dark:text-slate-400 hover:text-[#ec4899] hover:bg-white dark:hover:bg-slate-600 rounded-lg transition-all duration-200"
+                          title="View document"
                         >
                           <Eye className="w-4 h-4" />
-                        </a>
+                        </button>
                         <button
-                          onClick={() => handleDeleteDocument(doc.id)}
-                          className="p-2 text-slate-600 dark:text-slate-400 hover:text-red-600 hover:bg-white dark:hover:bg-slate-600 rounded-lg transition-all duration-200"
+                          onClick={() => handleDeleteDocument(doc.id, doc.type?.replace('_', ' '))}
+                          className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors shadow-md hover:shadow-lg"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -1324,6 +1754,30 @@ export default function ProviderProfile() {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => {
+          // Clear any pending upload if modal is closed
+          (window as any).pendingUpload = null;
+          setDeleteModal({ isOpen: false, type: '', itemId: '', itemName: '', isLoading: false });
+        }}
+        onConfirm={deleteModal.type === 'video' ? confirmVideoDelete : confirmDocumentDelete}
+        title={`Delete ${deleteModal.type === 'video' ? 'Video' : 'Document'}`}
+        message={`Are you sure you want to delete this ${deleteModal.type === 'video' ? 'video' : 'document'}?`}
+        itemName={deleteModal.itemName}
+        isLoading={deleteModal.isLoading}
+      />
+
+      {/* Document Viewer Modal */}
+      <DocumentViewerModal
+        isOpen={documentViewer.isOpen}
+        onClose={() => setDocumentViewer({ isOpen: false, documentUrl: '', documentName: '', documentType: '' })}
+        documentUrl={documentViewer.documentUrl}
+        documentName={documentViewer.documentName}
+        documentType={documentViewer.documentType}
+      />
 
       {/* Upgrade Modal */}
       {showUpgradeModal && (

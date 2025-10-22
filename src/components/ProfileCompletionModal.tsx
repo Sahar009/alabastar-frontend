@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { X, User, MapPin, FileText, CreditCard, CheckCircle } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 interface ProfileCompletionModalProps {
   isOpen: boolean;
@@ -16,7 +16,17 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
   totalSteps
 }) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isCompleting, setIsCompleting] = useState(false);
+
+  // Check if this is a redirect after payment completion
+  useEffect(() => {
+    const paymentCompleted = searchParams.get('payment_completed');
+    if (paymentCompleted === 'true' && isOpen) {
+      console.log('Payment completed detected - closing modal');
+      onClose();
+    }
+  }, [searchParams, isOpen, onClose]);
 
   const handleCompleteProfile = () => {
     setIsCompleting(true);
@@ -163,7 +173,13 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
   );
 };
 
-export default ProfileCompletionModal;
+export default function ProfileCompletionModalWithSuspense(props: ProfileCompletionModalProps) {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ProfileCompletionModal {...props} />
+    </Suspense>
+  );
+}
 
 
 

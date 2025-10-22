@@ -1,9 +1,10 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useProfileCompletion } from '../hooks/useProfileCompletion';
 import ProfileCompletionModal from '../components/ProfileCompletionModal';
 
-export default function ProfileCompletionWrapper() {
+function ProfileCompletionWrapperContent() {
   const { showModal, registrationProgress, closeModal } = useProfileCompletion();
 
   if (!registrationProgress) return null;
@@ -15,6 +16,14 @@ export default function ProfileCompletionWrapper() {
       currentStep={registrationProgress.currentStep}
       totalSteps={5}
     />
+  );
+}
+
+export default function ProfileCompletionWrapper() {
+  return (
+    <Suspense fallback={null}>
+      <ProfileCompletionWrapperContent />
+    </Suspense>
   );
 }
 
