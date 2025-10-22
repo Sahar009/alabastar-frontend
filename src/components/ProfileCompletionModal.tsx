@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { X, User, MapPin, FileText, CreditCard, CheckCircle } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -173,7 +173,13 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
   );
 };
 
-export default ProfileCompletionModal;
+export default function ProfileCompletionModalWithSuspense(props: ProfileCompletionModalProps) {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ProfileCompletionModal {...props} />
+    </Suspense>
+  );
+}
 
 
 
