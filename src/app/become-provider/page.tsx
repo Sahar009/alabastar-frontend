@@ -46,6 +46,8 @@ export default function BecomeProviderPage() {
 
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [nextStepLoading, setNextStepLoading] = useState(false);
+  const [overallLoading, setOverallLoading] = useState(true);
   const [currentStep, setCurrentStep] = useState(1);
   const [uploadedFiles, setUploadedFiles] = useState<{url: string, type: string, name: string, preview?: string}[]>([]);
   const [uploadedBrandImages, setUploadedBrandImages] = useState<{url: string, type: string, name: string, preview?: string}[]>([]);
@@ -115,6 +117,10 @@ export default function BecomeProviderPage() {
   const saveRegistrationStep = async (stepNumber: number, stepData: any) => {
     try {
       setSavingStep(true);
+      // Add overall loading for step 1 (account creation)
+      if (stepNumber === 1) {
+        setOverallLoading(true);
+      }
       const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       
       if (stepNumber === 1) {
@@ -190,12 +196,14 @@ export default function BecomeProviderPage() {
       toast.error('Failed to save progress. Please try again.');
     } finally {
       setSavingStep(false);
+      setOverallLoading(false);
     }
   };
 
   // Load existing registration progress
   const loadRegistrationProgress = async () => {
     if (user && token) {
+      setOverallLoading(true);
       // User is authenticated, load from backend
       try {
       const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -209,6 +217,14 @@ export default function BecomeProviderPage() {
       
       if (response.ok && data.success) {
         setRegistrationProgress(data.data);
+        
+        // Check if registration is complete
+        if (data.data.isComplete || (data.data.currentStep >= 5 && data.data.stepData?.step5?.paymentCompleted)) {
+          console.log('Registration is complete, redirecting to provider dashboard');
+          toast.success('Registration completed! Redirecting to your dashboard...');
+          router.push('/provider/dashboard');
+          return;
+        }
         
         // If user has existing progress, load it into form
         if (data.data.stepData && Object.keys(data.data.stepData).length > 0) {
@@ -260,6 +276,8 @@ export default function BecomeProviderPage() {
       }
     } catch (error) {
       console.error('Error loading registration progress:', error);
+    } finally {
+      setOverallLoading(false);
     }
     }
   };
@@ -586,8 +604,14 @@ export default function BecomeProviderPage() {
   };
 
   const nextStep = async () => {
-    // Validate current step before moving to next
+    setNextStepLoading(true);
+    // Add overall loading for step 1 to step 2 transition
     if (currentStep === 1) {
+      setOverallLoading(true);
+    }
+    try {
+      // Validate current step before moving to next
+      if (currentStep === 1) {
       // Check required fields for step 1
       if (!formData.fullName || !formData.businessName || !formData.email || !formData.password || !formData.confirmPassword) {
         toast.error('Please fill in all required fields');
@@ -689,6 +713,13 @@ export default function BecomeProviderPage() {
     }
     
     if (currentStep < 5) setCurrentStep(currentStep + 1);
+    } catch (error) {
+      console.error('Error in nextStep:', error);
+      toast.error('An error occurred. Please try again.');
+    } finally {
+      setNextStepLoading(false);
+      setOverallLoading(false);
+    }
   };
 
   const prevStep = () => {
@@ -757,7 +788,12 @@ export default function BecomeProviderPage() {
 
   // Load registration progress when component mounts or user/token changes
   useEffect(() => {
-    loadRegistrationProgress();
+    if (user && token) {
+      loadRegistrationProgress();
+    } else {
+      // No user/token, stop overall loading
+      setOverallLoading(false);
+    }
   }, [user, token]);
 
   // Fetch subscription plans on component mount
@@ -767,6 +803,32 @@ export default function BecomeProviderPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 py-12">
+      {/* Overall Loading Overlay */}
+      {overallLoading && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 text-center max-w-md mx-4">
+            <div className="flex flex-col items-center space-y-4">
+              <div className="w-16 h-16 border-4 border-pink-600 border-t-transparent rounded-full animate-spin"></div>
+              <div>
+                <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                  {currentStep === 1 && !user ? 'Creating Your Account...' : 
+                   currentStep === 1 && user ? 'Validating Account...' :
+                   'Loading Registration...'}
+                </h3>
+                <p className="text-slate-600 dark:text-slate-400">
+                  {currentStep === 1 && !user 
+                    ? 'Setting up your provider account and validating information...' 
+                    : currentStep === 1 && user
+                    ? 'Account created! Loading your registration progress...'
+                    : 'Fetching your registration progress...'
+                  }
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-extrabold text-slate-900 dark:text-slate-50">Become a Provider</h1>
@@ -1010,7 +1072,7 @@ export default function BecomeProviderPage() {
                   </div>
                   
                   {/* Referral Code Info */}
-                  {referralCodeInfo && (
+                  {/* {referralCodeInfo && (
                     <div className="mt-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
                       <div className="flex items-center space-x-2">
                         <Gift className="w-4 h-4 text-green-600 dark:text-green-400" />
@@ -1024,7 +1086,7 @@ export default function BecomeProviderPage() {
                         </div>
                       </div>
                     </div>
-                  )}
+                  )} */}
                   
                   <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                     Got referred by an existing provider? Enter their referral code to earn them a commission when you subscribe!
@@ -1669,19 +1731,19 @@ export default function BecomeProviderPage() {
                   <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
                     <div className="flex items-center justify-center space-x-2 mb-2">
                       <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                      <span className="text-blue-800 dark:text-blue-200 font-medium">Redirecting to Paystack...</span>
+                      <span className="text-blue-800 dark:text-blue-200 font-medium">Redirecting ...</span>
                     </div>
                     <p className="text-blue-700 dark:text-blue-300 text-sm">
-                      Please complete your payment on the secure Paystack checkout page.
+                      Please complete your payment on the secure checkout page.
                     </p>
                   </div>
-                  <button
+                  {/* <button
                     type="button"
                     onClick={() => window.location.href = paymentData.authorization_url}
                     className="w-full py-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold text-lg hover:opacity-90 transition-opacity shadow-lg hover:shadow-xl"
                   >
                     Complete Payment on Paystack
-                  </button>
+                  </button> */}
                 </div>
               )}
             </div>
@@ -1711,17 +1773,32 @@ export default function BecomeProviderPage() {
                 <button
                   type="button"
                   onClick={nextStep}
-                  className="px-6 py-3 bg-gradient-to-r from-pink-600 to-orange-500 text-white rounded-xl hover:opacity-90 transition-opacity"
+                  disabled={nextStepLoading}
+                  className="px-6 py-3 bg-gradient-to-r from-pink-600 to-orange-500 text-white rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                 >
-                  Next
+                  {nextStepLoading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Processing...</span>
+                    </>
+                  ) : (
+                    'Next'
+                  )}
                 </button>
               ) : (
                 <button
                   type="submit"
                   disabled={loading || !paymentData}
-                  className="px-8 py-3 bg-gradient-to-r from-pink-600 to-orange-500 text-white rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50"
+                  className="px-8 py-3 bg-gradient-to-r from-pink-600 to-orange-500 text-white rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                 >
-                  {loading ? 'Submitting...' : 'Complete Registration'}
+                  {loading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Processing Payment...</span>
+                    </>
+                  ) : (
+                    'Complete Registration'
+                  )}
                 </button>
               )}
             </div>

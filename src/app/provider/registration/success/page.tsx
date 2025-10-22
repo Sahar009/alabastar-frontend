@@ -47,9 +47,17 @@ export default function RegistrationSuccessPage() {
         setMessage('Registration completed successfully!');
         toast.success('Welcome! Your provider account has been activated.');
         
-        // Redirect to provider dashboard after 3 seconds
+        // Clear cached data and redirect to provider dashboard after 3 seconds
         setTimeout(() => {
-          router.push('/provider/dashboard');
+          // Clear localStorage to force fresh data fetch
+          localStorage.removeItem('providerProfile');
+          localStorage.removeItem('registrationProgress');
+          
+          // Set payment completion flag
+          localStorage.setItem('payment_completed', 'true');
+          
+          // Add refresh parameter to force data reload
+          router.push('/provider/dashboard?refresh=true&payment_completed=true');
         }, 3000);
       } else {
         setStatus('error');
@@ -72,7 +80,15 @@ export default function RegistrationSuccessPage() {
   };
 
   const handleGoToDashboard = () => {
-    router.push('/provider/dashboard');
+    // Clear cached data before redirecting
+    localStorage.removeItem('providerProfile');
+    localStorage.removeItem('registrationProgress');
+    
+    // Set payment completion flag
+    localStorage.setItem('payment_completed', 'true');
+    
+    // Add refresh parameter to force data reload
+    router.push('/provider/dashboard?refresh=true&payment_completed=true');
   };
 
   return (

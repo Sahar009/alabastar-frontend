@@ -104,9 +104,30 @@ export default function ProviderDashboard() {
         if (result.success) {
           const progress = result.data;
           
-          // If user has incomplete registration, redirect to become-provider
+          // If user has incomplete registration, try to fix it first
           if (progress && !progress.isComplete) {
-            console.log('Profile incomplete, redirecting to become-provider');
+            console.log('Profile incomplete, attempting to fix registration progress...');
+            
+            // Try to fix the registration progress (in case user paid but progress wasn't updated)
+            const fixResponse = await fetch(`${base}/api/providers/fix-registration-progress`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              }
+            });
+            
+            if (fixResponse.ok) {
+              const fixResult = await fixResponse.json();
+              if (fixResult.success && fixResult.data.isComplete) {
+                console.log('Registration progress fixed successfully');
+                toast.success('Registration completed! Welcome to your dashboard.');
+                return; // Don't redirect, user is now complete
+              }
+            }
+            
+            // If fix didn't work, redirect to become-provider
+            console.log('Profile still incomplete, redirecting to become-provider');
             router.push('/become-provider');
             return;
           }
@@ -693,6 +714,16 @@ export default function ProviderDashboard() {
               </div>
               <Shield className="w-4 h-4 text-slate-400" />
             </div>
+            
+            {/* Subscription Status */}
+            {(providerProfile?.paymentStatus === 'paid' || (providerProfile && user?.role === 'provider')) && (
+              <div className="mt-2 flex items-center space-x-2">
+                <div className="px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm transition-all duration-200 bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 dark:from-blue-900 dark:to-indigo-900 dark:text-blue-200">
+                  💎 Subscribed
+                </div>
+                <CreditCard className="w-4 h-4 text-blue-500" />
+              </div>
+            )}
           </div>
 
           {/* Navigation */}
