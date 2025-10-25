@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { 
@@ -8,45 +8,69 @@ import {
   Calendar,
   CheckCircle,
   XCircle,
-  Star,
   Crown,
-  Zap,
   Shield,
   Award,
-  TrendingUp,
-  Clock,
   AlertCircle,
   Loader2,
-  ChevronRight,
-  Gift,
-  Users,
   Camera,
-  FileText,
-  Activity,
   DollarSign,
   RefreshCw,
-  Download,
-  Eye,
   Settings,
-  Bell,
   HelpCircle,
   LogOut,
   Menu,
   X,
   Home,
-  BookOpen,
   User,
-  MessageSquare,
-  MapPin,
-  Phone,
-  Mail
+  MessageSquare
 } from "lucide-react";
+
+const subscriptionPlans: SubscriptionPlan[] = [
+  {
+    id: 'basic',
+    name: 'Basic',
+    price: 0,
+    duration: 'Free',
+    features: {
+      maxPhotos: 5,
+      maxVideos: 0,
+      videoMaxDuration: 0,
+      topListingDuration: 14, // days
+      rewardsAccess: false,
+      tvRadioPromotion: false,
+      prioritySupport: false,
+      analyticsAccess: false
+    }
+  },
+  {
+    id: 'premium',
+    name: 'Premium',
+    price: 15000,
+    duration: 'Monthly',
+    features: {
+      maxPhotos: 10,
+      maxVideos: 1,
+      videoMaxDuration: 90,
+      topListingDuration: 60, // days
+      rewardsAccess: true,
+      tvRadioPromotion: true,
+      prioritySupport: true,
+      analyticsAccess: true
+    },
+    isPopular: true
+  }
+];
 
 interface SubscriptionPlan {
   id: string;
   name: string;
   price: number;
   duration: string;
+  benefits?: string[];
+  maxPhotos?: number;
+  maxVideos?: number;
+  topListingDuration?: number;
   features: {
     maxPhotos: number;
     maxVideos: number;
@@ -72,6 +96,18 @@ interface CurrentSubscription {
   amount: number;
   nextBillingDate?: string;
   cancellationDate?: string;
+  SubscriptionPlan?: {
+    id: string;
+    name: string;
+    slug: string;
+    price: string;
+    interval: string;
+    benefits: string[];
+    features: any;
+    isActive: boolean;
+    createdAt: string;
+    updatedAt: string;
+  };
 }
 
 interface PaymentHistory {
@@ -137,7 +173,11 @@ export default function SubscriptionManagement() {
     
     // Convert amount to number, handling both string and number formats
     let amount = 0;
-    if (typeof subscription.amount === 'number') {
+    if (typeof subscription.metadata?.payment_amount === 'number') {
+      amount = subscription.metadata.payment_amount;
+    } else if (typeof subscription.metadata?.payment_amount === 'string') {
+      amount = parseFloat(subscription.metadata.payment_amount) || 0;
+    } else if (typeof subscription.amount === 'number') {
       amount = subscription.amount;
     } else if (typeof subscription.amount === 'string') {
       amount = parseFloat(subscription.amount) || 0;
@@ -146,71 +186,20 @@ export default function SubscriptionManagement() {
     return {
       id: subscription.id || '',
       planId: subscription.planId || '',
-      planName: subscription.planName || subscription.SubscriptionPlan?.name || 'Unknown Plan',
+      planName: subscription.SubscriptionPlan?.name || subscription.planName || 'Unknown Plan',
       status: subscription.status || 'inactive',
-      startDate: subscription.startDate || subscription.currentPeriodStart || new Date().toISOString(),
-      endDate: subscription.endDate || subscription.currentPeriodEnd || new Date().toISOString(),
+      startDate: subscription.currentPeriodStart || subscription.startDate || new Date().toISOString(),
+      endDate: subscription.currentPeriodEnd || subscription.endDate || new Date().toISOString(),
       autoRenew: subscription.autoRenew || false,
       amount: amount,
-      nextBillingDate: subscription.nextBillingDate || subscription.currentPeriodEnd || null,
-      cancellationDate: subscription.cancellationDate || null
+      nextBillingDate: subscription.currentPeriodEnd || subscription.nextBillingDate || null,
+      cancellationDate: subscription.cancellationDate || null,
+      SubscriptionPlan: subscription.SubscriptionPlan || null
     };
   };
 
-  const subscriptionPlans: SubscriptionPlan[] = [
-    {
-      id: 'basic',
-      name: 'Basic',
-      price: 0,
-      duration: 'Free',
-      features: {
-        maxPhotos: 5,
-        maxVideos: 0,
-        videoMaxDuration: 0,
-        topListingDuration: 14, // days
-        rewardsAccess: false,
-        tvRadioPromotion: false,
-        prioritySupport: false,
-        analyticsAccess: false
-      }
-    },
-    {
-      id: 'premium',
-      name: 'Premium',
-      price: 15000,
-      duration: 'Monthly',
-      features: {
-        maxPhotos: 10,
-        maxVideos: 1,
-        videoMaxDuration: 90,
-        topListingDuration: 60, // days
-        rewardsAccess: true,
-        tvRadioPromotion: true,
-        prioritySupport: true,
-        analyticsAccess: true
-      },
-      isPopular: true
-    },
-    {
-      id: 'enterprise',
-      name: 'Enterprise',
-      price: 45000,
-      duration: 'Monthly',
-      features: {
-        maxPhotos: 25,
-        maxVideos: 3,
-        videoMaxDuration: 180,
-        topListingDuration: 90, // days
-        rewardsAccess: true,
-        tvRadioPromotion: true,
-        prioritySupport: true,
-        analyticsAccess: true
-      }
-    }
-  ];
-
   // Fetch subscription data
-  const fetchSubscriptionData = async () => {
+  const fetchSubscriptionData = useCallback(async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
@@ -306,7 +295,7 @@ export default function SubscriptionManagement() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
 
   // Handle plan upgrade/downgrade
   const handlePlanChange = async (plan: SubscriptionPlan) => {
@@ -460,7 +449,7 @@ export default function SubscriptionManagement() {
     }
 
     fetchSubscriptionData();
-  }, []);
+  }, [fetchSubscriptionData]);
 
   // Handle payment verification on return from Paystack
   useEffect(() => {
@@ -499,7 +488,7 @@ export default function SubscriptionManagement() {
 
       verifyPayment();
     }
-  }, []);
+  }, [fetchSubscriptionData]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -755,9 +744,9 @@ export default function SubscriptionManagement() {
         {/* Main Content */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
           {/* Current Subscription Status */}
-          {currentSubscription && (() => {
+          {(currentSubscription || featureLimits?.hasSubscription) && (() => {
             const validatedSubscription = validateCurrentSubscription(currentSubscription);
-            if (!validatedSubscription) return null;
+            if (!validatedSubscription && !featureLimits?.hasSubscription) return null;
             
             return (
             <div className="mb-8">
@@ -777,19 +766,22 @@ export default function SubscriptionManagement() {
                         <CreditCard className="w-8 h-8" />
                       </div>
                       <div>
-                        <h2 className="text-2xl font-bold">{validatedSubscription.planName} Plan</h2>
+                        <h2 className="text-2xl font-bold">
+                          {validatedSubscription?.planName || featureLimits?.planName || 'Subscription'} Plan
+                        </h2>
                         <p className="text-white/90">
-                          {validatedSubscription.status === 'active' ? 'Active Subscription' : 
-                           validatedSubscription.status === 'expired' ? 'Subscription Expired' : 
+                          {featureLimits?.hasSubscription ? 'Active Subscription' :
+                           validatedSubscription?.status === 'active' ? 'Active Subscription' : 
+                           validatedSubscription?.status === 'expired' ? 'Subscription Expired' : 
                            'Subscription Cancelled'}
                         </p>
                       </div>
                     </div>
                     <div className={`px-4 py-2 rounded-full backdrop-blur-sm ${
-                      validatedSubscription.status === 'active' ? 'bg-white/20' : 'bg-white/10'
+                      (featureLimits?.hasSubscription || validatedSubscription?.status === 'active') ? 'bg-white/20' : 'bg-white/10'
                     }`}>
                       <span className="text-sm font-bold uppercase">
-                        {validatedSubscription.status}
+                        {featureLimits?.hasSubscription ? 'active' : validatedSubscription?.status || 'inactive'}
                       </span>
                     </div>
                   </div>
@@ -937,31 +929,43 @@ export default function SubscriptionManagement() {
                     )}
                   </div>
 
-                  <button
-                    onClick={() => {
-                      setSelectedPlan(validatedPlan);
-                      setShowUpgradeModal(true);
-                    }}
-                    disabled={processing || (currentSubscription && (currentSubscription.planName || '') === validatedPlan.name)}
-                    className={`w-full py-3 rounded-xl font-semibold transition-all duration-300 ${
-                      validatedPlan.isPopular
-                        ? 'bg-gradient-to-r from-pink-600 to-orange-500 text-white hover:shadow-lg hover:shadow-pink-500/25'
-                        : 'bg-slate-600 text-white hover:bg-slate-700'
-                    } disabled:opacity-50 disabled:cursor-not-allowed`}
-                  >
-                    {processing ? (
-                      <div className="flex items-center justify-center space-x-2">
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        <span>Processing...</span>
-                      </div>
-                    ) : currentSubscription && (currentSubscription.planName || '') === validatedPlan.name ? (
-                      'Current Plan'
-                    ) : validatedPlan.price === 0 ? (
-                      'Downgrade to Free'
-                    ) : (
-                      `Upgrade to ${validatedPlan.name}`
-                    )}
-                  </button>
+                  {(() => {
+                    // Check if this plan is the current subscription plan
+                    const isCurrentPlan = currentSubscription && 
+                      currentSubscription.SubscriptionPlan && 
+                      currentSubscription.SubscriptionPlan.id === validatedPlan.id;
+                    
+                    // Only hide button if this is the current plan (allow upgrades from Basic to Premium/Enterprise)
+                    if (isCurrentPlan) {
+                      return null; // Completely hide the button
+                    }
+                    
+                    return (
+                      <button
+                        onClick={() => {
+                          setSelectedPlan(validatedPlan);
+                          setShowUpgradeModal(true);
+                        }}
+                        disabled={processing}
+                        className={`w-full py-3 rounded-xl font-semibold transition-all duration-300 ${
+                          validatedPlan.isPopular
+                            ? 'bg-gradient-to-r from-pink-600 to-orange-500 text-white hover:shadow-lg hover:shadow-pink-500/25'
+                            : 'bg-slate-600 text-white hover:bg-slate-700'
+                        } disabled:opacity-50 disabled:cursor-not-allowed`}
+                      >
+                        {processing ? (
+                          <div className="flex items-center justify-center space-x-2">
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            <span>Processing...</span>
+                          </div>
+                        ) : validatedPlan.price === 0 ? (
+                          'Downgrade to Free'
+                        ) : (
+                          `Upgrade to ${validatedPlan.name}`
+                        )}
+                      </button>
+                    );
+                  })()}
                 </div>
                 );
               }) : (
@@ -1135,13 +1139,13 @@ export default function SubscriptionManagement() {
                         </span>
                       </div>
                       <div className="flex items-center space-x-3">
-                        {selectedPlan.maxVideos > 0 ? (
+                        {(selectedPlan.maxVideos || 0) > 0 ? (
                           <CheckCircle className="w-5 h-5 text-green-500" />
                         ) : (
                           <XCircle className="w-5 h-5 text-slate-400" />
                         )}
                         <span className="text-slate-700 dark:text-slate-300">
-                          {selectedPlan.maxVideos > 0 ? `${selectedPlan.maxVideos} video(s)` : 'No video uploads'}
+                          {(selectedPlan.maxVideos || 0) > 0 ? `${selectedPlan.maxVideos} video(s)` : 'No video uploads'}
                         </span>
                       </div>
                       <div className="flex items-center space-x-3">

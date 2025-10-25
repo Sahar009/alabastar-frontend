@@ -604,7 +604,7 @@ function MobileMenu({ user, onLogout }: { user: User | null; onLogout: () => voi
                     <div className="flex items-center gap-2">
                       <Calendar size={16} />
                       <span>My Bookings</span>
-                      {bookingsCount > 0 && (
+                      {bookingsCount && bookingsCount > 0 && (
                         <span className="ml-auto bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded-full">
                           {bookingsCount}
                         </span>

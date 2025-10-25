@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useGetMyBookingsQuery } from "../../store/api/providersApi";
+import toast from "react-hot-toast";
 import { 
   Loader2, Calendar, Clock, MapPin, ArrowLeft, CheckCircle, 
   XCircle, AlertCircle, User, RefreshCw, ChevronLeft, ChevronRight,
@@ -25,6 +26,7 @@ export default function BookingsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [updatingBooking, setUpdatingBooking] = useState<string | null>(null);
   const itemsPerPage = 6;
 
   useEffect(() => {
@@ -125,6 +127,43 @@ export default function BookingsPage() {
       router.push(`/messages?provider=${providerId}&booking=${booking.id}`);
     } else {
       alert('Provider information not available');
+    }
+  };
+
+  // Update booking status
+  const updateBookingStatus = async (bookingId: string, newStatus: string) => {
+    try {
+      setUpdatingBooking(bookingId);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('Please log in to update booking status');
+        return;
+      }
+
+      const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      
+      const response = await fetch(`${base}/api/bookings/${bookingId}?userType=customer`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      if (response.ok) {
+        toast.success(`Booking marked as ${newStatus}!`);
+        // Refresh bookings
+        refetch();
+      } else {
+        const errorData = await response.json();
+        toast.error(errorData.message || 'Failed to update booking status');
+      }
+    } catch (error) {
+      console.error('Error updating booking status:', error);
+      toast.error('Error updating booking status');
+    } finally {
+      setUpdatingBooking(null);
     }
   };
 
@@ -365,6 +404,51 @@ export default function BookingsPage() {
                             >
                               <Phone className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
                               <span>Call</span>
+                            </button>
+                          </>
+                        )}
+
+                        {/* Status Update Buttons */}
+                        {booking.status === 'pending' && (
+                          <button
+                            onClick={() => updateBookingStatus(booking.id, 'cancelled')}
+                            disabled={updatingBooking === booking.id}
+                            className="group px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-2xl font-semibold hover:shadow-lg hover:shadow-red-500/25 transition-all duration-300 transform hover:scale-105 flex items-center space-x-2 disabled:opacity-50"
+                          >
+                            {updatingBooking === booking.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <XCircle className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                            )}
+                            <span>Cancel</span>
+                          </button>
+                        )}
+
+                        {booking.status === 'confirmed' && (
+                          <>
+                            <button
+                              onClick={() => updateBookingStatus(booking.id, 'completed')}
+                              disabled={updatingBooking === booking.id}
+                              className="group px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-2xl font-semibold hover:shadow-lg hover:shadow-green-500/25 transition-all duration-300 transform hover:scale-105 flex items-center space-x-2 disabled:opacity-50"
+                            >
+                              {updatingBooking === booking.id ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <CheckCircle className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                              )}
+                              <span>Mark Done</span>
+                            </button>
+                            <button
+                              onClick={() => updateBookingStatus(booking.id, 'cancelled')}
+                              disabled={updatingBooking === booking.id}
+                              className="group px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-2xl font-semibold hover:shadow-lg hover:shadow-red-500/25 transition-all duration-300 transform hover:scale-105 flex items-center space-x-2 disabled:opacity-50"
+                            >
+                              {updatingBooking === booking.id ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <XCircle className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                              )}
+                              <span>Cancel</span>
                             </button>
                           </>
                         )}

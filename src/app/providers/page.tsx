@@ -16,11 +16,14 @@ import { Provider } from "../../types/provider";
 import Avatar from "../../components/Avatar";
 import ProviderProfileModal from "../../components/ProviderProfileModal";
 import BookingModal from "../../components/BookingModal";
+import BookingConflictModal from "../../components/BookingConflictModal";
 import LocationPicker from "../../components/LocationPicker";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProviders } from "../../hooks/useProviders";
 import { providersService } from "../../services/providersService";
 import { useCreateBookingMutation, useGetProviderServicesQuery } from "../../store/api/providersApi";
+import { checkBookingConflict } from "../../components/bookingUtils";
+import toast from "react-hot-toast";
 
 // Dynamically import the map component to avoid SSR issues
 const ProviderMap = dynamic(() => import("../../components/ProviderMap"), {
@@ -90,6 +93,11 @@ export default function ProvidersPage() {
   const [profileProvider, setProfileProvider] = useState<Provider | null>(null);
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
+  
+  // Booking conflict modal state
+  const [showBookingConflictModal, setShowBookingConflictModal] = useState(false);
+  const [conflictProvider, setConflictProvider] = useState<Provider | null>(null);
+  const [activeBookings, setActiveBookings] = useState<any[]>([]);
 
   // Use Redux hooks
   const {
@@ -754,15 +762,69 @@ export default function ProvidersPage() {
     }).format(price);
   };
 
-  const handleBookProvider = (provider: Provider) => {
+  const handleBookProvider = async (provider: Provider) => {
+    console.log('handleBookProvider called for provider:', provider.businessName);
+    
     if (!user) {
       const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
       router.push(`/login?returnUrl=${returnUrl}`);
       return;
     }
     
-    setSelectedProvider(provider);
-    setShowBookingModal(true);
+    // Check for ANY active bookings (not just same provider)
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Please sign in to book');
+        return;
+      }
+
+      console.log('Checking for active bookings...');
+      const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${base}/api/bookings?userType=customer`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      console.log('API response status:', response.status);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('API response data:', data);
+        
+        // Extract bookings from the nested data structure
+        const bookings = data.data?.bookings || data.bookings || [];
+        console.log('All bookings:', bookings);
+        
+        const activeBookings = bookings.filter((booking: any) => 
+          booking.status === 'requested' || booking.status === 'accepted' || booking.status === 'in_progress'
+        );
+        
+        console.log('Found active bookings:', activeBookings.length);
+        console.log('Active bookings:', activeBookings);
+        
+        if (activeBookings.length > 0) {
+          console.log('Showing conflict modal...');
+          // Show conflict modal
+          setConflictProvider(provider);
+          setActiveBookings(activeBookings);
+          setShowBookingConflictModal(true);
+        } else {
+          console.log('No conflicts, proceeding with booking...');
+          // No conflict, proceed with normal booking
+          setSelectedProvider(provider);
+          setShowBookingModal(true);
+        }
+      } else {
+        console.error('Failed to check existing bookings:', response.status, response.statusText);
+        toast.error('Unable to verify existing bookings. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error checking existing bookings:', error);
+      toast.error('Unable to verify existing bookings. Please try again.');
+    }
   };
 
   const handleViewProfile = (provider: Provider) => {
@@ -784,6 +846,67 @@ export default function ProvidersPage() {
   const handleCloseProfileModal = () => {
     setShowProfileModal(false);
     setProfileProvider(null);
+  };
+
+  // Booking conflict modal handlers
+  const handleBookingConflictConfirm = async (action: 'keep_previous' | 'cancel_previous', reason?: string) => {
+    console.log('Booking conflict confirmed with action:', action, 'reason:', reason);
+    
+    if (action === 'cancel_previous') {
+      try {
+        console.log('Cancelling most recent booking...');
+        
+        const token = localStorage.getItem('token');
+        if (!token) {
+          toast.error('Please sign in to cancel booking');
+          return;
+        }
+
+        const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+        const response = await fetch(`${base}/api/bookings/cancel-most-recent`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ reason: reason || 'Customer cancelled to book another provider' })
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log('Booking cancelled successfully:', result);
+          toast.success('Previous booking cancelled. Proceeding with new booking...');
+        } else {
+          console.error('Failed to cancel booking:', response.status);
+          toast.error('Failed to cancel previous booking. Please try again.');
+          return;
+        }
+      } catch (error) {
+        console.error('Error cancelling booking:', error);
+        toast.error('Failed to cancel previous booking. Please try again.');
+        return;
+      }
+    } else {
+      console.log('User wants to keep previous booking and add new one');
+      toast.success('Proceeding with multiple bookings...');
+    }
+    
+    // Close conflict modal and proceed with booking
+    setShowBookingConflictModal(false);
+    setConflictProvider(null);
+    setActiveBookings([]);
+    
+    // Open the booking modal for the selected provider
+    if (conflictProvider) {
+      setSelectedProvider(conflictProvider);
+      setShowBookingModal(true);
+    }
+  };
+
+  const handleBookingConflictClose = () => {
+    setShowBookingConflictModal(false);
+    setConflictProvider(null);
+    setActiveBookings([]);
   };
 
   const handleLocationEdit = () => {
@@ -1738,6 +1861,16 @@ export default function ProvidersPage() {
             onContact={handleContactProvider}
           />
         )}
+
+        {/* Booking Conflict Modal */}
+        {showBookingConflictModal && conflictProvider && (
+          <BookingConflictModal
+            isOpen={showBookingConflictModal}
+            onClose={handleBookingConflictClose}
+            onConfirm={handleBookingConflictConfirm}
+            activeBookings={activeBookings}
+          />
+        )}
       </div>
     );
   }
@@ -2548,6 +2681,16 @@ export default function ProvidersPage() {
               setShowBookingModal(true);
             }}
             onContact={handleContactProvider}
+          />
+        )}
+
+        {/* Booking Conflict Modal */}
+        {showBookingConflictModal && conflictProvider && (
+          <BookingConflictModal
+            isOpen={showBookingConflictModal}
+            onClose={handleBookingConflictClose}
+            onConfirm={handleBookingConflictConfirm}
+            activeBookings={activeBookings}
           />
         )}
       </div>

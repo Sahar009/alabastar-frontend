@@ -40,6 +40,7 @@ export default function BookingModal({ provider, isOpen, onClose, onBooked }: Bo
     return (availabilityData?.data?.availableSlots as AvailabilitySlot[]) || [];
   }, [availabilityData]);
 
+
   if (!isOpen) return null;
 
   const handleConfirm = async () => {
@@ -80,6 +81,7 @@ export default function BookingModal({ provider, isOpen, onClose, onBooked }: Bo
     }
   };
 
+
   if (successData) {
     console.log('Rendering success modal with data:', successData);
     return (
@@ -93,6 +95,7 @@ export default function BookingModal({ provider, isOpen, onClose, onBooked }: Bo
       />
     );
   }
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
