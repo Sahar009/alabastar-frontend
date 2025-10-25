@@ -65,7 +65,8 @@ export default function ProviderDashboard() {
     pendingBookings: 0,
     totalEarnings: 0,
     rating: 0,
-    reviews: 0
+    reviews: 0,
+    walletBalance: 0
   });
 
   // Referral states
@@ -275,6 +276,14 @@ export default function ProviderDashboard() {
           } else {
             setReferralCode(profile.referralCode);
             console.log('Using existing referral code:', profile.referralCode);
+          }
+
+          // Update wallet balance from profile
+          if (profile.wallet) {
+            setStats(prevStats => ({
+              ...prevStats,
+              walletBalance: profile.wallet.balance || 0
+            }));
           }
 
           // Fetch referral stats
@@ -600,9 +609,10 @@ export default function ProviderDashboard() {
   // Generate recent activities from real booking data
   const recentActivities = bookings.slice(0, 4).map((booking: any) => {
     const timeAgo = new Date(booking.createdAt).toLocaleDateString();
+    const amount = booking.totalAmount ? `₦${parseFloat(booking.totalAmount).toLocaleString()}` : '';
     return {
       type: "booking",
-      message: `Booking ${booking.status === 'pending' ? 'request' : booking.status} from ${booking.customer?.fullName || 'Customer'}`,
+      message: `${booking.status === 'pending' ? 'New booking request' : `Booking ${booking.status}`} from ${booking.customer?.fullName || 'Customer'}${amount ? ` - ${amount}` : ''}`,
       time: timeAgo,
       status: booking.status,
       booking: booking
@@ -610,12 +620,8 @@ export default function ProviderDashboard() {
   });
 
   // Add mock review and payment activities if no bookings
-  const mockActivities = [
-    { type: "review", message: "Received 5-star review from Sarah", time: "1 day ago", status: "completed" },
-    { type: "payment", message: "Payment received: ₦15,000", time: "2 days ago", status: "completed" }
-  ];
-
-  const allActivities = [...recentActivities, ...mockActivities].slice(0, 4);
+  // Only show real booking activities, no mock data
+  const allActivities = recentActivities.slice(0, 4);
 
   // Show loading while checking profile completion
   if (!profileCompletionChecked) {
@@ -927,7 +933,7 @@ export default function ProviderDashboard() {
         {/* Dashboard Content */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
           {/* Stats Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
             <div className="group bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
               <div className="flex items-center justify-between">
                 <div>
@@ -986,6 +992,21 @@ export default function ProviderDashboard() {
                 </div>
                 <div className="p-4 bg-gradient-to-br from-emerald-100 to-green-200 dark:from-emerald-900/30 dark:to-green-800/30 rounded-2xl group-hover:scale-110 transition-transform duration-300">
                 <span className="w-8 h-8 text-emerald-600 dark:text-emerald-400 group-hover:animate-bounce">₦</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="group bg-gradient-to-br from-white via-purple-50 to-white dark:from-slate-800 dark:via-purple-900/20 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">Wallet Balance</p>
+                  <p className="text-4xl font-bold text-purple-600 dark:text-purple-400">₦{stats.walletBalance.toLocaleString()}</p>
+                  <p className="text-xs text-purple-600 dark:text-purple-400 mt-2 font-medium">
+                    Available for withdrawal
+                  </p>
+                </div>
+                <div className="p-4 bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/30 dark:to-purple-800/30 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                  <CreditCard className="w-8 h-8 text-purple-600 dark:text-purple-400 group-hover:animate-bounce" />
                 </div>
               </div>
             </div>
@@ -1342,9 +1363,15 @@ export default function ProviderDashboard() {
                       <p className="font-medium text-slate-900 dark:text-slate-50">{activity.message}</p>
                       <p className="text-sm text-slate-500 dark:text-slate-400">{activity.time}</p>
                       {'booking' in activity && activity.booking && (
-                        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                          Service: {activity.booking.serviceType || 'General Service'}
-                        </p>
+                        <div className="text-xs text-slate-400 dark:text-slate-500 mt-1 space-y-1">
+                          <p>Service: {activity.booking.serviceType || activity.booking.category || 'General Service'}</p>
+                          {activity.booking.locationCity && (
+                            <p>Location: {activity.booking.locationCity}, {activity.booking.locationState}</p>
+                          )}
+                          {activity.booking.scheduledAt && (
+                            <p>Scheduled: {new Date(activity.booking.scheduledAt).toLocaleDateString()}</p>
+                          )}
+                        </div>
                       )}
                     </div>
                     <div className={`px-3 py-1 rounded-full text-xs font-medium ${

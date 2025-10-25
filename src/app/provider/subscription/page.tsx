@@ -246,7 +246,17 @@ export default function SubscriptionManagement() {
       if (historyResponse.ok) {
         const historyData = await historyResponse.json();
         if (historyData.success && historyData.data) {
-          setPaymentHistory(historyData.data);
+          // Transform subscription data to payment history format
+          const transformedHistory = historyData.data.map((subscription: any) => ({
+            id: subscription.id,
+            amount: parseFloat(subscription.metadata?.payment_amount || subscription.SubscriptionPlan?.price || '0'),
+            status: subscription.status === 'active' ? 'success' : subscription.status === 'cancelled' ? 'failed' : 'pending',
+            date: subscription.metadata?.payment_date || subscription.createdAt,
+            planName: subscription.SubscriptionPlan?.name || 'Unknown Plan',
+            transactionId: subscription.metadata?.payment_reference || subscription.metadata?.registrationPaymentReference || subscription.id,
+            method: 'Paystack'
+          }));
+          setPaymentHistory(transformedHistory);
         }
       }
 
@@ -1017,10 +1027,10 @@ export default function SubscriptionManagement() {
           <div className="bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 rounded-3xl shadow-xl p-8 border border-slate-200/50 dark:border-slate-700/50">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Payment History</h2>
-              <button className="px-4 py-2 bg-pink-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-pink-500/25 transition-all duration-300 flex items-center space-x-2">
+              {/* <button className="px-4 py-2 bg-pink-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-pink-500/25 transition-all duration-300 flex items-center space-x-2">
                 <Download className="w-4 h-4" />
                 <span>Export</span>
-              </button>
+              </button> */}
             </div>
 
             {paymentHistory.length > 0 ? (
@@ -1057,10 +1067,6 @@ export default function SubscriptionManagement() {
                             amount = payment.amount;
                           } else if (typeof payment.amount === 'string') {
                             amount = parseFloat(payment.amount) || 0;
-                          }
-                          // Convert from kobo to naira if amount seems too large (likely in kobo)
-                          if (amount > 1000) {
-                            amount = amount / 100;
                           }
                           return amount.toLocaleString();
                         })()}

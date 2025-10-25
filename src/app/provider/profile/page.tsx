@@ -75,10 +75,13 @@ export default function ProviderProfile() {
     videoThumbnail: '',
     videoDuration: 0
   });
+  const [currentProviderId, setCurrentProviderId] = useState<string | null>(null);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
 
-  // Initialize form data from AuthContext
+  // Initialize form data from API
   useEffect(() => {
-    console.log('Provider Profile useEffect - authLoading:', authLoading, 'user:', user, 'providerProfile:', providerProfile);
+    console.log('Provider Profile useEffect - authLoading:', authLoading, 'user:', user);
     
     if (!authLoading) {
       if (!user) {
@@ -88,140 +91,188 @@ export default function ProviderProfile() {
         return;
       }
 
-      // User is authenticated, set loading to false
-      console.log('User authenticated, setting loading to false');
-      setLoading(false);
-
-      if (providerProfile) {
-        // Provider profile exists, populate form data
-        console.log('Provider profile found, populating form data');
-        const newFormData = {
-          fullName: user.fullName || '',
-          email: user.email || '',
-          phone: user.phone || '',
-          businessName: providerProfile.businessName || '',
-          bio: providerProfile.description || '',
-          category: providerProfile.category || '',
-          subcategories: providerProfile.subcategories || [],
-          locationCity: providerProfile.businessAddress?.split(',')[0] || '',
-          locationState: providerProfile.businessAddress?.split(',')[1] || '',
-          latitude: providerProfile.latitude || '',
-          longitude: providerProfile.longitude || '',
-          portfolio: providerProfile.portfolio || [],
-          videoUrl: providerProfile.videoUrl || '',
-          videoThumbnail: providerProfile.videoThumbnail || '',
-          videoDuration: providerProfile.videoDuration || 0
-        };
-        
-        setFormData(newFormData);
-        
-        // Set stats from profile
-        setStats({
-          rating: 0,
-          reviews: 0,
-          totalReferrals: providerProfile.totalReferrals || 0,
-          totalCommissions: parseFloat(providerProfile.totalCommissionsEarned || '0') || 0
-        });
-        
-        // Fetch comprehensive provider data from API
-        if (providerProfile.id) {
-          fetchProviderData(providerProfile.id);
-        }
-      } else {
-        // User exists but no provider profile - show basic form
-        console.log('User found but no provider profile, showing basic form');
-        const newFormData = {
-          fullName: user.fullName || '',
-          email: user.email || '',
-          phone: user.phone || '',
-          businessName: '',
-          bio: '',
-          category: '',
-          subcategories: [],
-          locationCity: '',
-          locationState: '',
-          latitude: '',
-          longitude: '',
-          portfolio: [],
-          videoUrl: '',
-          videoThumbnail: '',
-          videoDuration: 0
-        };
-        
-        setFormData(newFormData);
-      }
+      // User is authenticated, fetch fresh data from API
+      console.log('User authenticated, fetching fresh data from API');
+      fetchCurrentProviderProfile();
     }
-  }, [authLoading, user, providerProfile, router]);
+  }, [authLoading, user, router]);
 
-  // Fetch comprehensive provider data from API
-  const fetchProviderData = async (providerId: string) => {
+  // Fetch categories on component mount
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  // Fetch categories from API
+  const fetchCategories = async () => {
     try {
+      setLoadingCategories(true);
+      const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${base}/api/categories/categories?limit=100&isActive=true`);
+      const data = await response.json();
+
+      if (data.success && data.data?.categories) {
+        const transformedCategories = data.data.categories.map((category: any) => ({
+          value: category.slug || category.name.toLowerCase().replace(/\s+/g, '_'),
+          label: category.name,
+          id: category.id,
+          description: category.description
+        }));
+        setCategories(transformedCategories);
+      } else {
+        console.error('Failed to load categories:', data.message);
+        // Fallback to hardcoded categories
+        setCategories([
+          { value: 'plumbing', label: 'Plumbing' },
+          { value: 'electrical', label: 'Electrical' },
+          { value: 'cleaning', label: 'Cleaning' },
+          { value: 'moving', label: 'Moving' },
+          { value: 'ac_repair', label: 'AC Repair' },
+          { value: 'carpentry', label: 'Carpentry' },
+          { value: 'painting', label: 'Painting' },
+          { value: 'pest_control', label: 'Pest Control' },
+          { value: 'laundry', label: 'Laundry' },
+          { value: 'tiling', label: 'Tiling' },
+          { value: 'cctv', label: 'CCTV' },
+          { value: 'gardening', label: 'Gardening' },
+          { value: 'appliance_repair', label: 'Appliance Repair' },
+          { value: 'locksmith', label: 'Locksmith' },
+          { value: 'carpet_cleaning', label: 'Carpet Cleaning' }
+        ]);
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      // Fallback to hardcoded categories
+      setCategories([
+        { value: 'plumbing', label: 'Plumbing' },
+        { value: 'electrical', label: 'Electrical' },
+        { value: 'cleaning', label: 'Cleaning' },
+        { value: 'moving', label: 'Moving' },
+        { value: 'ac_repair', label: 'AC Repair' },
+        { value: 'carpentry', label: 'Carpentry' },
+        { value: 'painting', label: 'Painting' },
+        { value: 'pest_control', label: 'Pest Control' },
+        { value: 'laundry', label: 'Laundry' },
+        { value: 'tiling', label: 'Tiling' },
+        { value: 'cctv', label: 'CCTV' },
+        { value: 'gardening', label: 'Gardening' },
+        { value: 'appliance_repair', label: 'Appliance Repair' },
+        { value: 'locksmith', label: 'Locksmith' },
+        { value: 'carpet_cleaning', label: 'Carpet Cleaning' }
+      ]);
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
+
+  // Fetch current provider profile from API
+  const fetchCurrentProviderProfile = async () => {
+    try {
+      setLoading(true);
       const token = localStorage.getItem('token');
-      if (!token) return;
+      if (!token) {
+        console.error('No authentication token found');
+        router.push('/provider/signin');
+        return;
+      }
 
       const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       
-      // Fetch comprehensive provider profile data
-      const profileResponse = await fetch(`${base}/api/providers/profile/${providerId}`, {
+      // Fetch current provider profile
+      const response = await fetch(`${base}/api/providers/profile`, {
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
 
-      if (profileResponse.ok) {
-        const profileData = await profileResponse.json();
-        if (profileData.success && profileData.data) {
-          const providerData = profileData.data;
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data) {
+          const providerData = data.data;
           
-          // Update form data with comprehensive provider information
-          setFormData(prev => ({
-            ...prev,
-            fullName: providerData.user?.fullName || prev.fullName,
-            email: providerData.user?.email || prev.email,
-            phone: providerData.user?.phone || prev.phone,
-            businessName: providerData.businessName || prev.businessName,
-            bio: providerData.description || prev.bio,
-            category: providerData.category || prev.category,
-            subcategories: providerData.subcategories || prev.subcategories,
-            locationCity: providerData.locationCity || prev.locationCity,
-            locationState: providerData.locationState || prev.locationState,
-            latitude: providerData.latitude || prev.latitude,
-            longitude: providerData.longitude || prev.longitude,
-            portfolio: providerData.portfolio || prev.portfolio,
-            videoUrl: providerData.videoUrl || prev.videoUrl,
-            videoThumbnail: providerData.videoThumbnail || prev.videoThumbnail,
-            videoDuration: providerData.videoDuration || prev.videoDuration
-          }));
+          // Update form data with API data
+          setFormData({
+            fullName: providerData.User?.fullName || providerData.user?.fullName || '',
+            email: providerData.User?.email || providerData.user?.email || '',
+            phone: providerData.User?.phone || providerData.user?.phone || '',
+            businessName: providerData.businessName || '',
+            bio: providerData.bio || providerData.description || '',
+            category: providerData.category || '',
+            subcategories: providerData.subcategories || [],
+            locationCity: providerData.locationCity || '',
+            locationState: providerData.locationState || '',
+            latitude: providerData.latitude || '',
+            longitude: providerData.longitude || '',
+            portfolio: providerData.portfolio || [],
+            videoUrl: providerData.videoUrl || '',
+            videoThumbnail: providerData.videoThumbnail || '',
+            videoDuration: providerData.videoDuration || 0
+          });
 
-          // Update stats with comprehensive data
-          setStats(prevStats => ({
-            ...prevStats,
+          // Update stats with API data
+          setStats({
             rating: providerData.averageRating || 0,
             reviews: providerData.totalReviews || 0,
             totalReferrals: providerData.totalReferrals || 0,
             totalCommissions: parseFloat(providerData.totalCommissionsEarned || '0') || 0
-          }));
+          });
 
-          // Update documents if available
-          if (providerData.documents && providerData.documents.length > 0) {
-            setDocuments(providerData.documents);
+          // Handle documents from API response
+          let allDocuments: any[] = [];
+          
+          // Handle ProviderDocuments array (old structure)
+          if (providerData.ProviderDocuments && providerData.ProviderDocuments.length > 0) {
+            allDocuments = [...providerData.ProviderDocuments];
+          }
+          
+          // Handle portfolio structure (new structure)
+          if (providerData.portfolio) {
+            if (providerData.portfolio.documents && Array.isArray(providerData.portfolio.documents)) {
+              allDocuments = [...allDocuments, ...providerData.portfolio.documents];
+            }
+            if (providerData.portfolio.brandImages && Array.isArray(providerData.portfolio.brandImages)) {
+              allDocuments = [...allDocuments, ...providerData.portfolio.brandImages];
+            }
+          }
+          
+          // Handle direct documents array (fallback)
+          if (providerData.documents && Array.isArray(providerData.documents)) {
+            allDocuments = [...allDocuments, ...providerData.documents];
+          }
+          
+          if (allDocuments.length > 0) {
+            setDocuments(allDocuments);
+            console.log('Documents loaded:', allDocuments);
           }
 
-          console.log('Comprehensive provider data loaded:', providerData);
+          // Set current provider ID for updates
+          setCurrentProviderId(providerData.id);
+
+          // Fetch additional data in parallel
+          if (providerData.id) {
+            await Promise.all([
+              fetchProviderRating(providerData.id, token),
+              fetchFeatureLimits(providerData.id, token)
+            ]);
+          }
+
+          console.log('Current provider profile loaded from API:', providerData);
         }
       } else {
-        console.error('Failed to fetch provider profile:', profileResponse.status);
+        // Handle 401 Unauthorized
+        if (response.status === 401) {
+          console.error('Authentication failed, redirecting to login');
+          localStorage.removeItem('token');
+          router.push('/provider/signin');
+          return;
+        }
+        console.error('Failed to fetch current provider profile:', response.status);
       }
-
-      // Also fetch additional data in parallel
-      await Promise.all([
-        fetchDocuments(providerId, token),
-        fetchProviderRating(providerId, token),
-        fetchFeatureLimits(providerId, token)
-      ]);
     } catch (error) {
-      console.error('Error fetching provider data:', error);
+      console.error('Error fetching current provider profile:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -267,6 +318,13 @@ export default function ProviderProfile() {
         console.log('Documents API Response:', responseData);
         setDocuments(responseData.data?.documents || responseData.data || []);
       } else {
+        // Handle 401 Unauthorized
+        if (response.status === 401) {
+          console.error('Authentication failed in documents fetch');
+          localStorage.removeItem('token');
+          router.push('/provider/signin');
+          return;
+        }
         const errorData = await response.json();
         console.error('Documents fetch error:', errorData);
       }
@@ -291,6 +349,15 @@ export default function ProviderProfile() {
         const data = await response.json();
         console.log('Feature limits:', data.data);
         setFeatureLimits(data.data);
+      } else {
+        // Handle 401 Unauthorized
+        if (response.status === 401) {
+          console.error('Authentication failed in feature limits fetch');
+          localStorage.removeItem('token');
+          router.push('/provider/signin');
+          return;
+        }
+        console.error('Feature limits fetch error:', response.status);
       }
     } catch (error) {
       console.error('Error fetching feature limits:', error);
@@ -304,11 +371,11 @@ export default function ProviderProfile() {
       const token = localStorage.getItem('token');
       const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       
-      if (!providerProfile?.id) {
+      if (!currentProviderId) {
         throw new Error('Provider profile not found');
       }
 
-      const response = await fetch(`${base}/api/providers/profile/${providerProfile.id}`, {
+      const response = await fetch(`${base}/api/providers/profile/${currentProviderId}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -328,6 +395,13 @@ export default function ProviderProfile() {
       });
 
       if (!response.ok) {
+        // Handle 401 Unauthorized
+        if (response.status === 401) {
+          console.error('Authentication failed during profile update');
+          localStorage.removeItem('token');
+          router.push('/provider/signin');
+          return;
+        }
         throw new Error('Failed to update provider profile');
       }
 
@@ -340,8 +414,8 @@ export default function ProviderProfile() {
         phone: formData.phone
       });
       
-      // Refresh comprehensive provider data
-      await fetchProviderData(providerProfile.id);
+      // Refresh current provider profile from API
+      await fetchCurrentProviderProfile();
     } catch (error) {
       console.error('Error updating profile:', error);
       toast.error('Failed to update profile');
@@ -397,7 +471,7 @@ export default function ProviderProfile() {
       formData.append('documents', file); // Changed from 'file' to 'documents'
       formData.append('type', type);
 
-      const response = await fetch(`${base}/api/providers/${providerProfile?.id}/documents`, {
+      const response = await fetch(`${base}/api/providers/${currentProviderId}/documents`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -407,13 +481,20 @@ export default function ProviderProfile() {
 
       if (response.ok) {
         toast.success('Document uploaded successfully!');
-        if (providerProfile?.id && token) {
-          await fetchDocuments(providerProfile.id, token);
-          await fetchFeatureLimits(providerProfile.id, token); // Refresh limits
-          // Also refresh comprehensive provider data
-          await fetchProviderData(providerProfile.id);
+        if (currentProviderId && token) {
+          await fetchDocuments(currentProviderId, token);
+          await fetchFeatureLimits(currentProviderId, token); // Refresh limits
+          // Also refresh current provider profile
+          await fetchCurrentProviderProfile();
         }
       } else {
+        // Handle 401 Unauthorized
+        if (response.status === 401) {
+          console.error('Authentication failed during document upload');
+          localStorage.removeItem('token');
+          router.push('/provider/signin');
+          return;
+        }
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to upload document');
       }
@@ -484,7 +565,7 @@ export default function ProviderProfile() {
       const token = localStorage.getItem('token');
       const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-      const response = await fetch(`${base}/api/providers/${providerProfile?.id}/video`, {
+      const response = await fetch(`${base}/api/providers/${currentProviderId}/video`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -496,11 +577,16 @@ export default function ProviderProfile() {
         // Refresh profile data by updating AuthContext
         await updateProfile({});
         
-        // Refresh comprehensive provider data
-        if (providerProfile?.id) {
-          await fetchProviderData(providerProfile.id);
-        }
+        // Refresh current provider profile from API
+        await fetchCurrentProviderProfile();
       } else {
+        // Handle 401 Unauthorized
+        if (response.status === 401) {
+          console.error('Authentication failed during video deletion');
+          localStorage.removeItem('token');
+          router.push('/provider/signin');
+          return;
+        }
         throw new Error('Failed to delete video');
       }
     } catch (error: any) {
@@ -522,7 +608,7 @@ export default function ProviderProfile() {
       
       const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-      const response = await fetch(`${base}/api/providers/${providerProfile?.id}/documents/${documentId}`, {
+      const response = await fetch(`${base}/api/providers/${currentProviderId}/documents/${documentId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -531,12 +617,19 @@ export default function ProviderProfile() {
 
       if (response.ok) {
         toast.success('Document deleted successfully!');
-        if (providerProfile?.id) {
-          await fetchDocuments(providerProfile.id, token);
-          // Also refresh comprehensive provider data
-          await fetchProviderData(providerProfile.id);
+        if (currentProviderId) {
+          await fetchDocuments(currentProviderId, token);
+          // Also refresh current provider profile
+          await fetchCurrentProviderProfile();
         }
       } else {
+        // Handle 401 Unauthorized
+        if (response.status === 401) {
+          console.error('Authentication failed during document deletion');
+          localStorage.removeItem('token');
+          router.push('/provider/signin');
+          return;
+        }
         throw new Error('Failed to delete document');
       }
     } catch (error) {
@@ -607,6 +700,7 @@ export default function ProviderProfile() {
   console.log('Rendering profile with formData:', formData);
   console.log('Provider profile:', providerProfile);
   console.log('Documents:', documents);
+  console.log('Feature limits:', featureLimits);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
@@ -848,22 +942,26 @@ export default function ProviderProfile() {
                           Category
                         </label>
                         {editing ? (
-                          <select
-                            name="category"
-                            value={formData.category}
-                            onChange={handleInputChange}
-                            className="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-2xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#ec4899] focus:border-transparent transition-all duration-200"
-                          >
-                            <option value="">Select Category</option>
-                            <option value="plumbing">Plumbing</option>
-                            <option value="electrical">Electrical</option>
-                            <option value="hvac">HVAC</option>
-                            <option value="cleaning">Cleaning</option>
-                            <option value="landscaping">Landscaping</option>
-                            <option value="painting">Painting</option>
-                            <option value="carpentry">Carpentry</option>
-                            <option value="other">Other</option>
-                          </select>
+                          loadingCategories ? (
+                            <div className="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-2xl bg-white dark:bg-slate-700 flex items-center space-x-2">
+                              <div className="w-4 h-4 border-2 border-pink-600 border-t-transparent rounded-full animate-spin"></div>
+                              <span className="text-slate-600 dark:text-slate-400">Loading categories...</span>
+                            </div>
+                          ) : (
+                            <select
+                              name="category"
+                              value={formData.category}
+                              onChange={handleInputChange}
+                              className="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-2xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#ec4899] focus:border-transparent transition-all duration-200"
+                            >
+                              <option value="">Select Category</option>
+                              {categories.map(cat => (
+                                <option key={cat.value} value={cat.value}>
+                                  {cat.label}
+                                </option>
+                              ))}
+                            </select>
+                          )
                         ) : (
                           <div className="flex items-center space-x-3 p-3 bg-slate-50 dark:bg-slate-700 rounded-xl">
                             <Briefcase className="w-4 h-4 text-slate-400" />

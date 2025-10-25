@@ -53,6 +53,14 @@ interface EarningStats {
   pendingEarnings: number;
   totalWithdrawals: number;
   commissionEarned: number;
+  wallet?: {
+    balance: number;
+    currency: string;
+    totalCredits: number;
+    totalDebits: number;
+    netAmount: number;
+    recentTransactions: any[];
+  };
 }
 
 export default function ProviderEarnings() {
@@ -69,6 +77,11 @@ export default function ProviderEarnings() {
     accountName: ''
   });
   const [processingWithdrawal, setProcessingWithdrawal] = useState(false);
+  const [banks, setBanks] = useState([]);
+  const [loadingBanks, setLoadingBanks] = useState(false);
+  const [verifyingAccount, setVerifyingAccount] = useState(false);
+  const [accountVerified, setAccountVerified] = useState(false);
+  const [verifiedAccountName, setVerifiedAccountName] = useState('');
 
   const [stats, setStats] = useState<EarningStats>({
     totalEarnings: 0,
@@ -103,7 +116,12 @@ export default function ProviderEarnings() {
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.data) {
-          setStats(data.data);
+          // Use wallet balance if available, otherwise use availableBalance
+          const walletBalance = data.data.wallet?.balance || data.data.availableBalance || 0;
+          setStats({
+            ...data.data,
+            availableBalance: walletBalance
+          });
         }
       } else {
         console.error('Failed to fetch earnings stats:', response.statusText);
@@ -176,6 +194,13 @@ export default function ProviderEarnings() {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
+  // Fetch banks when withdrawal modal opens
+  useEffect(() => {
+    if (showWithdrawalModal && banks.length === 0) {
+      fetchBanks();
+    }
+  }, [showWithdrawalModal]);
+
   const filteredTransactions = transactions;
 
   const getTransactionIcon = (type: string) => {
@@ -207,13 +232,119 @@ export default function ProviderEarnings() {
     }
   };
 
+  // Fetch banks from Paystack API
+  const fetchBanks = async () => {
+    try {
+      setLoadingBanks(true);
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${base}/api/paystack/banks`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data) {
+          setBanks(data.data);
+        }
+      } else {
+        console.error('Failed to fetch banks:', response.statusText);
+        toast.error('Failed to load banks list');
+      }
+    } catch (error) {
+      console.error('Error fetching banks:', error);
+      toast.error('Error loading banks');
+    } finally {
+      setLoadingBanks(false);
+    }
+  };
+
+  // Verify account number
+  const verifyAccount = async (accountNumber: string, bankCode: string) => {
+    if (!accountNumber || !bankCode) return;
+
+    try {
+      setVerifyingAccount(true);
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${base}/api/paystack/verify-account`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          accountNumber,
+          bankCode
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data) {
+          setAccountVerified(true);
+          setVerifiedAccountName(data.data.account_name);
+          setBankAccount(prev => ({
+            ...prev,
+            accountName: data.data.account_name
+          }));
+          toast.success('Account verified successfully');
+        } else {
+          setAccountVerified(false);
+          setVerifiedAccountName('');
+          toast.error(data.message || 'Account verification failed');
+        }
+      } else {
+        setAccountVerified(false);
+        setVerifiedAccountName('');
+        toast.error('Account verification failed');
+      }
+    } catch (error) {
+      console.error('Error verifying account:', error);
+      setAccountVerified(false);
+      setVerifiedAccountName('');
+      toast.error('Error verifying account');
+    } finally {
+      setVerifyingAccount(false);
+    }
+  };
+
+  // Handle bank selection change
+  const handleBankChange = (bankName: string) => {
+    setBankAccount(prev => ({ ...prev, bankName }));
+    setAccountVerified(false);
+    setVerifiedAccountName('');
+  };
+
+  // Handle account number change
+  const handleAccountNumberChange = (accountNumber: string) => {
+    setBankAccount(prev => ({ ...prev, accountNumber }));
+    setAccountVerified(false);
+    setVerifiedAccountName('');
+    
+    // Auto-verify account when both bank and account number are provided
+    if (accountNumber.length === 10 && bankAccount.bankName) {
+      const selectedBank = banks.find(bank => bank.name === bankAccount.bankName);
+      if (selectedBank) {
+        verifyAccount(accountNumber, selectedBank.code);
+      }
+    }
+  };
+
   const handleWithdrawal = async () => {
     if (!withdrawalAmount || parseFloat(withdrawalAmount) <= 0) {
       toast.error('Please enter a valid amount');
       return;
     }
 
-    if (parseFloat(withdrawalAmount) > stats.availableBalance) {
+    if (parseFloat(withdrawalAmount) > (stats.wallet?.balance || stats.availableBalance)) {
       toast.error('Insufficient balance');
       return;
     }
@@ -228,7 +359,7 @@ export default function ProviderEarnings() {
       const token = localStorage.getItem('token');
       const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-      const response = await fetch(`${base}/api/earnings/withdraw`, {
+      const response = await fetch(`${base}/api/wallet/withdraw`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -236,9 +367,12 @@ export default function ProviderEarnings() {
         },
         body: JSON.stringify({
           amount: parseFloat(withdrawalAmount),
-          bankName: bankAccount.bankName,
-          accountNumber: bankAccount.accountNumber,
-          accountName: bankAccount.accountName
+          withdrawalMethod: 'bank_transfer',
+          bankDetails: {
+            bankName: bankAccount.bankName,
+            accountNumber: bankAccount.accountNumber,
+            accountName: bankAccount.accountName
+          }
         })
       });
 
@@ -313,7 +447,7 @@ export default function ProviderEarnings() {
         </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
           {/* Total Earnings */}
           <div className="group bg-gradient-to-br from-white via-emerald-50 to-white dark:from-slate-800 dark:via-emerald-900/20 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
             <div className="flex items-center justify-between mb-4">
@@ -358,7 +492,7 @@ export default function ProviderEarnings() {
           </div>
 
           {/* Available Balance */}
-          <div className="group bg-gradient-to-br from-white via-blue-50 to-white dark:from-slate-800 dark:via-blue-900/20 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
+          {/* <div className="group bg-gradient-to-br from-white via-blue-50 to-white dark:from-slate-800 dark:via-blue-900/20 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-1">Available Balance</p>
@@ -375,7 +509,7 @@ export default function ProviderEarnings() {
             >
               Withdraw Funds
             </button>
-          </div>
+          </div> */}
 
           {/* Pending Earnings */}
           <div className="group bg-gradient-to-br from-white via-amber-50 to-white dark:from-slate-800 dark:via-amber-900/20 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-amber-500/10 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
@@ -391,6 +525,26 @@ export default function ProviderEarnings() {
             <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
               Available after service completion
             </p>
+          </div>
+
+          {/* Wallet Balance */}
+          <div className="group bg-gradient-to-br from-white via-purple-50 to-white dark:from-slate-800 dark:via-purple-900/20 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-1">Wallet Balance</p>
+                <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">₦{stats.wallet?.balance?.toLocaleString() || stats.availableBalance.toLocaleString()}</p>
+              </div>
+              <div className="p-3 bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/30 dark:to-purple-800/30 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                <Wallet className="w-7 h-7 text-purple-600 dark:text-purple-400 group-hover:animate-bounce" />
+              </div>
+            </div>
+            <button
+              onClick={() => setShowWithdrawalModal(true)}
+              disabled={stats.wallet?.balance <= 0 && stats.availableBalance <= 0}
+              className="w-full mt-2 px-4 py-2 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+            >
+              Withdraw Funds
+            </button>
           </div>
         </div>
 
@@ -590,7 +744,7 @@ export default function ProviderEarnings() {
                     </div>
                     <div>
                       <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Withdraw Funds</h2>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">Available: ₦{stats.availableBalance.toLocaleString()}</p>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">Available: ₦{(stats.wallet?.balance || stats.availableBalance).toLocaleString()}</p>
                     </div>
                   </div>
                   <button
@@ -614,12 +768,12 @@ export default function ProviderEarnings() {
                       value={withdrawalAmount}
                       onChange={(e) => setWithdrawalAmount(e.target.value)}
                       placeholder="0.00"
-                      max={stats.availableBalance}
+                      max={stats.wallet?.balance || stats.availableBalance}
                       className="w-full pl-8 pr-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 font-semibold text-lg"
                     />
                   </div>
                   <button
-                    onClick={() => setWithdrawalAmount(stats.availableBalance.toString())}
+                    onClick={() => setWithdrawalAmount((stats.wallet?.balance || stats.availableBalance).toString())}
                     className="mt-2 text-sm text-blue-600 hover:text-blue-700 font-semibold"
                   >
                     Withdraw all available balance
@@ -630,27 +784,57 @@ export default function ProviderEarnings() {
                   <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                     Bank Name *
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={bankAccount.bankName}
-                    onChange={(e) => setBankAccount({ ...bankAccount, bankName: e.target.value })}
-                    placeholder="e.g., GTBank, Access Bank"
-                    className="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                  />
+                    onChange={(e) => handleBankChange(e.target.value)}
+                    disabled={loadingBanks}
+                    className="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 disabled:opacity-50"
+                  >
+                    <option value="">
+                      {loadingBanks ? 'Loading banks...' : 'Select Bank'}
+                    </option>
+                    {banks.map((bank) => (
+                      <option key={bank.code} value={bank.name}>
+                        {bank.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                     Account Number *
                   </label>
-                  <input
-                    type="text"
-                    value={bankAccount.accountNumber}
-                    onChange={(e) => setBankAccount({ ...bankAccount, accountNumber: e.target.value })}
-                    placeholder="0123456789"
-                    maxLength={10}
-                    className="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 font-mono"
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={bankAccount.accountNumber}
+                      onChange={(e) => handleAccountNumberChange(e.target.value)}
+                      placeholder="0123456789"
+                      maxLength={10}
+                      className="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 font-mono"
+                    />
+                    {verifyingAccount && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+                      </div>
+                    )}
+                    {accountVerified && !verifyingAccount && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <CheckCircle className="w-5 h-5 text-green-600" />
+                      </div>
+                    )}
+                  </div>
+                  {accountVerified && verifiedAccountName && (
+                    <div className="mt-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                      <div className="flex items-center space-x-2">
+                        <CheckCircle className="w-4 h-4 text-green-600" />
+                        <span className="text-sm text-green-800 dark:text-green-200 font-medium">
+                          Account verified: {verifiedAccountName}
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -661,9 +845,15 @@ export default function ProviderEarnings() {
                     type="text"
                     value={bankAccount.accountName}
                     onChange={(e) => setBankAccount({ ...bankAccount, accountName: e.target.value })}
-                    placeholder="Full name as registered"
-                    className="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    placeholder={accountVerified ? verifiedAccountName : "Full name as registered"}
+                    disabled={accountVerified}
+                    className="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 disabled:opacity-50 disabled:bg-slate-50 dark:disabled:bg-slate-800"
                   />
+                  {accountVerified && (
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                      Account name verified automatically
+                    </p>
+                  )}
                 </div>
 
                 {/* Info Box */}
@@ -689,7 +879,7 @@ export default function ProviderEarnings() {
                   </button>
                   <button
                     onClick={handleWithdrawal}
-                    disabled={processingWithdrawal}
+                    disabled={processingWithdrawal || !accountVerified || !bankAccount.bankName || !bankAccount.accountNumber || !bankAccount.accountName}
                     className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {processingWithdrawal ? (
@@ -697,6 +887,8 @@ export default function ProviderEarnings() {
                         <Loader2 className="w-4 h-4 animate-spin" />
                         <span>Processing...</span>
                       </span>
+                    ) : !accountVerified ? (
+                      'Verify Account First'
                     ) : (
                       'Submit Withdrawal'
                     )}

@@ -77,6 +77,8 @@ export default function ProvidersPage() {
   const [searchSuggestions, setSearchSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
   const [showNoResultsModal, setShowNoResultsModal] = useState(false);
   const [allProviders, setAllProviders] = useState<Provider[]>([]);
   const [isLoadingProviders, setIsLoadingProviders] = useState(false);
@@ -115,24 +117,97 @@ export default function ProvidersPage() {
 
   const [createBooking] = useCreateBookingMutation();
 
-  const categories = [
-    { value: '', label: 'All Services', image: '/images/tool.jpg' },
-    { value: 'plumbing', label: 'Plumbing', image: '/images/plumber2d.png' },
-    { value: 'electrical', label: 'Electrical', image: '/images/mechanic2d.png' },
-    { value: 'cleaning', label: 'Cleaning', image: '/images/cleaner2d.png' },
-    { value: 'moving', label: 'Moving', image: '/images/mover2d.png' },
-    { value: 'ac_repair', label: 'AC Repair', image: '/images/ac2d.png' },
-    { value: 'carpentry', label: 'Carpentry', image: '/images/carpenter2d.png' },
-    { value: 'painting', label: 'Painting', image: '/images/paint2d.png' },
-    { value: 'pest_control', label: 'Pest Control', image: '/images/pest2d.png' },
-    { value: 'laundry', label: 'Laundry', image: '/images/laundry2d.png' },
-    { value: 'tiling', label: 'Tiling', image: '/images/tiler2d.png' },
-    { value: 'cctv', label: 'CCTV', image: '/images/cctv2d.png' },
-    { value: 'gardening', label: 'Gardening', image: '/images/gardener2d.png' },
-    { value: 'appliance_repair', label: 'Appliance Repair', image: '/images/mechanic2d.png' },
-    { value: 'locksmith', label: 'Locksmith', image: '/images/mechanic2d.png' },
-    { value: 'carpet_cleaning', label: 'Carpet Cleaning', image: '/images/cleaner2d.png' }
-  ];
+  // Image mapping for categories
+  const getCategoryImage = (slug: string) => {
+    const imageMap: { [key: string]: string } = {
+      'plumbing': '/images/plumber2d.png',
+      'electrical': '/images/mechanic2d.png',
+      'cleaning': '/images/cleaner2d.png',
+      'moving': '/images/mover2d.png',
+      'ac_repair': '/images/ac2d.png',
+      'carpentry': '/images/carpenter2d.png',
+      'painting': '/images/paint2d.png',
+      'pest_control': '/images/pest2d.png',
+      'laundry': '/images/laundry2d.png',
+      'tiling': '/images/tiler2d.png',
+      'cctv': '/images/cctv2d.png',
+      'gardening': '/images/gardener2d.png',
+      'appliance_repair': '/images/mechanic2d.png',
+      'locksmith': '/images/mechanic2d.png',
+      'carpet_cleaning': '/images/cleaner2d.png'
+    };
+    return imageMap[slug] || '/images/any_user.png';
+  };
+
+  // Fetch categories from API
+  const fetchCategories = async () => {
+    try {
+      setLoadingCategories(true);
+      const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${base}/api/categories/categories?limit=100`);
+      const data = await response.json();
+
+      if (data.success && data.data?.categories) {
+        // Transform API response and add images
+        const transformedCategories = [
+          { value: '', label: 'All Services', image: '/images/any_user.png' }, // Always include "All Services"
+          ...data.data.categories.map((category: any) => ({
+            value: category.slug || category.name.toLowerCase().replace(/\s+/g, '_'),
+            label: category.name,
+            image: getCategoryImage(category.slug || category.name.toLowerCase().replace(/\s+/g, '_')),
+            id: category.id,
+            description: category.description,
+            serviceCount: category.serviceCount
+          }))
+        ];
+        setCategories(transformedCategories);
+      } else {
+        console.error('Failed to load categories:', data.message);
+        // Fallback to hardcoded categories
+        setCategories([
+          { value: '', label: 'All Services', image: '/images/any_user.png' },
+          { value: 'plumbing', label: 'Plumbing', image: '/images/plumber2d.png' },
+          { value: 'electrical', label: 'Electrical', image: '/images/mechanic2d.png' },
+          { value: 'cleaning', label: 'Cleaning', image: '/images/cleaner2d.png' },
+          { value: 'moving', label: 'Moving', image: '/images/mover2d.png' },
+          { value: 'ac_repair', label: 'AC Repair', image: '/images/ac2d.png' },
+          { value: 'carpentry', label: 'Carpentry', image: '/images/carpenter2d.png' },
+          { value: 'painting', label: 'Painting', image: '/images/paint2d.png' },
+          { value: 'pest_control', label: 'Pest Control', image: '/images/pest2d.png' },
+          { value: 'laundry', label: 'Laundry', image: '/images/laundry2d.png' },
+          { value: 'tiling', label: 'Tiling', image: '/images/tiler2d.png' },
+          { value: 'cctv', label: 'CCTV', image: '/images/cctv2d.png' },
+          { value: 'gardening', label: 'Gardening', image: '/images/gardener2d.png' },
+          { value: 'appliance_repair', label: 'Appliance Repair', image: '/images/mechanic2d.png' },
+          { value: 'locksmith', label: 'Locksmith', image: '/images/mechanic2d.png' },
+          { value: 'carpet_cleaning', label: 'Carpet Cleaning', image: '/images/cleaner2d.png' }
+        ]);
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      // Fallback to hardcoded categories
+      setCategories([
+        { value: '', label: 'All Services', image: '/images/any_user.png' },
+        { value: 'plumbing', label: 'Plumbing', image: '/images/plumber2d.png' },
+        { value: 'electrical', label: 'Electrical', image: '/images/mechanic2d.png' },
+        { value: 'cleaning', label: 'Cleaning', image: '/images/cleaner2d.png' },
+        { value: 'moving', label: 'Moving', image: '/images/mover2d.png' },
+        { value: 'ac_repair', label: 'AC Repair', image: '/images/ac2d.png' },
+        { value: 'carpentry', label: 'Carpentry', image: '/images/carpenter2d.png' },
+        { value: 'painting', label: 'Painting', image: '/images/paint2d.png' },
+        { value: 'pest_control', label: 'Pest Control', image: '/images/pest2d.png' },
+        { value: 'laundry', label: 'Laundry', image: '/images/laundry2d.png' },
+        { value: 'tiling', label: 'Tiling', image: '/images/tiler2d.png' },
+        { value: 'cctv', label: 'CCTV', image: '/images/cctv2d.png' },
+        { value: 'gardening', label: 'Gardening', image: '/images/gardener2d.png' },
+        { value: 'appliance_repair', label: 'Appliance Repair', image: '/images/mechanic2d.png' },
+        { value: 'locksmith', label: 'Locksmith', image: '/images/mechanic2d.png' },
+        { value: 'carpet_cleaning', label: 'Carpet Cleaning', image: '/images/cleaner2d.png' }
+      ]);
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
 
   // Search suggestions data
   const searchSuggestionsData = [
@@ -238,6 +313,11 @@ export default function ProvidersPage() {
       return () => clearInterval(interval);
     }
   }, [allProviders.length]);
+
+  // Fetch categories on component mount
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
   // Helper function to fetch provider ratings
   const fetchProviderRatings = async (providerIds: string[]) => {
@@ -850,47 +930,61 @@ export default function ProvidersPage() {
                 </div>
                 
                 {/* Popular Categories Grid - Responsive */}
-                <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 sm:gap-3">
-                  {categories.slice(1, 9).map(cat => (
-                    <button
-                      key={cat.value}
-                      onClick={() => setSelectedCategory(cat.value)}
-                      className={`group relative flex flex-col items-center space-y-1 sm:space-y-2 p-2 sm:p-3 rounded-lg sm:rounded-xl text-xs font-medium transition-all duration-300 hover:scale-105 ${
-                        selectedCategory === cat.value
-                          ? 'bg-gradient-to-br from-pink-600 to-orange-500 text-white shadow-xl shadow-pink-500/30 transform scale-105'
-                          : 'bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 hover:bg-gradient-to-br hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-600 dark:hover:to-slate-500 hover:text-slate-900 dark:hover:text-slate-100 border border-slate-200/50 dark:border-slate-600/50 hover:border-pink-500/30 hover:shadow-lg'
-                      }`}
-                    >
-                      {/* Image Container */}
-                      <div className={`relative w-8 h-8 sm:w-10 sm:h-10 rounded-md sm:rounded-lg overflow-hidden transition-all duration-300 shadow-md ${
-                        selectedCategory === cat.value ? 'animate-pulse shadow-lg' : 'group-hover:scale-110'
-                      }`}>
-                        <img
-                          src={cat.image}
-                          alt={cat.label}
-                          className="w-full h-full object-cover transition-all duration-300"
-                        />
-                        {selectedCategory === cat.value && (
-                          <div className="absolute inset-0 bg-gradient-to-br from-pink-600/20 to-orange-500/20"></div>
-                        )}
-                        {selectedCategory === cat.value && (
-                          <div className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 w-3 h-3 sm:w-4 sm:h-4 bg-white rounded-full flex items-center justify-center shadow-lg">
-                            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-pink-600 rounded-full animate-pulse"></div>
-                          </div>
-                        )}
+                {loadingCategories ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 sm:gap-3">
+                    {Array.from({ length: 8 }).map((_, index) => (
+                      <div
+                        key={index}
+                        className="flex flex-col items-center space-y-1 sm:space-y-2 p-2 sm:p-3 rounded-lg sm:rounded-xl bg-slate-50 dark:bg-slate-700/50 animate-pulse"
+                      >
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-md sm:rounded-lg bg-slate-200 dark:bg-slate-600"></div>
+                        <div className="w-12 h-3 bg-slate-200 dark:bg-slate-600 rounded"></div>
                       </div>
-                      
-                      {/* Label */}
-                      <span className={`text-center leading-tight transition-colors duration-300 text-xs font-semibold ${
-                        selectedCategory === cat.value 
-                          ? 'text-white font-bold' 
-                          : 'text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-100'
-                      }`}>
-                        {cat.label}
-                      </span>
-                    </button>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 sm:gap-3">
+                    {categories.slice(1, 9).map(cat => (
+                      <button
+                        key={cat.value}
+                        onClick={() => setSelectedCategory(cat.value)}
+                        className={`group relative flex flex-col items-center space-y-1 sm:space-y-2 p-2 sm:p-3 rounded-lg sm:rounded-xl text-xs font-medium transition-all duration-300 hover:scale-105 ${
+                          selectedCategory === cat.value
+                            ? 'bg-gradient-to-br from-pink-600 to-orange-500 text-white shadow-xl shadow-pink-500/30 transform scale-105'
+                            : 'bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 hover:bg-gradient-to-br hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-600 dark:hover:to-slate-500 hover:text-slate-900 dark:hover:text-slate-100 border border-slate-200/50 dark:border-slate-600/50 hover:border-pink-500/30 hover:shadow-lg'
+                        }`}
+                      >
+                        {/* Image Container */}
+                        <div className={`relative w-8 h-8 sm:w-10 sm:h-10 rounded-md sm:rounded-lg overflow-hidden transition-all duration-300 shadow-md ${
+                          selectedCategory === cat.value ? 'animate-pulse shadow-lg' : 'group-hover:scale-110'
+                        }`}>
+                          <img
+                            src={cat.image}
+                            alt={cat.label}
+                            className="w-full h-full object-cover transition-all duration-300"
+                          />
+                          {selectedCategory === cat.value && (
+                            <div className="absolute inset-0 bg-gradient-to-br from-pink-600/20 to-orange-500/20"></div>
+                          )}
+                          {selectedCategory === cat.value && (
+                            <div className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 w-3 h-3 sm:w-4 sm:h-4 bg-white rounded-full flex items-center justify-center shadow-lg">
+                              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-pink-600 rounded-full animate-pulse"></div>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Label */}
+                        <span className={`text-center leading-tight transition-colors duration-300 text-xs font-semibold ${
+                          selectedCategory === cat.value 
+                            ? 'text-white font-bold' 
+                            : 'text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-100'
+                        }`}>
+                          {cat.label}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
                 
                 {/* Selected Category Indicator */}
                 {selectedCategory && (
@@ -1245,7 +1339,7 @@ export default function ProvidersPage() {
                           {/* Avatar */}
                           <div className="flex-shrink-0">
                             <Avatar
-                              src={provider.brandImages && provider.brandImages.length > 0 ? (provider.brandImages[0].url || provider.brandImages[0]) : (provider.user?.avatarUrl || '')}
+                              src={provider.brandImages && Array.isArray(provider.brandImages) && provider.brandImages.length > 0 ? (provider.brandImages[0].url || provider.brandImages[0]) : (provider.user?.avatarUrl || '')}
                               alt={provider.businessName || provider.user?.fullName || 'Provider'}
                               fallback={provider.businessName || provider.user?.fullName || 'P'}
                               size="lg"
@@ -1290,7 +1384,7 @@ export default function ProvidersPage() {
                         </div>
                         
                         {/* Subcategories */}
-                        {provider.subcategories && provider.subcategories.length > 0 && (
+                        {provider.subcategories && Array.isArray(provider.subcategories) && provider.subcategories.length > 0 && (
                           <div className="mb-4">
                             <div className="flex items-center space-x-2 mb-2">
                               <div className="w-2 h-2 bg-gradient-to-r from-pink-600 to-orange-500 rounded-full animate-pulse"></div>
@@ -1321,7 +1415,7 @@ export default function ProvidersPage() {
                                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Brand Images</span>
                             </div>
                           
-                          {provider.brandImages && provider.brandImages.length > 0 ? (
+                          {provider.brandImages && Array.isArray(provider.brandImages) && provider.brandImages.length > 0 ? (
                             <div className="grid grid-cols-3 gap-2">
                               {provider.brandImages.slice(0, 6).map((image: any, index: number) => (
                                 <div
@@ -1338,7 +1432,7 @@ export default function ProvidersPage() {
                                   />
                                 </div>
                               ))}
-                              {provider.brandImages.length > 6 && (
+                              {provider.brandImages && Array.isArray(provider.brandImages) && provider.brandImages.length > 6 && (
                                 <div className="aspect-square rounded-lg bg-gradient-to-br from-pink-600/10 to-orange-500/10 dark:from-pink-600/20 dark:to-orange-500/20 border border-pink-600/30 dark:border-orange-500/30 shadow-sm flex items-center justify-center cursor-pointer hover:scale-105 transition-all duration-300">
                                   <div className="text-center">
                                     <div className="w-6 h-6 bg-gradient-to-r from-pink-600 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-1">
@@ -1888,7 +1982,7 @@ export default function ProvidersPage() {
                           <div className="h-full flex items-center justify-center p-2">
                             <div className="w-full h-full max-w-none max-h-none">
                           <Avatar
-                                src={provider.brandImages && provider.brandImages.length > 0 ? (provider.brandImages[0].url || provider.brandImages[0]) : (provider.user?.avatarUrl || '')}
+                                src={provider.brandImages && Array.isArray(provider.brandImages) && provider.brandImages.length > 0 ? (provider.brandImages[0].url || provider.brandImages[0]) : (provider.user?.avatarUrl || '')}
                                 alt={provider.businessName || provider.user?.fullName || 'Provider'}
                                 fallback={provider.businessName || provider.user?.fullName || 'P'}
                                 size="xl"
@@ -1985,7 +2079,7 @@ export default function ProvidersPage() {
                             <div className="grid grid-cols-3 gap-3">
                               {(() => {
                                 // Use real brand images if available, otherwise fallback to mock images
-                                const brandImages = provider.brandImages && provider.brandImages.length > 0 
+                                const brandImages = provider.brandImages && Array.isArray(provider.brandImages) && provider.brandImages.length > 0 
                                   ? provider.brandImages.slice(0, 3).map((img: any) => img.url || img)
                                   : (() => {
                                       // Fallback to mock images based on provider category
@@ -2041,7 +2135,7 @@ export default function ProvidersPage() {
                                       </div>
                                     ))}
                                     {/* More indicator if there are more images */}
-                                    {(provider.brandImages && provider.brandImages.length > 3) && (
+                                    {(provider.brandImages && Array.isArray(provider.brandImages) && provider.brandImages.length > 3) && (
                                       <div className="w-full h-20 sm:h-24 rounded-lg bg-gradient-to-br from-pink-600/10 to-orange-500/10 dark:from-pink-600/20 dark:to-orange-500/20 border border-pink-600/30 dark:border-orange-500/30 shadow-md flex items-center justify-center group cursor-pointer hover:scale-105 transition-all duration-300">
                                         <div className="text-center">
                                           <div className="w-6 h-6 bg-gradient-to-r from-pink-600 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-1">
@@ -2081,7 +2175,7 @@ export default function ProvidersPage() {
                           </div>
                           
                           {/* Provider Subcategories */}
-                          {provider.subcategories && provider.subcategories.length > 0 && (
+                          {provider.subcategories && Array.isArray(provider.subcategories) && provider.subcategories.length > 0 && (
                             <div className="mb-4">
                               <div className="flex items-center space-x-2 mb-2">
                                 <div className="w-2 h-2 bg-gradient-to-r from-pink-600 to-orange-500 rounded-full animate-pulse"></div>

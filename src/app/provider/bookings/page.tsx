@@ -143,8 +143,8 @@ export default function ProviderBookings() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending': return 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200';
-      case 'confirmed': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+      case 'pending': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+      case 'confirmed': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
       case 'completed': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
       case 'cancelled': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
       default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
@@ -153,11 +153,23 @@ export default function ProviderBookings() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'pending': return <Clock className="w-4 h-4" />;
-      case 'confirmed': return <CheckCircle className="w-4 h-4" />;
-      case 'completed': return <CheckCircle className="w-4 h-4" />;
-      case 'cancelled': return <XCircle className="w-4 h-4" />;
-      default: return <Clock className="w-4 h-4" />;
+      case 'pending': 
+        return (
+          <div className="relative">
+            <Clock className="w-4 h-4 text-green-500" />
+            <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+          </div>
+        );
+      case 'confirmed': 
+        return (
+          <div className="relative">
+            <CheckCircle className="w-4 h-4 text-green-500" />
+            <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+          </div>
+        );
+      case 'completed': return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case 'cancelled': return <XCircle className="w-4 h-4 text-red-500" />;
+      default: return <Clock className="w-4 h-4 text-gray-500" />;
     }
   };
 
@@ -319,10 +331,22 @@ export default function ProviderBookings() {
                         <h3 className="text-xl font-bold text-slate-900 dark:text-slate-50 group-hover:text-[#ec4899] transition-colors duration-200">
                           {booking.service?.name || 'General Service'}
                         </h3>
-                        <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold shadow-sm ${getStatusColor(booking.status)}`}>
+                      <div className="flex items-center space-x-3">
+                        <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold shadow-sm status-progress ${getStatusColor(booking.status)}`}>
                           {getStatusIcon(booking.status)}
                           <span className="ml-2 capitalize">{booking.status}</span>
                         </span>
+                        {(booking.status === 'pending' || booking.status === 'confirmed') && (
+                          <div className="flex items-center space-x-1">
+                            <div className="flex space-x-1">
+                              <div className="w-2 h-2 bg-green-500 rounded-full animate-progress-dots" style={{ animationDelay: '0ms' }}></div>
+                              <div className="w-2 h-2 bg-green-500 rounded-full animate-progress-dots" style={{ animationDelay: '200ms' }}></div>
+                              <div className="w-2 h-2 bg-green-500 rounded-full animate-progress-dots" style={{ animationDelay: '400ms' }}></div>
+                            </div>
+                            <span className="text-xs text-green-600 dark:text-green-400 ml-2">Processing...</span>
+                          </div>
+                        )}
+                      </div>
                       </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

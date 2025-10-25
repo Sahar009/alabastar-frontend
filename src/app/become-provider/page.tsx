@@ -71,26 +71,76 @@ export default function BecomeProviderPage() {
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const [savingStep, setSavingStep] = useState(false);
   const [registrationProgress, setRegistrationProgress] = useState<any>(null);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const brandImageInputRef = useRef<HTMLInputElement>(null);
 
-  const categories = [
-    { value: 'plumbing', label: 'Plumbing' },
-    { value: 'electrical', label: 'Electrical' },
-    { value: 'cleaning', label: 'Cleaning' },
-    { value: 'moving', label: 'Moving' },
-    { value: 'ac_repair', label: 'AC Repair' },
-    { value: 'carpentry', label: 'Carpentry' },
-    { value: 'painting', label: 'Painting' },
-    { value: 'pest_control', label: 'Pest Control' },
-    { value: 'laundry', label: 'Laundry' },
-    { value: 'tiling', label: 'Tiling' },
-    { value: 'cctv', label: 'CCTV' },
-    { value: 'gardening', label: 'Gardening' },
-    { value: 'appliance_repair', label: 'Appliance Repair' },
-    { value: 'locksmith', label: 'Locksmith' },
-    { value: 'carpet_cleaning', label: 'Carpet Cleaning' }
-  ];
+  const fetchCategories = async () => {
+    try {
+      setLoadingCategories(true);
+      const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${base}/api/categories/categories?limit=100`);
+      const data = await response.json();
+
+      if (data.success && data.data?.categories) {
+        // Transform the API response to match the expected format
+        const transformedCategories = data.data.categories.map((category: any) => ({
+          value: category.slug || category.name.toLowerCase().replace(/\s+/g, '_'),
+          label: category.name,
+          id: category.id,
+          description: category.description,
+          icon: category.icon,
+          serviceCount: category.serviceCount
+        }));
+        setCategories(transformedCategories);
+      } else {
+        console.error('Failed to load categories:', data.message);
+        toast.error('Failed to load service categories');
+        // Fallback to hardcoded categories
+        setCategories([
+          { value: 'plumbing', label: 'Plumbing' },
+          { value: 'electrical', label: 'Electrical' },
+          { value: 'cleaning', label: 'Cleaning' },
+          { value: 'moving', label: 'Moving' },
+          { value: 'ac_repair', label: 'AC Repair' },
+          { value: 'carpentry', label: 'Carpentry' },
+          { value: 'painting', label: 'Painting' },
+          { value: 'pest_control', label: 'Pest Control' },
+          { value: 'laundry', label: 'Laundry' },
+          { value: 'tiling', label: 'Tiling' },
+          { value: 'cctv', label: 'CCTV' },
+          { value: 'gardening', label: 'Gardening' },
+          { value: 'appliance_repair', label: 'Appliance Repair' },
+          { value: 'locksmith', label: 'Locksmith' },
+          { value: 'carpet_cleaning', label: 'Carpet Cleaning' }
+        ]);
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      toast.error('Error loading service categories');
+      // Fallback to hardcoded categories
+      setCategories([
+        { value: 'plumbing', label: 'Plumbing' },
+        { value: 'electrical', label: 'Electrical' },
+        { value: 'cleaning', label: 'Cleaning' },
+        { value: 'moving', label: 'Moving' },
+        { value: 'ac_repair', label: 'AC Repair' },
+        { value: 'carpentry', label: 'Carpentry' },
+        { value: 'painting', label: 'Painting' },
+        { value: 'pest_control', label: 'Pest Control' },
+        { value: 'laundry', label: 'Laundry' },
+        { value: 'tiling', label: 'Tiling' },
+        { value: 'cctv', label: 'CCTV' },
+        { value: 'gardening', label: 'Gardening' },
+        { value: 'appliance_repair', label: 'Appliance Repair' },
+        { value: 'locksmith', label: 'Locksmith' },
+        { value: 'carpet_cleaning', label: 'Carpet Cleaning' }
+      ]);
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
 
   const subcategoryOptions: { [key: string]: string[] } = {
     plumbing: ['Pipe Repair', 'Drain Cleaning', 'Water Heater', 'Toilet Repair', 'Faucet Installation'],
@@ -765,6 +815,11 @@ export default function BecomeProviderPage() {
     fetchSubscriptionPlans();
   }, []);
 
+  // Fetch categories on component mount
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1060,18 +1115,28 @@ export default function BecomeProviderPage() {
                   <Award className="inline w-4 h-4 mr-2" />
                   Service Category *
                 </label>
-                <select
-                  name="category"
-                  value={formData.category}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#2563EB]/50 focus:border-transparent"
-                >
-                  <option value="">Select a category</option>
-                  {categories.map(cat => (
-                    <option key={cat.value} value={cat.value}>{cat.label}</option>
-                  ))}
-                </select>
+                {loadingCategories ? (
+                  <div className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 flex items-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-pink-600 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-slate-600 dark:text-slate-400">Loading categories...</span>
+                  </div>
+                ) : (
+                  <select
+                    name="category"
+                    value={formData.category}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#2563EB]/50 focus:border-transparent"
+                  >
+                    <option value="">Select a category</option>
+                    {categories.map(cat => (
+                      <option key={cat.value} value={cat.value}>
+                        {cat.label}
+                        {/* {cat.serviceCount && ` (${cat.serviceCount})`} */}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
 
               {formData.category && (
