@@ -8,9 +8,12 @@ import type { LucideIcon } from "lucide-react";
 import FAQComponent from "@/components/FAQ";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import BookingStatusModal from "@/components/BookingStatusModal";
 
 export default function HomePage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<string | null>(null);
   
@@ -27,10 +30,75 @@ export default function HomePage() {
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
 
+  // Booking status modal state
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [bookingForStatus, setBookingForStatus] = useState<any>(null);
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [isLoadingBookings, setIsLoadingBookings] = useState(false);
+
   // Auto-detect user location on component mount
   useEffect(() => {
     detectUserLocation();
   }, []);
+
+  // Fetch bookings and auto-open modal for authenticated users with active bookings
+  useEffect(() => {
+    if (!user || user.role === 'provider' || showStatusModal) return;
+
+    const fetchBookings = async () => {
+      setIsLoadingBookings(true);
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/bookings?userType=customer`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!response.ok) return;
+
+        const data = await response.json();
+        const bookingList = Array.isArray(data?.data) ? data?.data : data?.data?.bookings || [];
+        
+        setBookings(bookingList);
+
+        // Find active bookings
+        const activeBookings = bookingList.filter((booking: any) => 
+          booking.status === 'requested' || 
+          booking.status === 'accepted' || 
+          booking.status === 'in_progress'
+        );
+
+        // Auto-open modal for most recent active booking
+        if (activeBookings.length > 0 && !bookingForStatus) {
+          const mostRecentBooking = activeBookings.sort((a: any, b: any) => 
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          )[0];
+          
+          setBookingForStatus(mostRecentBooking);
+          setShowStatusModal(true);
+        }
+      } catch (error) {
+        console.error('Error fetching bookings:', error);
+      } finally {
+        setIsLoadingBookings(false);
+      }
+    };
+
+    fetchBookings();
+  }, [user, showStatusModal, bookingForStatus]);
+
+  const handleStatusUpdate = () => {
+    // Refetch bookings
+    setBookings([]);
+    setBookingForStatus(null);
+    setShowStatusModal(false);
+  };
 
   // Handle scroll for pagination
   useEffect(() => {
@@ -200,14 +268,14 @@ export default function HomePage() {
   
   // Background images for slider
   const backgroundImages = [
-    "/images/slider1.jpg",
-    "/images/slider2.jpg", 
-    "/images/slider3.jpg",
-    "/images/slider4.jpg",
+    "/images/slider14.png",
+    "/images/slider3.jpg", 
+    "/images/slider13.png",
+    "/images/slider15.png",
     "/images/slider5.jpg",
-    "/images/slider6.jpg",
-    "/images/slider7.jpg",
-    "/images/slider8.jpg"
+    "/images/slider17.png",
+    "/images/slider18.png",
+    "/images/slider16.png"
   ];
 
   useEffect(() => {
@@ -1233,6 +1301,14 @@ Our dedicated customer service team is ready and willing to offer assistance whe
           </div>
         </div>
       </section> */}
+
+      {/* Booking Status Modal */}
+      <BookingStatusModal
+        isOpen={showStatusModal}
+        onClose={() => setShowStatusModal(false)}
+        booking={bookingForStatus}
+        onStatusUpdate={handleStatusUpdate}
+      />
     </div>
   );
 }

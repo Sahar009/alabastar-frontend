@@ -122,14 +122,13 @@ function SignupContent() {
 
   // Slider data for signup page
   const sliderImages = [
-    '/images/slider1.jpg',
-    '/images/slider2.jpg',
-    '/images/slider3.jpg',
-    '/images/slider4.jpg',
+    '/images/slider15.png',
+    '/images/slider17.jpg',
+    '/images/pharmacy.jpg',
+    '/images/slider14.png',
     '/images/slider5.jpg',
-    '/images/slider6.jpg',
-    '/images/slider7.jpg',
-    '/images/slider8.jpg'
+    '/images/slider18.jpg',
+  
   ];
 
   const sliderTexts = [

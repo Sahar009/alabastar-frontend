@@ -10,6 +10,8 @@ import {
   Search, Filter, MessageSquare, Star, Eye, CheckCircle2, X,
   Phone, Mail, ShieldCheck, FileText, CalendarDays, MapPinIcon
 } from "lucide-react";
+import RatingModal from "@/components/RatingModal";
+import BookingStatusModal from "@/components/BookingStatusModal";
 
 // WhatsApp icon component
 const WhatsAppIcon = ({ className }: { className?: string }) => (
@@ -26,12 +28,39 @@ export default function BookingsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [bookingToRate, setBookingToRate] = useState<any>(null);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [bookingForStatus, setBookingForStatus] = useState<any>(null);
   const [updatingBooking, setUpdatingBooking] = useState<string | null>(null);
   const itemsPerPage = 6;
 
   useEffect(() => {
     refetch();
   }, [refetch]);
+
+  // Auto-open status modal for pending bookings when page loads
+  useEffect(() => {
+    if (!data || isLoading || showStatusModal || bookingForStatus) return;
+    
+    const bookings = Array.isArray(data?.data) ? data?.data : data?.data?.bookings || [];
+    const activeBookings = bookings.filter((booking: any) => 
+      booking.status === 'requested' || 
+      booking.status === 'accepted' || 
+      booking.status === 'in_progress'
+    );
+    
+    // Only auto-open if there are active bookings
+    if (activeBookings.length > 0) {
+      // Find the most recent active booking
+      const mostRecentBooking = activeBookings.sort((a: any, b: any) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )[0];
+      
+      setBookingForStatus(mostRecentBooking);
+      setShowStatusModal(true);
+    }
+  }, [data, isLoading, showStatusModal, bookingForStatus]);
 
   const bookings = Array.isArray(data?.data) ? data?.data : data?.data?.bookings || [];
   
@@ -99,9 +128,26 @@ export default function BookingsPage() {
     }
   };
 
-  const handleComingSoon = (feature: string) => {
-    // Simple alert for coming soon features
-    alert(`🚧 ${feature} - Coming Soon!`);
+  const handleRateProvider = (booking: any) => {
+    setBookingToRate(booking);
+    setShowRatingModal(true);
+  };
+
+  const handleRatingSubmit = () => {
+    // Refresh bookings to update the list
+    refetch();
+  };
+
+  const handleOpenStatusModal = (booking: any) => {
+    setBookingForStatus(booking);
+    setShowStatusModal(true);
+  };
+
+  const handleStatusUpdate = () => {
+    // Reset and refresh bookings
+    setBookingForStatus(null);
+    setShowStatusModal(false);
+    refetch();
   };
 
   const viewBookingDetails = (booking: any) => {
@@ -409,6 +455,16 @@ export default function BookingsPage() {
                         )}
 
                         {/* Status Update Buttons */}
+                        {(booking.status === 'requested' || booking.status === 'accepted' || booking.status === 'in_progress') && (
+                          <button
+                            onClick={() => handleOpenStatusModal(booking)}
+                            className="group px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl font-semibold hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-300 transform hover:scale-105 flex items-center space-x-2"
+                          >
+                            <Clock className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                            <span>Update Status</span>
+                          </button>
+                        )}
+
                         {booking.status === 'pending' && (
                           <button
                             onClick={() => updateBookingStatus(booking.id, 'cancelled')}
@@ -455,7 +511,7 @@ export default function BookingsPage() {
 
                         {booking.status === 'completed' && (
                           <button
-                            onClick={() => handleComingSoon("Rate Service")}
+                            onClick={() => handleRateProvider(booking)}
                             className="group px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-2xl font-semibold hover:shadow-lg hover:shadow-yellow-500/25 transition-all duration-300 transform hover:scale-105 flex items-center space-x-2"
                           >
                             <Star className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
@@ -784,7 +840,10 @@ export default function BookingsPage() {
                   
                   {selectedBooking.status === 'completed' && (
                     <button
-                      onClick={() => handleComingSoon("Rate Service")}
+                      onClick={() => {
+                        setShowDetailsModal(false);
+                        handleRateProvider(selectedBooking);
+                      }}
                       className="group px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-2xl font-semibold hover:shadow-lg hover:shadow-yellow-500/25 transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2"
                     >
                       <Star className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
@@ -805,6 +864,20 @@ export default function BookingsPage() {
           </div>
         )}
       </div>
+
+      {/* Rating Modal */}
+      <RatingModal
+        isOpen={showRatingModal}
+        onClose={() => setShowRatingModal(false)}
+        booking={bookingToRate}
+        onSubmit={handleRatingSubmit}
+      />
+      <BookingStatusModal
+        isOpen={showStatusModal}
+        onClose={() => setShowStatusModal(false)}
+        booking={bookingForStatus}
+        onStatusUpdate={handleStatusUpdate}
+      />
     </div>
   );
 }

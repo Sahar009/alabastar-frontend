@@ -234,9 +234,9 @@ export default function Navbar() {
 
             <nav className="hidden md:flex items-center gap-6 text-base font-semibold">
            
-              <Link href="#services" className="text-slate-700 hover:text-orange-600 dark:text-slate-200 dark:hover:text-orange-400 transition-colors">Services</Link>
+              <Link href="/providers" className="text-slate-700 hover:text-orange-600 dark:text-slate-200 dark:hover:text-orange-400 transition-colors">Services</Link>
               <Link href="/providers" className="text-slate-700 hover:text-orange-600 dark:text-slate-200 dark:hover:text-orange-400 transition-colors">Providers</Link>
-              <Link href="#pricing" className="text-slate-700 hover:text-orange-600 dark:text-slate-200 dark:hover:text-orange-400 transition-colors">Pricing</Link>
+              <Link href="/pricing" className="text-slate-700 hover:text-orange-600 dark:text-slate-200 dark:hover:text-orange-400 transition-colors">Pricing</Link>
               <Link href="/contact" className="text-slate-700 hover:text-orange-600 dark:text-slate-200 dark:hover:text-orange-400 transition-colors">Contact</Link>
             </nav>
 
@@ -549,7 +549,7 @@ export default function Navbar() {
               <Link href="/providers" className="inline-flex items-center rounded-full bg-pink-600 hover:bg-pink-700 px-4 py-2 text-white font-semibold shadow-sm hover:shadow-md transition-all active:scale-[.98]">Book a Service</Link>
             </div>
 
-            <MobileMenu user={user} onLogout={handleLogout} />
+            <MobileMenu user={user} onLogout={handleLogout} bookingsCount={bookingsCount} unreadMessagesCount={unreadMessagesCount} />
           </div>
         </div>
       </div>
@@ -567,7 +567,7 @@ interface User {
   provider: string;
 }
 
-function MobileMenu({ user, onLogout }: { user: User | null; onLogout: () => void }) {
+function MobileMenu({ user, onLogout, bookingsCount, unreadMessagesCount }: { user: User | null; onLogout: () => void; bookingsCount: number; unreadMessagesCount: number }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -583,9 +583,9 @@ function MobileMenu({ user, onLogout }: { user: User | null; onLogout: () => voi
       
       {isOpen && (
         <div className="absolute right-0 mt-2 w-64 origin-top-right rounded-2xl border border-white/20 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-xl p-3 space-y-1 z-50">
-          <Link href="#services" className="block rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-orange-900/20 dark:hover:text-orange-400 transition-colors" onClick={() => setIsOpen(false)}>Services</Link>
+          <Link href="/providers" className="block rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-orange-900/20 dark:hover:text-orange-400 transition-colors" onClick={() => setIsOpen(false)}>Services</Link>
           <Link href="/providers" className="block rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-orange-900/20 dark:hover:text-orange-400 transition-colors" onClick={() => setIsOpen(false)}>Providers</Link>
-          <Link href="#pricing" className="block rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-orange-900/20 dark:hover:text-orange-400 transition-colors" onClick={() => setIsOpen(false)}>Pricing</Link>
+          <Link href="/pricing" className="block rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-orange-900/20 dark:hover:text-orange-400 transition-colors" onClick={() => setIsOpen(false)}>Pricing</Link>
           <Link href="/contact" className="block rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-orange-900/20 dark:hover:text-orange-400 transition-colors" onClick={() => setIsOpen(false)}>Contact</Link>
           
           <div className="h-px bg-gradient-to-r from-transparent via-slate-900/10 to-transparent dark:via-white/10 my-1" />

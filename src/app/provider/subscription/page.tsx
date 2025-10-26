@@ -767,7 +767,7 @@ export default function SubscriptionManagement() {
                       </div>
                       <div>
                         <h2 className="text-2xl font-bold">
-                          {validatedSubscription?.planName || featureLimits?.planName || 'Subscription'} Plan
+                          {validatedSubscription?.planName || featureLimits?.planName || 'Subscription'}
                         </h2>
                         <p className="text-white/90">
                           {featureLimits?.hasSubscription ? 'Active Subscription' :
