@@ -510,13 +510,25 @@ export default function BookingsPage() {
                         )}
 
                         {booking.status === 'completed' && (
-                          <button
-                            onClick={() => handleRateProvider(booking)}
-                            className="group px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-2xl font-semibold hover:shadow-lg hover:shadow-yellow-500/25 transition-all duration-300 transform hover:scale-105 flex items-center space-x-2"
-                          >
-                            <Star className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
-                            <span>Rate</span>
-                          </button>
+                          <>
+                            {booking.review ? (
+                              <button
+                                disabled
+                                className="group px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-2xl font-semibold flex items-center space-x-2 opacity-75"
+                              >
+                                <CheckCircle className="w-4 h-4" />
+                                <span>Reviewed</span>
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => handleRateProvider(booking)}
+                                className="group px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-2xl font-semibold hover:shadow-lg hover:shadow-yellow-500/25 transition-all duration-300 transform hover:scale-105 flex items-center space-x-2"
+                              >
+                                <Star className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                                <span>Rate</span>
+                              </button>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>
@@ -839,16 +851,28 @@ export default function BookingsPage() {
                   )}
                   
                   {selectedBooking.status === 'completed' && (
-                    <button
-                      onClick={() => {
-                        setShowDetailsModal(false);
-                        handleRateProvider(selectedBooking);
-                      }}
-                      className="group px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-2xl font-semibold hover:shadow-lg hover:shadow-yellow-500/25 transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2"
-                    >
-                      <Star className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
-                      <span>Rate Service</span>
-                    </button>
+                    <>
+                      {selectedBooking.review ? (
+                        <button
+                          disabled
+                          className="group px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-2xl font-semibold flex items-center justify-center space-x-2 opacity-75"
+                        >
+                          <CheckCircle className="w-5 h-5" />
+                          <span>Reviewed</span>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setShowDetailsModal(false);
+                            handleRateProvider(selectedBooking);
+                          }}
+                          className="group px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-2xl font-semibold hover:shadow-lg hover:shadow-yellow-500/25 transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2"
+                        >
+                          <Star className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
+                          <span>Rate Service</span>
+                        </button>
+                      )}
+                    </>
                   )}
                   
                   <button
