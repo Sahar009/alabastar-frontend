@@ -126,7 +126,7 @@ function SignupContent() {
     '/images/slider17.jpg',
     '/images/pharmacy.jpg',
     '/images/slider14.png',
-    '/images/slider5.jpg',
+    '/images/slider6.jpg',
     '/images/slider18.jpg',
   
   ];

@@ -272,7 +272,7 @@ export default function HomePage() {
     "/images/slider3.jpg", 
     "/images/slider13.png",
     "/images/slider15.png",
-    "/images/slider5.jpg",
+    "/images/slider6.jpg",
     "/images/slider17.png",
     "/images/slider18.png",
     "/images/slider16.png"
@@ -1218,7 +1218,7 @@ Our dedicated customer service team is ready and willing to offer assistance whe
                 {/* First vertical image */}
                 <div className="w-32 h-48 rounded-2xl overflow-hidden shadow-lg border-2 border-white dark:border-slate-800 relative z-10">
                   <Image
-                    src="/images/slider5.jpg"
+                    src="/images/slider14.jpg"
                     alt="Professional working on laptop"
                     width={128}
                     height={192}
