@@ -107,18 +107,130 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
       const base = raw.endsWith('/api') ? raw : `${raw.replace(/\/$/, '')}/api`;
       console.log('API base URL:', base);
       
-      // Fetch reviews
+      // Fetch reviews from API - try provider profile endpoint first (includes reviews)
       try {
-        const reviewsResponse = await fetch(`${base}/providers/${provider.id}/reviews`);
-        if (reviewsResponse.ok) {
-          const reviewsData = await reviewsResponse.json();
-          setReviews(reviewsData.data?.reviews || generateMockReviews());
+        // Try provider profile endpoint first (includes reviews)
+        const profileUrl = `${base}/providers/profile/${provider.id}`;
+        console.log('[ProviderProfileModal] Fetching provider profile with reviews from:', profileUrl);
+        
+        let apiReviews = [];
+        let reviewsData = null;
+        
+        const profileResponse = await fetch(profileUrl);
+        
+        if (profileResponse.ok) {
+          const profileData = await profileResponse.json();
+          
+          console.log('[ProviderProfileModal] Provider profile API response:', {
+            success: profileData.success,
+            hasReviews: !!profileData.data?.reviews,
+            reviewCount: profileData.data?.reviews?.length || 0,
+            dataStructure: profileData.data,
+          });
+          
+          if (profileData.success && profileData.data?.reviews && Array.isArray(profileData.data.reviews)) {
+            apiReviews = profileData.data.reviews;
+            console.log('[ProviderProfileModal] ✅ Got reviews from provider profile endpoint');
+          }
+        }
+        
+        // Fallback to reviews endpoint if profile endpoint doesn't have reviews
+        if (apiReviews.length === 0) {
+          const reviewsUrl = `${base}/reviews/provider/${provider.id}`;
+          console.log('[ProviderProfileModal] Falling back to reviews endpoint:', reviewsUrl);
+          
+          const reviewsResponse = await fetch(reviewsUrl);
+          
+          if (reviewsResponse.ok) {
+            reviewsData = await reviewsResponse.json();
+            
+            console.log('[ProviderProfileModal] Reviews API response:', {
+              success: reviewsData.success,
+              hasData: !!reviewsData.data,
+              reviewCount: reviewsData.data?.reviews?.length || 0,
+              dataStructure: reviewsData.data,
+            });
+            
+            if (reviewsData.success && reviewsData.data?.reviews && Array.isArray(reviewsData.data.reviews)) {
+              apiReviews = reviewsData.data.reviews;
+              console.log('[ProviderProfileModal] ✅ Got reviews from reviews endpoint');
+            }
+          }
+        }
+        
+        if (apiReviews.length > 0) {
+            
+            // Transform API reviews to component format
+            const transformedReviews: Review[] = apiReviews.map((review: any) => {
+              // Format date
+              const reviewDate = review.createdAt 
+                ? new Date(review.createdAt)
+                : new Date();
+              
+              const now = new Date();
+              const diffInMs = now.getTime() - reviewDate.getTime();
+              const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+              const diffInWeeks = Math.floor(diffInDays / 7);
+              const diffInMonths = Math.floor(diffInDays / 30);
+              
+              let dateStr = '';
+              if (diffInDays === 0) {
+                dateStr = 'Today';
+              } else if (diffInDays === 1) {
+                dateStr = '1 day ago';
+              } else if (diffInDays < 7) {
+                dateStr = `${diffInDays} days ago`;
+              } else if (diffInWeeks === 1) {
+                dateStr = '1 week ago';
+              } else if (diffInWeeks < 4) {
+                dateStr = `${diffInWeeks} weeks ago`;
+              } else if (diffInMonths === 1) {
+                dateStr = '1 month ago';
+              } else if (diffInMonths < 12) {
+                dateStr = `${diffInMonths} months ago`;
+              } else {
+                dateStr = reviewDate.toLocaleDateString();
+              }
+              
+              return {
+                id: review.id || `review-${Math.random()}`,
+                userName: review.User?.fullName || review.user?.fullName || 'Anonymous',
+                userAvatar: review.User?.avatarUrl || review.user?.avatarUrl || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face',
+                rating: review.rating || 0,
+                comment: review.comment || '',
+                date: dateStr,
+                service: review.booking?.serviceId || undefined,
+              };
+            });
+            
+            console.log('[ProviderProfileModal] ✅ Using REAL reviews from API:', {
+              count: transformedReviews.length,
+              reviews: transformedReviews.map(r => ({
+                id: r.id,
+                userName: r.userName,
+                rating: r.rating,
+                date: r.date,
+                hasComment: !!r.comment,
+              })),
+            });
+            
+            setReviews(transformedReviews);
+          } else {
+            console.warn('[ProviderProfileModal] ⚠️ No reviews in API response, showing empty state');
+            setReviews([]);
+          }
         } else {
-          setReviews(generateMockReviews());
+          const errorText = await reviewsResponse.text();
+          console.warn('[ProviderProfileModal] ⚠️ Reviews API request failed:', {
+            status: reviewsResponse.status,
+            statusText: reviewsResponse.statusText,
+            error: errorText,
+          });
+          setReviews([]);
         }
       } catch (error) {
-        console.log('Using mock reviews:', error);
-        setReviews(generateMockReviews());
+        console.error('[ProviderProfileModal] ❌ Error fetching reviews:', error);
+        setReviews([]);
       }
 
       // Fetch brand images

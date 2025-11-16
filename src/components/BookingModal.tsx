@@ -50,8 +50,17 @@ export default function BookingModal({ provider, isOpen, onClose, onBooked }: Bo
     }
     
     try {
+      // IMPORTANT: Always use provider.id which should be the ProviderProfile.id
+      // The backend will handle conversion if needed, but we should send the correct ID
+      const providerIdToSend = provider.id || provider.providerUserId || provider.user?.id;
+      
+      if (!providerIdToSend) {
+        toast.error('Provider information is invalid. Please try again.');
+        return;
+      }
+      
       const result = await createBooking({
-        providerId: provider.providerUserId || provider.user.id || provider.id,
+        providerId: providerIdToSend, // Backend will resolve this to ProviderProfile.id if it's a userId
         scheduledAt: new Date(selectedSlot).toISOString(),
         locationCity: provider.locationCity,
         locationState: provider.locationState,
