@@ -113,8 +113,7 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
         const profileUrl = `${base}/providers/profile/${provider.id}`;
         console.log('[ProviderProfileModal] Fetching provider profile with reviews from:', profileUrl);
         
-        let apiReviews = [];
-        let reviewsData = null;
+        let apiReviews: any[] = [];
         
         const profileResponse = await fetch(profileUrl);
         
@@ -128,7 +127,7 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
             dataStructure: profileData.data,
           });
           
-          if (profileData.success && profileData.data?.reviews && Array.isArray(profileData.data.reviews)) {
+          if (profileData.success && Array.isArray(profileData.data?.reviews)) {
             apiReviews = profileData.data.reviews;
             console.log('[ProviderProfileModal] ✅ Got reviews from provider profile endpoint');
           }
@@ -142,7 +141,7 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
           const reviewsResponse = await fetch(reviewsUrl);
           
           if (reviewsResponse.ok) {
-            reviewsData = await reviewsResponse.json();
+            const reviewsData = await reviewsResponse.json();
             
             console.log('[ProviderProfileModal] Reviews API response:', {
               success: reviewsData.success,
@@ -151,7 +150,7 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
               dataStructure: reviewsData.data,
             });
             
-            if (reviewsData.success && reviewsData.data?.reviews && Array.isArray(reviewsData.data.reviews)) {
+            if (reviewsData.success && Array.isArray(reviewsData.data?.reviews)) {
               apiReviews = reviewsData.data.reviews;
               console.log('[ProviderProfileModal] ✅ Got reviews from reviews endpoint');
             }
@@ -159,73 +158,62 @@ export default function ProviderProfileModal({ provider, isOpen, onClose, onBook
         }
         
         if (apiReviews.length > 0) {
+          // Transform API reviews to component format
+          const transformedReviews: Review[] = apiReviews.map((review: any) => {
+            const reviewDate = review.createdAt 
+              ? new Date(review.createdAt)
+              : new Date();
             
-            // Transform API reviews to component format
-            const transformedReviews: Review[] = apiReviews.map((review: any) => {
-              // Format date
-              const reviewDate = review.createdAt 
-                ? new Date(review.createdAt)
-                : new Date();
-              
-              const now = new Date();
-              const diffInMs = now.getTime() - reviewDate.getTime();
-              const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-              const diffInWeeks = Math.floor(diffInDays / 7);
-              const diffInMonths = Math.floor(diffInDays / 30);
-              
-              let dateStr = '';
-              if (diffInDays === 0) {
-                dateStr = 'Today';
-              } else if (diffInDays === 1) {
-                dateStr = '1 day ago';
-              } else if (diffInDays < 7) {
-                dateStr = `${diffInDays} days ago`;
-              } else if (diffInWeeks === 1) {
-                dateStr = '1 week ago';
-              } else if (diffInWeeks < 4) {
-                dateStr = `${diffInWeeks} weeks ago`;
-              } else if (diffInMonths === 1) {
-                dateStr = '1 month ago';
-              } else if (diffInMonths < 12) {
-                dateStr = `${diffInMonths} months ago`;
-              } else {
-                dateStr = reviewDate.toLocaleDateString();
-              }
-              
-              return {
-                id: review.id || `review-${Math.random()}`,
-                userName: review.User?.fullName || review.user?.fullName || 'Anonymous',
-                userAvatar: review.User?.avatarUrl || review.user?.avatarUrl || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face',
-                rating: review.rating || 0,
-                comment: review.comment || '',
-                date: dateStr,
-                service: review.booking?.serviceId || undefined,
-              };
-            });
+            const now = new Date();
+            const diffInMs = now.getTime() - reviewDate.getTime();
+            const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+            const diffInWeeks = Math.floor(diffInDays / 7);
+            const diffInMonths = Math.floor(diffInDays / 30);
             
-            console.log('[ProviderProfileModal] ✅ Using REAL reviews from API:', {
-              count: transformedReviews.length,
-              reviews: transformedReviews.map(r => ({
-                id: r.id,
-                userName: r.userName,
-                rating: r.rating,
-                date: r.date,
-                hasComment: !!r.comment,
-              })),
-            });
+            let dateStr = '';
+            if (diffInDays === 0) {
+              dateStr = 'Today';
+            } else if (diffInDays === 1) {
+              dateStr = '1 day ago';
+            } else if (diffInDays < 7) {
+              dateStr = `${diffInDays} days ago`;
+            } else if (diffInWeeks === 1) {
+              dateStr = '1 week ago';
+            } else if (diffInWeeks < 4) {
+              dateStr = `${diffInWeeks} weeks ago`;
+            } else if (diffInMonths === 1) {
+              dateStr = '1 month ago';
+            } else if (diffInMonths < 12) {
+              dateStr = `${diffInMonths} months ago`;
+            } else {
+              dateStr = reviewDate.toLocaleDateString();
+            }
             
-            setReviews(transformedReviews);
-          } else {
-            console.warn('[ProviderProfileModal] ⚠️ No reviews in API response, showing empty state');
-            setReviews([]);
-          }
-        } else {
-          const errorText = await reviewsResponse.text();
-          console.warn('[ProviderProfileModal] ⚠️ Reviews API request failed:', {
-            status: reviewsResponse.status,
-            statusText: reviewsResponse.statusText,
-            error: errorText,
+            return {
+              id: review.id || `review-${Math.random()}`,
+              userName: review.User?.fullName || review.user?.fullName || 'Anonymous',
+              userAvatar: review.User?.avatarUrl || review.user?.avatarUrl || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face',
+              rating: review.rating || 0,
+              comment: review.comment || '',
+              date: dateStr,
+              service: review.booking?.serviceId || undefined,
+            };
           });
+          
+          console.log('[ProviderProfileModal] ✅ Using REAL reviews from API:', {
+            count: transformedReviews.length,
+            reviews: transformedReviews.map(r => ({
+              id: r.id,
+              userName: r.userName,
+              rating: r.rating,
+              date: r.date,
+              hasComment: !!r.comment,
+            })),
+          });
+          
+          setReviews(transformedReviews);
+        } else {
+          console.warn('[ProviderProfileModal] ⚠️ No reviews in API response, showing empty state');
           setReviews([]);
         }
       } catch (error) {

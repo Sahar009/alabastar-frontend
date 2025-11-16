@@ -416,10 +416,10 @@ export default function ProviderBookings() {
 
                     {/* Actions */}
                     <div className="flex flex-col sm:flex-row gap-3">
-                      {(booking.status === 'pending' || booking.status === 'requested') && (
+                      {booking.status === 'pending' && (
                         <>
                           <button
-                            onClick={() => handleStatusChange(booking.id, 'accepted')}
+                            onClick={() => handleStatusChange(booking.id, 'confirmed')}
                             disabled={updating === booking.id}
                             className="group px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-2xl font-semibold hover:shadow-lg hover:shadow-green-500/25 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 flex items-center space-x-2"
                           >
@@ -445,7 +445,7 @@ export default function ProviderBookings() {
                         </>
                       )}
                       
-                      {(booking.status === 'confirmed' || booking.status === 'accepted' || booking.status === 'in_progress') && (
+                      {booking.status === 'confirmed' && (
                         <button
                           onClick={() => handleStatusChange(booking.id, 'completed')}
                           disabled={updating === booking.id}
