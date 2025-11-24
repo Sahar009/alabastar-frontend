@@ -2,7 +2,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { Provider } from '../../types/provider';
 
 // Normalize base URL to always include `/api`
-const RAW_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const RAW_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://backend.alabastar.ng';
 const BASE_URL = RAW_BASE.endsWith('/api')
   ? RAW_BASE
   : `${RAW_BASE.replace(/\/$/, '')}/api`;

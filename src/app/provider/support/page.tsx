@@ -200,7 +200,7 @@ export default function ProviderSupport() {
                 </div>
                 <div>
                   <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">Email Us</p>
-                  <p className="text-lg font-bold text-slate-900 dark:text-slate-50">support@alabastar.com</p>
+                  <p className="text-lg font-bold text-slate-900 dark:text-slate-50">support@alabastar.ng</p>
                 </div>
               </div>
             </div>
