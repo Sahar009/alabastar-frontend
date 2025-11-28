@@ -1012,7 +1012,7 @@ export default function HomePage() {
                 <div className="relative">
                   <div className="absolute inset-0 bg-white/20 rounded-full blur-lg animate-pulse"></div>
                   <div className="relative bg-white/10 backdrop-blur-sm rounded-full p-3 border border-white/30">
-                    <Sparkles className="w-6 h-6 text-white animate-spin" />
+                    <CheckCircle className="w-6 h-6 text-white" />
                   </div>
                 </div>
               </div>
@@ -1218,7 +1218,7 @@ Our dedicated customer service team is ready and willing to offer assistance whe
                 {/* First vertical image */}
                 <div className="w-32 h-48 rounded-2xl overflow-hidden shadow-lg border-2 border-white dark:border-slate-800 relative z-10">
                   <Image
-                    src="/images/slider14.jpg"
+                    src="/images/slider14.png"
                     alt="Professional working on laptop"
                     width={128}
                     height={192}

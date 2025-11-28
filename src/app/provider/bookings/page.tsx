@@ -65,18 +65,16 @@ export default function ProviderBookings() {
 
       if (response.ok) {
         const data = await response.json();
-        // Backend returns: { success: true, data: { bookings: [], pagination: {...} } }
-        const bookingsList = data?.data?.bookings || data?.bookings || [];
-        setBookings(bookingsList);
+        setBookings(data.bookings || []);
         
         // Calculate stats
-        const total = bookingsList.length || 0;
-        const pending = bookingsList.filter((b: any) => b.status === 'pending' || b.status === 'requested').length || 0;
-        const confirmed = bookingsList.filter((b: any) => b.status === 'confirmed' || b.status === 'accepted').length || 0;
-        const completed = bookingsList.filter((b: any) => b.status === 'completed').length || 0;
-        const cancelled = bookingsList.filter((b: any) => b.status === 'cancelled' || b.status === 'declined').length || 0;
-        const totalEarnings = bookingsList.reduce((sum: number, b: any) => {
-          return b.status === 'completed' ? sum + (parseFloat(b.totalAmount) || 0) : sum;
+        const total = data.bookings?.length || 0;
+        const pending = data.bookings?.filter((b: any) => b.status === 'pending').length || 0;
+        const confirmed = data.bookings?.filter((b: any) => b.status === 'confirmed').length || 0;
+        const completed = data.bookings?.filter((b: any) => b.status === 'completed').length || 0;
+        const cancelled = data.bookings?.filter((b: any) => b.status === 'cancelled').length || 0;
+        const totalEarnings = data.bookings?.reduce((sum: number, b: any) => {
+          return b.status === 'completed' ? sum + (b.totalAmount || 0) : sum;
         }, 0) || 0;
 
         setStats({ total, pending, confirmed, completed, cancelled, totalEarnings });
@@ -136,29 +134,7 @@ export default function ProviderBookings() {
   };
 
   const filteredBookings = bookings.filter(booking => {
-    // Backend uses: 'requested', 'accepted', 'in_progress', 'completed', 'cancelled'
-    // UI uses: 'pending', 'confirmed', 'completed', 'cancelled'
-    let matchesFilter = filter === 'all';
-    if (!matchesFilter) {
-      const status = (booking.status || '').toLowerCase();
-      switch (filter) {
-        case 'pending':
-          matchesFilter = status === 'requested' || status === 'pending';
-          break;
-        case 'confirmed':
-          matchesFilter = status === 'accepted' || status === 'confirmed';
-          break;
-        case 'completed':
-          matchesFilter = status === 'completed';
-          break;
-        case 'cancelled':
-          matchesFilter = status === 'cancelled' || status === 'declined' || status === 'rejected';
-          break;
-        default:
-          matchesFilter = status === filter;
-      }
-    }
-    
+    const matchesFilter = filter === 'all' || booking.status === filter;
     const matchesSearch = booking.customer?.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          booking.service?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          booking.notes?.toLowerCase().includes(searchTerm.toLowerCase());

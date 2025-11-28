@@ -675,9 +675,9 @@ export default function BookingsPage() {
                           <User className="w-4 h-4 text-blue-600" />
                         </div>
                         <div>
-                          <p className="text-sm text-slate-600 dark:text-slate-400">Provider Name</p>
+                          <p className="text-sm text-slate-600 dark:text-slate-400">Provider Business Name</p>
                           <p className="font-semibold text-slate-900 dark:text-white">
-                            {selectedBooking.providerProfile?.User?.fullName || 'N/A'}
+                            {selectedBooking.providerProfile?.businessName || 'N/A'}
                           </p>
                         </div>
                       </div>
