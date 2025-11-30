@@ -3,7 +3,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import type { JSX } from "react";
-import { Wrench, Zap, Truck, Fan, Hammer, PaintRoller, Bug, Shirt, Ruler, Camera, Sparkles, Search, ShieldCheck, Star, Apple, Play, Users, Settings, MapPin, ArrowRight, CheckCircle, UserPlus, Navigation, Cog, Pill, Store, GraduationCap, Home, Scale, Bed } from "lucide-react";
+import { Wrench, Zap, Truck, Fan, Hammer, PaintRoller, Bug, Shirt, Ruler, Camera, Layers, Search, ShieldCheck, Star, Apple, Play, Users, Settings, MapPin, ArrowRight, CheckCircle, UserPlus, Navigation, Cog, Pill, Store, GraduationCap, Home, Scale, Bed } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import FAQComponent from "@/components/FAQ";
 import Link from "next/link";
@@ -1010,10 +1010,12 @@ export default function HomePage() {
               {/* Icon */}
               <div className="mb-4 flex justify-center">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-white/20 rounded-full blur-lg animate-pulse"></div>
-                  <div className="relative bg-white/10 backdrop-blur-sm rounded-full p-3 border border-white/30">
-                    <CheckCircle className="w-6 h-6 text-white" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-white/10 rounded-full blur-xl animate-pulse"></div>
+                  <div className="absolute inset-0 bg-white/20 rounded-full blur-md"></div>
+                  <div className="relative bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-md rounded-full p-4 border border-white/40 shadow-lg">
+                    <Layers className="w-8 h-8 text-white drop-shadow-lg" strokeWidth={2.5} />
                   </div>
+                  <div className="absolute -inset-1 bg-white/10 rounded-full blur-sm animate-ping opacity-75"></div>
                 </div>
               </div>
               
