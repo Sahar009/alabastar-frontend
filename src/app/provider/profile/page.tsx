@@ -78,24 +78,49 @@ export default function ProviderProfile() {
   const [currentProviderId, setCurrentProviderId] = useState<string | null>(null);
   const [categories, setCategories] = useState<any[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
+  const [hasToken, setHasToken] = useState<boolean>(false);
+  const [profileLoaded, setProfileLoaded] = useState<boolean>(false);
+  const [showSubcategoryModal, setShowSubcategoryModal] = useState(false);
+  const [availableSubcategories, setAvailableSubcategories] = useState<string[]>([]);
+  const [loadingSubcategories, setLoadingSubcategories] = useState(false);
+  const [selectedCategoryForSubcat, setSelectedCategoryForSubcat] = useState<string>('');
+
+  // Check for token on mount
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    setHasToken(!!token);
+  }, []);
 
   // Initialize form data from API
   useEffect(() => {
-    console.log('Provider Profile useEffect - authLoading:', authLoading, 'user:', user);
+    console.log('Provider Profile useEffect - authLoading:', authLoading, 'user:', user, 'profileLoaded:', profileLoaded);
+    
+    // Don't run if profile already loaded - we're done!
+    if (profileLoaded) {
+      return;
+    }
     
     if (!authLoading) {
-      if (!user) {
-        // User not authenticated, redirect to login
-        console.log('No user found, redirecting to signin');
+      // Check for token first - if token exists, try to fetch profile even if user is not in context
+      const token = localStorage.getItem('token');
+      setHasToken(!!token);
+      
+      // If we have a token, always try to fetch profile (don't redirect)
+      if (token) {
+        console.log('Token found, fetching provider profile (user:', !!user, ')');
+        fetchCurrentProviderProfile();
+        return;
+      }
+      
+      // Only redirect if we have NO token AND NO user AND profile hasn't loaded
+      if (!token && !user && !profileLoaded) {
+        console.log('No token and no user found, redirecting to signin');
         router.push('/provider/signin');
         return;
       }
-
-      // User is authenticated, fetch fresh data from API
-      console.log('User authenticated, fetching fresh data from API');
-      fetchCurrentProviderProfile();
     }
-  }, [authLoading, user, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, profileLoaded]);
 
   // Fetch categories on component mount
   useEffect(() => {
@@ -164,6 +189,104 @@ export default function ProviderProfile() {
     }
   };
 
+  // Fetch subcategories for a category
+  const loadSubcategories = async (category: string) => {
+    if (!category) return;
+    
+    try {
+      setLoadingSubcategories(true);
+      const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${base}/api/providers/subcategories/${category}?limit=30`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      const data = await response.json();
+      console.log('[ProviderProfile] Subcategories API response:', data);
+      
+      if (data.success && data.data?.subcategories) {
+        console.log('[ProviderProfile] Setting subcategories:', data.data.subcategories);
+        setAvailableSubcategories(data.data.subcategories);
+      } else {
+        console.warn('[ProviderProfile] No subcategories in response');
+        setAvailableSubcategories([]);
+      }
+    } catch (error) {
+      console.error('Error loading subcategories:', error);
+      setAvailableSubcategories([]);
+    } finally {
+      setLoadingSubcategories(false);
+    }
+  };
+
+  // Handle category selection - opens subcategory modal
+  const handleCategorySelect = async (categoryValue: string) => {
+    // Update category in formData
+    setFormData(prev => ({ ...prev, category: categoryValue }));
+    
+    // Load and show subcategories
+    setSelectedCategoryForSubcat(categoryValue);
+    await loadSubcategories(categoryValue);
+    setShowSubcategoryModal(true);
+  };
+
+  // Handle edit subcategories button - loads subcategories for existing category
+  const handleEditSubcategories = async () => {
+    if (!formData.category) {
+      console.warn('[ProviderProfile] No category selected');
+      return;
+    }
+    
+    console.log('[ProviderProfile] Opening subcategory modal for category:', formData.category);
+    console.log('[ProviderProfile] Current subcategories:', formData.subcategories);
+    
+    // Open modal first to show loading state
+    setShowSubcategoryModal(true);
+    setSelectedCategoryForSubcat(formData.category);
+    
+    // Then load subcategories
+    await loadSubcategories(formData.category);
+    
+    console.log('[ProviderProfile] Modal opened, subcategories loaded');
+  };
+
+  // Handle subcategory toggle
+  const handleSubcategoryToggle = (subcategory: string) => {
+    const normalized = subcategory.toLowerCase().trim();
+    const currentSubcats = formData.subcategories || [];
+    
+    // Check if already selected (case-insensitive comparison)
+    const isAlreadySelected = currentSubcats.some((item: string) => 
+      item.toLowerCase().trim() === normalized
+    );
+    
+    if (isAlreadySelected) {
+      // Remove if already selected
+      setFormData(prev => ({
+        ...prev,
+        subcategories: currentSubcats.filter((item: string) => 
+          item.toLowerCase().trim() !== normalized
+        )
+      }));
+    } else {
+      // Add if not selected (store normalized version)
+      setFormData(prev => ({
+        ...prev,
+        subcategories: [...currentSubcats, normalized]
+      }));
+    }
+  };
+
+  // Close subcategory modal
+  const handleCloseSubcategoryModal = () => {
+    setShowSubcategoryModal(false);
+    setAvailableSubcategories([]);
+    setSelectedCategoryForSubcat('');
+  };
+
   // Fetch current provider profile from API
   const fetchCurrentProviderProfile = async () => {
     try {
@@ -171,7 +294,10 @@ export default function ProviderProfile() {
       const token = localStorage.getItem('token');
       if (!token) {
         console.error('No authentication token found');
-        router.push('/provider/signin');
+        // Only redirect if user is actually not authenticated
+        if (!user) {
+          router.push('/provider/signin');
+        }
         return;
       }
 
@@ -248,29 +374,52 @@ export default function ProviderProfile() {
 
           // Set current provider ID for updates
           setCurrentProviderId(providerData.id);
+          
+          // Mark profile as loaded to prevent redirects
+          setProfileLoaded(true);
 
-          // Fetch additional data in parallel
+          // Fetch additional data in parallel (don't let failures block the page)
           if (providerData.id) {
-            await Promise.all([
+            Promise.allSettled([
               fetchProviderRating(providerData.id, token),
               fetchFeatureLimits(providerData.id, token)
-            ]);
+            ]).catch(error => {
+              console.error('Error fetching additional provider data:', error);
+            });
           }
 
           console.log('Current provider profile loaded from API:', providerData);
         }
       } else {
-        // Handle 401 Unauthorized
+        // Handle 401 Unauthorized - only redirect if truly unauthenticated
         if (response.status === 401) {
-          console.error('Authentication failed, redirecting to login');
+          const errorData = await response.json().catch(() => ({}));
+          console.error('Authentication failed:', errorData);
+          
+          // Clear invalid token and redirect only if we get a clear 401
           localStorage.removeItem('token');
+          toast.error('Session expired. Please sign in again.');
           router.push('/provider/signin');
           return;
         }
-        console.error('Failed to fetch current provider profile:', response.status);
+        
+        // For other errors, just log them and show error message
+        const errorText = await response.text().catch(() => 'Unknown error');
+        console.error('Failed to fetch current provider profile:', response.status, errorText);
+        
+        // Show user-friendly error for network/server issues
+        if (response.status >= 500) {
+          toast.error('Server error. Please try again later.');
+        } else {
+          toast.error('Failed to load profile. Please refresh the page.');
+        }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching current provider profile:', error);
+      // Don't redirect on network errors - just show error
+      if (error.message?.includes('fetch')) {
+        toast.error('Network error. Please check your connection.');
+      }
     } finally {
       setLoading(false);
     }
@@ -318,14 +467,16 @@ export default function ProviderProfile() {
         console.log('Documents API Response:', responseData);
         setDocuments(responseData.data?.documents || responseData.data || []);
       } else {
-        // Handle 401 Unauthorized
+        // Handle 401 Unauthorized - but don't redirect immediately
         if (response.status === 401) {
           console.error('Authentication failed in documents fetch');
-          localStorage.removeItem('token');
-          router.push('/provider/signin');
+          if (!user) {
+            localStorage.removeItem('token');
+            router.push('/provider/signin');
+          }
           return;
         }
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({}));
         console.error('Documents fetch error:', errorData);
       }
     } catch (error) {
@@ -350,11 +501,13 @@ export default function ProviderProfile() {
         console.log('Feature limits:', data.data);
         setFeatureLimits(data.data);
       } else {
-        // Handle 401 Unauthorized
+        // Handle 401 Unauthorized - but don't redirect immediately
         if (response.status === 401) {
           console.error('Authentication failed in feature limits fetch');
-          localStorage.removeItem('token');
-          router.push('/provider/signin');
+          if (!user) {
+            localStorage.removeItem('token');
+            router.push('/provider/signin');
+          }
           return;
         }
         console.error('Feature limits fetch error:', response.status);
@@ -395,11 +548,15 @@ export default function ProviderProfile() {
       });
 
       if (!response.ok) {
-        // Handle 401 Unauthorized
+        // Handle 401 Unauthorized - but don't redirect immediately
         if (response.status === 401) {
           console.error('Authentication failed during profile update');
-          localStorage.removeItem('token');
-          router.push('/provider/signin');
+          if (!user) {
+            localStorage.removeItem('token');
+            router.push('/provider/signin');
+          } else {
+            toast.error('Session expired. Please refresh the page.');
+          }
           return;
         }
         throw new Error('Failed to update provider profile');
@@ -488,14 +645,18 @@ export default function ProviderProfile() {
           await fetchCurrentProviderProfile();
         }
       } else {
-        // Handle 401 Unauthorized
+        // Handle 401 Unauthorized - but don't redirect immediately
         if (response.status === 401) {
           console.error('Authentication failed during document upload');
-          localStorage.removeItem('token');
-          router.push('/provider/signin');
+          if (!user) {
+            localStorage.removeItem('token');
+            router.push('/provider/signin');
+          } else {
+            toast.error('Session expired. Please refresh the page.');
+          }
           return;
         }
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || 'Failed to upload document');
       }
     } catch (error: any) {
@@ -580,11 +741,15 @@ export default function ProviderProfile() {
         // Refresh current provider profile from API
         await fetchCurrentProviderProfile();
       } else {
-        // Handle 401 Unauthorized
+        // Handle 401 Unauthorized - but don't redirect immediately
         if (response.status === 401) {
           console.error('Authentication failed during video deletion');
-          localStorage.removeItem('token');
-          router.push('/provider/signin');
+          if (!user) {
+            localStorage.removeItem('token');
+            router.push('/provider/signin');
+          } else {
+            toast.error('Session expired. Please refresh the page.');
+          }
           return;
         }
         throw new Error('Failed to delete video');
@@ -623,11 +788,15 @@ export default function ProviderProfile() {
           await fetchCurrentProviderProfile();
         }
       } else {
-        // Handle 401 Unauthorized
+        // Handle 401 Unauthorized - but don't redirect immediately
         if (response.status === 401) {
           console.error('Authentication failed during document deletion');
-          localStorage.removeItem('token');
-          router.push('/provider/signin');
+          if (!user) {
+            localStorage.removeItem('token');
+            router.push('/provider/signin');
+          } else {
+            toast.error('Session expired. Please refresh the page.');
+          }
           return;
         }
         throw new Error('Failed to delete document');
@@ -679,8 +848,11 @@ export default function ProviderProfile() {
     );
   }
 
-  // Show error if no user data after loading
-  if (!authLoading && !loading && !user) {
+  // Show error only if no token, no user, no profile data, and not loading
+  // If we have currentProviderId or formData populated, it means we successfully loaded the profile
+  const hasProfileData = currentProviderId || formData.businessName || formData.email;
+  
+  if (!authLoading && !loading && !user && !hasToken && !hasProfileData) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center">
         <div className="text-center">
@@ -951,7 +1123,7 @@ export default function ProviderProfile() {
                             <select
                               name="category"
                               value={formData.category}
-                              onChange={handleInputChange}
+                              onChange={(e) => handleCategorySelect(e.target.value)}
                               className="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-2xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#ec4899] focus:border-transparent transition-all duration-200"
                             >
                               <option value="">Select Category</option>
@@ -974,12 +1146,50 @@ export default function ProviderProfile() {
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                           Subcategories
                         </label>
-                        <div className="flex items-center space-x-3 p-3 bg-slate-50 dark:bg-slate-700 rounded-xl">
-                          <Briefcase className="w-4 h-4 text-slate-400" />
-                          <span className="text-slate-900 dark:text-slate-100">
-                            {formData.subcategories?.length > 0 ? formData.subcategories.join(', ') : 'None'}
-                          </span>
-                        </div>
+                        {editing ? (
+                          <div>
+                            <div className="flex flex-wrap gap-2 mb-3">
+                              {formData.subcategories?.length > 0 ? (
+                                formData.subcategories.map((subcat) => (
+                                  <span
+                                    key={subcat}
+                                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-pink-50 dark:bg-pink-900/20 text-pink-700 dark:text-pink-300 rounded-full text-sm font-medium"
+                                  >
+                                    {subcat.replace(/_/g, ' ')}
+                                    <button
+                                      type="button"
+                                      onClick={() => handleSubcategoryToggle(subcat)}
+                                      className="hover:bg-pink-200 dark:hover:bg-pink-800 rounded-full p-0.5"
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </button>
+                                  </span>
+                                ))
+                              ) : (
+                                <span className="text-slate-500 dark:text-slate-400 text-sm">No subcategories selected</span>
+                              )}
+                            </div>
+                            {formData.category && (
+                              <button
+                                type="button"
+                                onClick={handleEditSubcategories}
+                                className="w-full px-4 py-2.5 border-2 border-dashed border-pink-300 dark:border-pink-700 rounded-xl text-pink-600 dark:text-pink-400 hover:bg-pink-50 dark:hover:bg-pink-900/20 transition-all duration-200 font-medium"
+                              >
+                                {formData.subcategories?.length > 0 ? 'Edit Subcategories' : 'Select Subcategories'}
+                              </button>
+                            )}
+                            {!formData.category && (
+                              <p className="text-sm text-slate-500 dark:text-slate-400">Please select a category first</p>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex items-center space-x-3 p-3 bg-slate-50 dark:bg-slate-700 rounded-xl">
+                            <Briefcase className="w-4 h-4 text-slate-400" />
+                            <span className="text-slate-900 dark:text-slate-100">
+                              {formData.subcategories?.length > 0 ? formData.subcategories.map(s => s.replace(/_/g, ' ')).join(', ') : 'None'}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
                     
@@ -1196,7 +1406,7 @@ export default function ProviderProfile() {
                         Photo Limit Reached
                       </p>
                       <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
-                        You've used all {featureLimits.features.maxPhotos} photos in your {featureLimits.planName} plan. 
+                        You&apos;ve used all {featureLimits.features.maxPhotos} photos in your {featureLimits.planName} plan. 
                         Upgrade to Premium for up to 10 photos!
                       </p>
                       <button
@@ -1508,6 +1718,98 @@ export default function ProviderProfile() {
                   Upgrade Now
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Subcategory Selection Modal */}
+      {showSubcategoryModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-3xl max-w-2xl w-full max-h-[80vh] shadow-2xl shadow-pink-500/20 border border-white/20 dark:border-slate-700/50 flex flex-col">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Select Subcategories</h2>
+                <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                  Choose the services you offer. You can add custom ones later.
+                </p>
+              </div>
+              <button
+                onClick={handleCloseSubcategoryModal}
+                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="flex-1 overflow-y-auto p-6">
+              {/* Debug: Remove in production */}
+              {process.env.NODE_ENV === 'development' && (
+                <div className="mb-4 p-2 bg-slate-100 dark:bg-slate-700 rounded text-xs text-slate-600 dark:text-slate-400">
+                  Debug: Loading={loadingSubcategories.toString()}, Count={availableSubcategories.length}
+                </div>
+              )}
+              {loadingSubcategories ? (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <Loader2 className="w-8 h-8 text-[#ec4899] animate-spin mb-4" />
+                  <p className="text-slate-600 dark:text-slate-400">Loading subcategories...</p>
+                </div>
+              ) : availableSubcategories.length > 0 ? (
+                <div className="grid grid-cols-1 gap-2">
+                  {availableSubcategories.map((subcat, index) => {
+                    const normalized = subcat.toLowerCase().trim();
+                    const currentSubcats = formData.subcategories || [];
+                    const isSelected = currentSubcats.some((item: string) => item.toLowerCase().trim() === normalized);
+                    return (
+                      <button
+                        key={`${subcat}-${index}`}
+                        type="button"
+                        onClick={() => handleSubcategoryToggle(subcat)}
+                        className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-200 text-left ${
+                          isSelected
+                            ? 'border-[#ec4899] bg-pink-50 dark:bg-pink-900/20'
+                            : 'border-slate-200 dark:border-slate-700 hover:border-pink-300 dark:hover:border-pink-700 bg-white dark:bg-slate-700'
+                        }`}
+                      >
+                        <span
+                          className={`font-medium capitalize ${
+                            isSelected
+                              ? 'text-[#ec4899] dark:text-pink-300'
+                              : 'text-slate-900 dark:text-slate-100'
+                          }`}
+                        >
+                          {subcat.replace(/_/g, ' ')}
+                        </span>
+                        {isSelected && (
+                          <CheckCircle className="w-5 h-5 text-[#ec4899]" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <Briefcase className="w-12 h-12 text-slate-300 dark:text-slate-600 mb-4" />
+                  <p className="text-slate-600 dark:text-slate-400 text-center mb-2">
+                    No popular subcategories found for this category.
+                  </p>
+                  <p className="text-sm text-slate-500 dark:text-slate-500 text-center">
+                    You can add custom subcategories using the input field on the profile page.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-6 border-t border-slate-200 dark:border-slate-700">
+              <button
+                onClick={handleCloseSubcategoryModal}
+                className="w-full px-6 py-3 bg-gradient-to-r from-pink-600 to-orange-500 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-pink-500/25 transition-all duration-300 transform hover:scale-105"
+              >
+                Done
+              </button>
             </div>
           </div>
         </div>
