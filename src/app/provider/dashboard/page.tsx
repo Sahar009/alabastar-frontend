@@ -284,6 +284,11 @@ export default function ProviderDashboard() {
         if (profileData.success && profileData.data) {
           const profile = profileData.data;
           
+          // Update providerProfile state with fresh data from API
+          setProviderProfile(profile);
+          // Also update localStorage to keep it in sync
+          localStorage.setItem('providerProfile', JSON.stringify(profile));
+          
           // If no referral code, generate one
           if (!profile.referralCode) {
             console.log('No referral code found, generating one...');
@@ -698,15 +703,7 @@ export default function ProviderDashboard() {
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
           <div className="flex items-center justify-between p-6 border-b border-slate-200/50 dark:border-slate-700/50 bg-gradient-to-r from-white/80 to-slate-50/80 dark:from-slate-800/80 dark:to-slate-900/80 backdrop-blur-sm">
-            <div className="flex items-center space-x-3 group">
-              <div className="w-12 h-12 bg-pink-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300">
-                <Award className="w-7 h-7 text-white group-hover:rotate-12 transition-transform duration-300" />
-              </div>
-              <div>
-              {/* <Image src="/brand/logo.png" alt="Alabastar" width={100} height={70} priority /> */}
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Provider Portal</p>
-              </div>
-            </div>
+           
             <button
               onClick={() => setSidebarOpen(false)}
               className="lg:hidden p-2 rounded-xl text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all duration-200"
@@ -990,82 +987,88 @@ export default function ProviderDashboard() {
         </header>
 
           {/* Dashboard Content */}
-          <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
+          <main className="flex-1 p-3 sm:p-4 md:p-6 lg:p-8 overflow-auto">
             {/* Stats Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-              <div className="group bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-5 lg:gap-6 mb-6 sm:mb-8">
+              <div className="group bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 rounded-2xl sm:rounded-3xl shadow-lg p-4 sm:p-5 lg:p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 transform hover:scale-[1.02] sm:hover:scale-105 hover:-translate-y-1 sm:hover:-translate-y-2">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">Total Bookings</p>
-                    <p className="text-4xl font-bold text-pink-600">{stats.totalBookings}</p>
-                    <p className="text-xs text-green-600 dark:text-green-400 flex items-center mt-2 font-medium">
-                      <TrendingUp className="w-3 h-3 mr-1 animate-pulse" />
-                      +12% from last month
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] sm:text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1 truncate">Total Bookings</p>
+                    <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-pink-600 leading-tight">{stats.totalBookings}</p>
+                    <p className="text-[9px] sm:text-[10px] text-green-600 dark:text-green-400 flex items-center mt-1 font-medium">
+                      <TrendingUp className="w-2 h-2 sm:w-2.5 sm:h-2.5 mr-1 animate-pulse flex-shrink-0" />
+                      <span className="truncate">+12% from last month</span>
                     </p>
                   </div>
-                  <div className="p-4 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                    <Calendar className="w-8 h-8 text-blue-600 dark:text-blue-400 group-hover:animate-bounce" />
+                  <div className="p-2 sm:p-3 lg:p-4 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30 rounded-xl sm:rounded-2xl group-hover:scale-110 transition-transform duration-300 flex-shrink-0 ml-2">
+                    <Calendar className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-blue-600 dark:text-blue-400 group-hover:animate-bounce" />
                   </div>
                 </div>
               </div>
 
-              <div className="group bg-gradient-to-br from-white via-green-50 to-white dark:from-slate-800 dark:via-green-900/20 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-green-500/10 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
+              <div className="group bg-gradient-to-br from-white via-green-50 to-white dark:from-slate-800 dark:via-green-900/20 dark:to-slate-800 rounded-2xl sm:rounded-3xl shadow-lg p-4 sm:p-5 lg:p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-green-500/10 transition-all duration-500 transform hover:scale-[1.02] sm:hover:scale-105 hover:-translate-y-1 sm:hover:-translate-y-2">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">Completed</p>
-                    <p className="text-4xl font-bold text-green-600 dark:text-green-400">{stats.completedBookings}</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-medium">
-                      {Math.round((stats.completedBookings / stats.totalBookings) * 100)}% completion rate
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] sm:text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1 truncate">Completed</p>
+                    <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-green-600 dark:text-green-400 leading-tight">{stats.completedBookings}</p>
+                    <p className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-medium">
+                      {stats.totalBookings > 0 
+                        ? `${Math.round((stats.completedBookings / stats.totalBookings) * 100)}% completion rate`
+                        : 'No bookings yet'}
                     </p>
                   </div>
-                  <div className="p-4 bg-gradient-to-br from-green-100 to-emerald-200 dark:from-green-900/30 dark:to-emerald-800/30 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                    <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400 group-hover:animate-pulse" />
+                  <div className="p-2 sm:p-3 lg:p-4 bg-gradient-to-br from-green-100 to-emerald-200 dark:from-green-900/30 dark:to-emerald-800/30 rounded-xl sm:rounded-2xl group-hover:scale-110 transition-transform duration-300 flex-shrink-0 ml-2">
+                    <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-green-600 dark:text-green-400 group-hover:animate-pulse" />
                   </div>
                 </div>
               </div>
 
-              <div className="group bg-gradient-to-br from-white via-amber-50 to-white dark:from-slate-800 dark:via-amber-900/20 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-amber-500/10 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
+              <div className="group bg-gradient-to-br from-white via-amber-50 to-white dark:from-slate-800 dark:via-amber-900/20 dark:to-slate-800 rounded-2xl sm:rounded-3xl shadow-lg p-4 sm:p-5 lg:p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-amber-500/10 transition-all duration-500 transform hover:scale-[1.02] sm:hover:scale-105 hover:-translate-y-1 sm:hover:-translate-y-2">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">Pending</p>
-                    <p className="text-4xl font-bold text-amber-600 dark:text-amber-400">{stats.pendingBookings}</p>
-                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-2 font-medium">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] sm:text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1 truncate">Pending</p>
+                    <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-amber-600 dark:text-amber-400 leading-tight">{stats.pendingBookings}</p>
+                    <p className="text-[9px] sm:text-[10px] text-amber-600 dark:text-amber-400 mt-1 font-medium truncate">
                       Requires attention
                     </p>
                   </div>
-                  <div className="p-4 bg-gradient-to-br from-amber-100 to-yellow-200 dark:from-amber-900/30 dark:to-yellow-800/30 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                    <Clock className="w-8 h-8 text-amber-600 dark:text-amber-400 group-hover:animate-spin" />
+                  <div className="p-2 sm:p-3 lg:p-4 bg-gradient-to-br from-amber-100 to-yellow-200 dark:from-amber-900/30 dark:to-yellow-800/30 rounded-xl sm:rounded-2xl group-hover:scale-110 transition-transform duration-300 flex-shrink-0 ml-2">
+                    <Clock className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-amber-600 dark:text-amber-400 group-hover:animate-spin" />
                   </div>
                 </div>
               </div>
 
-              <div className="group bg-gradient-to-br from-white via-emerald-50 to-white dark:from-slate-800 dark:via-emerald-900/20 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
+              <div className="group bg-gradient-to-br from-white via-emerald-50 to-white dark:from-slate-800 dark:via-emerald-900/20 dark:to-slate-800 rounded-2xl sm:rounded-3xl shadow-lg p-4 sm:p-5 lg:p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-500 transform hover:scale-[1.02] sm:hover:scale-105 hover:-translate-y-1 sm:hover:-translate-y-2">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">Total Earnings</p>
-                    <p className="text-4xl font-bold text-pink-600">₦{stats.totalEarnings.toLocaleString()}</p>
-                    <p className="text-xs text-green-600 dark:text-green-400 flex items-center mt-2 font-medium">
-                      <TrendingUp className="w-3 h-3 mr-1 animate-pulse" />
-                      +8% from last month
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] sm:text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1 truncate">Total Earnings</p>
+                    <p className="text-lg sm:text-xl lg:text-2xl font-bold text-pink-600 leading-tight break-words">
+                      ₦{stats.totalEarnings.toLocaleString()}
+                    </p>
+                    <p className="text-[9px] sm:text-[10px] text-green-600 dark:text-green-400 flex items-center mt-1 font-medium">
+                      <TrendingUp className="w-2 h-2 sm:w-2.5 sm:h-2.5 mr-1 animate-pulse flex-shrink-0" />
+                      <span className="truncate">+8% from last month</span>
                     </p>
                   </div>
-                  <div className="p-4 bg-gradient-to-br from-emerald-100 to-green-200 dark:from-emerald-900/30 dark:to-green-800/30 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                  <span className="w-8 h-8 text-emerald-600 dark:text-emerald-400 group-hover:animate-bounce">₦</span>
+                  <div className="p-2 sm:p-3 lg:p-4 bg-gradient-to-br from-emerald-100 to-green-200 dark:from-emerald-900/30 dark:to-green-800/30 rounded-xl sm:rounded-2xl group-hover:scale-110 transition-transform duration-300 flex-shrink-0 ml-2">
+                    <span className="text-sm sm:text-base lg:text-lg text-emerald-600 dark:text-emerald-400 group-hover:animate-bounce font-bold">₦</span>
                   </div>
                 </div>
               </div>
 
-              <div className="group bg-gradient-to-br from-white via-purple-50 to-white dark:from-slate-800 dark:via-purple-900/20 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
+              <div className="group bg-gradient-to-br from-white via-purple-50 to-white dark:from-slate-800 dark:via-purple-900/20 dark:to-slate-800 rounded-2xl sm:rounded-3xl shadow-lg p-4 sm:p-5 lg:p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-500 transform hover:scale-[1.02] sm:hover:scale-105 hover:-translate-y-1 sm:hover:-translate-y-2">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">Wallet Balance</p>
-                    <p className="text-4xl font-bold text-purple-600 dark:text-purple-400">₦{stats.walletBalance.toLocaleString()}</p>
-                    <p className="text-xs text-purple-600 dark:text-purple-400 mt-2 font-medium">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] sm:text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1 truncate">Wallet Balance</p>
+                    <p className="text-lg sm:text-xl lg:text-2xl font-bold text-purple-600 dark:text-purple-400 leading-tight break-words">
+                      ₦{stats.walletBalance.toLocaleString()}
+                    </p>
+                    <p className="text-[9px] sm:text-[10px] text-purple-600 dark:text-purple-400 mt-1 font-medium truncate">
                       Available for withdrawal
                     </p>
                   </div>
-                  <div className="p-4 bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/30 dark:to-purple-800/30 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                    <CreditCard className="w-8 h-8 text-purple-600 dark:text-purple-400 group-hover:animate-bounce" />
+                  <div className="p-2 sm:p-3 lg:p-4 bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/30 dark:to-purple-800/30 rounded-xl sm:rounded-2xl group-hover:scale-110 transition-transform duration-300 flex-shrink-0 ml-2">
+                    <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-purple-600 dark:text-purple-400 group-hover:animate-bounce" />
                   </div>
                 </div>
               </div>
