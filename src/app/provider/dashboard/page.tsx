@@ -1100,7 +1100,21 @@ export default function ProviderDashboard() {
                         <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
                           <p className="text-xs text-white/80 mb-1">Days Remaining</p>
                           <p className="text-3xl font-bold">
-                            {Math.ceil((new Date(providerProfile.topListingEndDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))}
+                            {(() => {
+                              const endDate = new Date(providerProfile.topListingEndDate);
+                              const today = new Date();
+                              
+                              // Normalize both dates to start of day (midnight) in local timezone
+                              const endMidnight = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+                              const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                              
+                              // Calculate difference in milliseconds, then convert to days
+                              const diffMs = endMidnight.getTime() - todayMidnight.getTime();
+                              const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                              
+                              // Return 0 if negative (already expired)
+                              return diffDays > 0 ? diffDays : 0;
+                            })()}
                           </p>
                         </div>
                         <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
