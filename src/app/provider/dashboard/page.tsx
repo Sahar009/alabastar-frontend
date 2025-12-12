@@ -1356,30 +1356,30 @@ export default function ProviderDashboard() {
             </div>
 
             {/* Quick Actions */}
-            <div className="mb-8">
-              <h3 className="text-2xl font-bold text-pink-600 mb-8">Quick Actions</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="mb-6 sm:mb-8">
+              <h3 className="text-xl sm:text-2xl font-bold text-pink-600 mb-4 sm:mb-6 lg:mb-8">Quick Actions</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
                 {quickActions.map((action, index) => (
                   <button
                     key={index}
                     onClick={action.onClick}
-                    className="group bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl transition-all duration-500 text-left transform hover:scale-105 hover:-translate-y-2"
+                    className="group bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 rounded-2xl sm:rounded-3xl shadow-lg p-4 sm:p-5 lg:p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl transition-all duration-500 text-left transform hover:scale-105 hover:-translate-y-1 sm:hover:-translate-y-2"
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
-                    <div className="flex items-center space-x-4 mb-4">
-                      <div className={`p-4 rounded-2xl ${action.color} text-white group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg`}>
-                        <action.icon className="w-6 h-6" />
+                    <div className="flex items-center space-x-3 sm:space-x-4 mb-3 sm:mb-4">
+                      <div className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl ${action.color} text-white group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg flex-shrink-0`}>
+                        <action.icon className="w-5 h-5 sm:w-6 sm:h-6" />
                       </div>
-                      <div className="flex-1">
-                        <h4 className="font-bold text-slate-900 dark:text-slate-50 group-hover:text-pink-600 transition-colors duration-200">{action.title}</h4>
-                        <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">{action.description}</p>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-slate-50 group-hover:text-pink-600 transition-colors duration-200 truncate">{action.title}</h4>
+                        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium line-clamp-2 mt-1">{action.description}</p>
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="w-full h-1 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                         <div className="h-full bg-pink-600 rounded-full transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
                       </div>
-                      <ChevronRight className="w-5 h-5 text-slate-400 ml-3 group-hover:text-pink-600 group-hover:translate-x-1 transition-all duration-300" />
+                      <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400 ml-2 sm:ml-3 group-hover:text-pink-600 group-hover:translate-x-1 transition-all duration-300 flex-shrink-0" />
                     </div>
                   </button>
                 ))}
