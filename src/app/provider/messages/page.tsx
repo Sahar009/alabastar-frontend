@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { 
   Search, 
@@ -80,6 +80,8 @@ function ProviderMessagesPageContent() {
   const socketRef = useRef<Socket | null>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const loadedConversationIdRef = useRef<number | null>(null);
+  const markAsReadCalledRef = useRef<Set<number>>(new Set());
 
   // Navigation items
   const navigationItems = [
@@ -145,10 +147,19 @@ function ProviderMessagesPageContent() {
     });
 
     socket.on('message:new', ({ message }) => {
-      setMessages(prev => [...prev, message]);
-      scrollToBottom();
+      // Only add message if it's for the current conversation
+      if (selectedConversation?.id === message.conversationId) {
+        setMessages(prev => {
+          // Check if message already exists to prevent duplicates
+          if (prev.some(m => m.id === message.id)) {
+            return prev;
+          }
+          return [...prev, message];
+        });
+        scrollToBottom();
+      }
       
-      // Update conversation list
+      // Update conversation list (only update, don't trigger re-fetch)
       setConversations(prev => prev.map(conv => 
         conv.id === message.conversationId 
           ? { ...conv, messages: [message], lastMessageAt: message.createdAt }
@@ -185,12 +196,17 @@ function ProviderMessagesPageContent() {
   // Load selected conversation from URL
   useEffect(() => {
     if (selectedConversationId && conversations.length > 0) {
-      const conv = conversations.find(c => c.id === parseInt(selectedConversationId));
-      if (conv) {
-        handleSelectConversation(conv);
+      const conversationId = parseInt(selectedConversationId);
+      // Only load if it's a different conversation than what's already loaded
+      if (loadedConversationIdRef.current !== conversationId) {
+        const conv = conversations.find(c => c.id === conversationId);
+        if (conv && (!selectedConversation || selectedConversation.id !== conversationId)) {
+          handleSelectConversation(conv);
+        }
       }
     }
-  }, [selectedConversationId, conversations]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedConversationId, conversations.length]); // Only depend on length, not the array itself
 
   const fetchConversations = async () => {
     try {
@@ -213,7 +229,50 @@ function ProviderMessagesPageContent() {
     }
   };
 
-  const handleSelectConversation = async (conversation: Conversation) => {
+  const markAsRead = useCallback(async (conversationId: number) => {
+    // Prevent duplicate mark as read calls
+    if (markAsReadCalledRef.current.has(conversationId)) {
+      return;
+    }
+
+    markAsReadCalledRef.current.add(conversationId);
+
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/messages/conversations/${conversationId}/read`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      // Only update conversations if unreadCount is not already 0
+      setConversations(prev => prev.map(conv => {
+        if (conv.id === conversationId && conv.unreadCount > 0) {
+          return { ...conv, unreadCount: 0 };
+        }
+        return conv;
+      }));
+    } catch (error) {
+      console.error('Error marking as read:', error);
+      // Remove from set on error so it can be retried
+      markAsReadCalledRef.current.delete(conversationId);
+    }
+  }, []);
+
+  const handleSelectConversation = useCallback(async (conversation: Conversation) => {
+    // Prevent duplicate calls for the same conversation
+    if (selectedConversation?.id === conversation.id && loadedConversationIdRef.current === conversation.id) {
+      return;
+    }
+
+    loadedConversationIdRef.current = conversation.id;
+    // Reset mark as read tracking for new conversation
+    markAsReadCalledRef.current.clear();
     setSelectedConversation(conversation);
     setSidebarOpen(false);
     
@@ -236,34 +295,13 @@ function ProviderMessagesPageContent() {
       if (result.success) {
         setMessages(result.data.messages || []);
         scrollToBottom();
+        // Only mark as read once per conversation load
         markAsRead(conversation.id);
       }
     } catch (error) {
       console.error('Error fetching messages:', error);
     }
-  };
-
-  const markAsRead = async (conversationId: number) => {
-    try {
-      const token = localStorage.getItem('token');
-      await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/messages/conversations/${conversationId}/read`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-      
-      setConversations(prev => prev.map(conv =>
-        conv.id === conversationId ? { ...conv, unreadCount: 0 } : conv
-      ));
-    } catch (error) {
-      console.error('Error marking as read:', error);
-    }
-  };
+  }, [selectedConversation, markAsRead]);
 
   const handleSendMessage = async () => {
     if ((!newMessage.trim() && !selectedFile) || !selectedConversation || sending) return;

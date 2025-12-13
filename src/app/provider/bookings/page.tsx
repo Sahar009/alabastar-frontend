@@ -12,18 +12,11 @@ import {
   MapPin, 
   Phone,
   MessageSquare,
-  Star,
   Filter,
   Search,
   ArrowLeft,
   RefreshCw,
-  Eye,
-  MoreVertical,
-  TrendingUp,
-  DollarSign,
-  AlertCircle,
   CheckCircle2,
-  X,
   Loader2
 } from "lucide-react";
 
@@ -64,17 +57,24 @@ export default function ProviderBookings() {
       });
 
       if (response.ok) {
-        const data = await response.json();
-        setBookings(data.bookings || []);
+        const responseData = await response.json();
+        // API returns { success, message, statusCode, data: { bookings, pagination } }
+        const bookings = responseData.data?.bookings || [];
+        setBookings(bookings);
         
         // Calculate stats
-        const total = data.bookings?.length || 0;
-        const pending = data.bookings?.filter((b: any) => b.status === 'pending').length || 0;
-        const confirmed = data.bookings?.filter((b: any) => b.status === 'confirmed').length || 0;
-        const completed = data.bookings?.filter((b: any) => b.status === 'completed').length || 0;
-        const cancelled = data.bookings?.filter((b: any) => b.status === 'cancelled').length || 0;
-        const totalEarnings = data.bookings?.reduce((sum: number, b: any) => {
-          return b.status === 'completed' ? sum + (b.totalAmount || 0) : sum;
+        // Map API statuses: 'requested' -> 'pending', 'accepted' -> 'confirmed'
+        const total = bookings.length || 0;
+        const pending = bookings.filter((b: any) => 
+          b.status === 'requested' || b.status === 'pending'
+        ).length || 0;
+        const confirmed = bookings.filter((b: any) => 
+          b.status === 'accepted' || b.status === 'confirmed' || b.status === 'in_progress'
+        ).length || 0;
+        const completed = bookings.filter((b: any) => b.status === 'completed').length || 0;
+        const cancelled = bookings.filter((b: any) => b.status === 'cancelled').length || 0;
+        const totalEarnings = bookings.reduce((sum: number, b: any) => {
+          return b.status === 'completed' ? sum + (parseFloat(b.totalAmount) || 0) : sum;
         }, 0) || 0;
 
         setStats({ total, pending, confirmed, completed, cancelled, totalEarnings });
@@ -92,6 +92,7 @@ export default function ProviderBookings() {
 
   useEffect(() => {
     fetchBookings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Update booking status
@@ -101,7 +102,7 @@ export default function ProviderBookings() {
       const token = localStorage.getItem('token');
       const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       
-      const response = await fetch(`${base}/api/bookings/${bookingId}?userType=provider`, {
+      const response = await fetch(`${base}/api/bookings/${bookingId}/status?userType=provider`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -111,7 +112,12 @@ export default function ProviderBookings() {
       });
 
       if (response.ok) {
-        toast.success(`Booking ${newStatus} successfully!`);
+        await response.json(); // Read response but don't need to use it
+        const statusMessage = newStatus === 'accepted' ? 'accepted' : 
+                            newStatus === 'cancelled' ? 'declined' : 
+                            newStatus === 'completed' ? 'marked as completed' : 
+                            newStatus;
+        toast.success(`Booking ${statusMessage} successfully!`);
         // Refresh bookings
         await fetchBookings();
       } else {
@@ -126,23 +132,128 @@ export default function ProviderBookings() {
     }
   };
 
-  const handleComingSoon = (feature: string) => {
-    toast(`🚧 ${feature} - Coming Soon!`, {
-      duration: 3000,
-      icon: '🚧'
-    });
+  // Handle messaging - create or get conversation with customer
+  const handleMessage = async (customerId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Please sign in to send messages');
+        router.push('/provider/signin');
+        return;
+      }
+
+      // Get current user ID
+      const userStr = localStorage.getItem('user');
+      const currentUser = userStr ? JSON.parse(userStr) : null;
+      const currentUserId = currentUser?.id || currentUser?.userId;
+
+      if (!currentUserId) {
+        toast.error('Unable to identify user. Please sign in again.');
+        router.push('/provider/signin');
+        return;
+      }
+
+      const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      
+      // First, check if a conversation already exists with this customer
+      try {
+        const conversationsResponse = await fetch(`${base}/api/messages/conversations`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (conversationsResponse.ok) {
+          const conversationsResult = await conversationsResponse.json();
+          if (conversationsResult.success && conversationsResult.data?.conversations) {
+            // Find all existing direct conversations with exactly 2 participants: current user and customer
+            const existingConversations = conversationsResult.data.conversations.filter((conv: any) => {
+              // Must be a direct conversation
+              if (conv.type !== 'direct') return false;
+              
+              // Must have exactly 2 participants
+              if (!conv.participants || conv.participants.length !== 2) return false;
+              
+              // Check that both current user and customer are participants
+              const participantIds = conv.participants.map((p: any) => p.id);
+              const hasCurrentUser = participantIds.includes(currentUserId);
+              const hasCustomer = participantIds.includes(customerId);
+              
+              return hasCurrentUser && hasCustomer;
+            });
+
+            if (existingConversations.length > 0) {
+              // Sort by lastMessageAt (most recent first) and use the most recent one
+              existingConversations.sort((a: any, b: any) => {
+                const dateA = new Date(a.lastMessageAt || a.createdAt || 0).getTime();
+                const dateB = new Date(b.lastMessageAt || b.createdAt || 0).getTime();
+                return dateB - dateA; // Most recent first
+              });
+              
+              const mostRecentConversation = existingConversations[0];
+              // Navigate to the most recent existing conversation
+              router.push(`/provider/messages?conversation=${mostRecentConversation.id}`);
+              return;
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching conversations:', error);
+        // Continue to create new conversation if fetch fails
+      }
+      
+      // If no existing conversation found, create a new one
+      // Note: The backend API should return existing conversation if one exists
+      const response = await fetch(`${base}/api/messages/conversations/direct`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          recipientId: customerId
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data) {
+          // Navigate to messages page with this conversation
+          router.push(`/provider/messages?conversation=${result.data.id}`);
+        } else {
+          toast.error(result.message || 'Failed to start conversation');
+        }
+      } else {
+        const errorData = await response.json();
+        toast.error(errorData.message || 'Failed to start conversation');
+      }
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+      toast.error('Error starting conversation');
+    }
   };
 
   const filteredBookings = bookings.filter(booking => {
-    const matchesFilter = filter === 'all' || booking.status === filter;
+    // Map API statuses to filter values: 'requested' -> 'pending', 'accepted' -> 'confirmed'
+    let bookingStatus = booking.status;
+    if (bookingStatus === 'requested') bookingStatus = 'pending';
+    if (bookingStatus === 'accepted' || bookingStatus === 'in_progress') bookingStatus = 'confirmed';
+    
+    const matchesFilter = filter === 'all' || bookingStatus === filter;
     const matchesSearch = booking.customer?.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         booking.service?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          booking.service?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          booking.notes?.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesFilter && matchesSearch;
   });
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    // Map API statuses to UI statuses
+    const normalizedStatus = status === 'requested' ? 'pending' : 
+                            (status === 'accepted' || status === 'in_progress') ? 'confirmed' : 
+                            status;
+    
+    switch (normalizedStatus) {
       case 'pending': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
       case 'confirmed': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
       case 'completed': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
@@ -152,7 +263,12 @@ export default function ProviderBookings() {
   };
 
   const getStatusIcon = (status: string) => {
-    switch (status) {
+    // Map API statuses to UI statuses
+    const normalizedStatus = status === 'requested' ? 'pending' : 
+                            (status === 'accepted' || status === 'in_progress') ? 'confirmed' : 
+                            status;
+    
+    switch (normalizedStatus) {
       case 'pending': 
         return (
           <div className="relative">
@@ -309,11 +425,86 @@ export default function ProviderBookings() {
 
         {/* Bookings List */}
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="text-center">
-              <Loader2 className="w-12 h-12 text-[#ec4899] animate-spin mx-auto mb-4" />
-              <p className="text-slate-600 dark:text-slate-400 font-medium">Loading bookings...</p>
+          <div className="space-y-6">
+            {/* Skeleton Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-20 mb-3 animate-pulse"></div>
+                      <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-16 animate-pulse"></div>
+                    </div>
+                    <div className="w-12 h-12 bg-slate-200 dark:bg-slate-700 rounded-2xl animate-pulse"></div>
+                  </div>
+                </div>
+              ))}
             </div>
+
+            {/* Skeleton Filter/Search */}
+            <div className="bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 mb-8">
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-1">
+                  <div className="h-12 bg-slate-200 dark:bg-slate-700 rounded-2xl animate-pulse"></div>
+                </div>
+                <div className="w-full md:w-48">
+                  <div className="h-12 bg-slate-200 dark:bg-slate-700 rounded-2xl animate-pulse"></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Skeleton Booking Cards */}
+            {[...Array(3)].map((_, index) => (
+              <div 
+                key={index}
+                className="bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 rounded-3xl shadow-lg border border-slate-200/50 dark:border-slate-700/50 overflow-hidden"
+              >
+                <div className="p-8">
+                  <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+                    {/* Booking Info Skeleton */}
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-4 mb-4">
+                        <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded w-48 animate-pulse"></div>
+                        <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded w-24 animate-pulse"></div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-3">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-slate-200 dark:bg-slate-700 rounded-xl animate-pulse"></div>
+                            <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-32 animate-pulse"></div>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-slate-200 dark:bg-slate-700 rounded-xl animate-pulse"></div>
+                            <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-28 animate-pulse"></div>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-slate-200 dark:bg-slate-700 rounded-xl animate-pulse"></div>
+                            <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-40 animate-pulse"></div>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-3">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-slate-200 dark:bg-slate-700 rounded-xl animate-pulse"></div>
+                            <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-36 animate-pulse"></div>
+                          </div>
+                          <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-24 animate-pulse"></div>
+                          <div className="h-16 bg-slate-200 dark:bg-slate-700 rounded-xl animate-pulse"></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Actions Skeleton */}
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <div className="h-12 bg-slate-200 dark:bg-slate-700 rounded-2xl w-32 animate-pulse"></div>
+                      <div className="h-12 bg-slate-200 dark:bg-slate-700 rounded-2xl w-32 animate-pulse"></div>
+                      <div className="h-12 bg-slate-200 dark:bg-slate-700 rounded-2xl w-28 animate-pulse"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
           <div className="space-y-6">
@@ -329,14 +520,19 @@ export default function ProviderBookings() {
                     <div className="flex-1">
                       <div className="flex items-center space-x-4 mb-4">
                         <h3 className="text-xl font-bold text-slate-900 dark:text-slate-50 group-hover:text-[#ec4899] transition-colors duration-200">
-                          {booking.service?.name || 'General Service'}
+                          {booking.service?.title || booking.service?.name || 'General Service'}
                         </h3>
                       <div className="flex items-center space-x-3">
                         <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold shadow-sm status-progress ${getStatusColor(booking.status)}`}>
                           {getStatusIcon(booking.status)}
-                          <span className="ml-2 capitalize">{booking.status}</span>
+                          <span className="ml-2 capitalize">
+                            {booking.status === 'requested' ? 'Pending' : 
+                             booking.status === 'accepted' ? 'Confirmed' : 
+                             booking.status === 'in_progress' ? 'In Progress' : 
+                             booking.status}
+                          </span>
                         </span>
-                        {(booking.status === 'pending' || booking.status === 'confirmed') && (
+                        {(booking.status === 'requested' || booking.status === 'pending' || booking.status === 'accepted' || booking.status === 'confirmed' || booking.status === 'in_progress') && (
                           <div className="flex items-center space-x-1">
                             <div className="flex space-x-1">
                               <div className="w-2 h-2 bg-green-500 rounded-full animate-progress-dots" style={{ animationDelay: '0ms' }}></div>
@@ -392,10 +588,10 @@ export default function ProviderBookings() {
 
                     {/* Actions */}
                     <div className="flex flex-col sm:flex-row gap-3">
-                      {booking.status === 'pending' && (
+                      {(booking.status === 'requested' || booking.status === 'pending') && (
                         <>
                           <button
-                            onClick={() => handleStatusChange(booking.id, 'confirmed')}
+                            onClick={() => handleStatusChange(booking.id, 'accepted')}
                             disabled={updating === booking.id}
                             className="group px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-2xl font-semibold hover:shadow-lg hover:shadow-green-500/25 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 flex items-center space-x-2"
                           >
@@ -420,25 +616,11 @@ export default function ProviderBookings() {
                           </button>
                         </>
                       )}
-                      
-                      {booking.status === 'confirmed' && (
-                        <button
-                          onClick={() => handleStatusChange(booking.id, 'completed')}
-                          disabled={updating === booking.id}
-                          className="group px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-2xl font-semibold hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 flex items-center space-x-2"
-                        >
-                          {updating === booking.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <CheckCircle2 className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
-                          )}
-                          <span>Mark Complete</span>
-                        </button>
-                      )}
 
                       <button
-                        onClick={() => handleComingSoon("Customer Messages")}
-                        className="group px-6 py-3 border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-2xl font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-[#ec4899] hover:text-[#ec4899] transition-all duration-300 transform hover:scale-105 flex items-center space-x-2"
+                        onClick={() => booking.customer?.id && handleMessage(booking.customer.id)}
+                        disabled={!booking.customer?.id}
+                        className="group px-6 py-3 border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-2xl font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-[#ec4899] hover:text-[#ec4899] transition-all duration-300 transform hover:scale-105 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <MessageSquare className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
                         <span>Message</span>
