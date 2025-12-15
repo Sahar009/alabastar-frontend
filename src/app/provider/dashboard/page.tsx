@@ -69,45 +69,6 @@ export default function ProviderDashboard() {
     walletBalance: 0
   });
 
-  const formatCurrency = (amount: number | string = 0) => {
-    const numericAmount = typeof amount === 'number' ? amount : parseFloat(String(amount || '0'));
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN',
-      minimumFractionDigits: 0
-    }).format(Number.isFinite(numericAmount) ? numericAmount : 0);
-  };
-
-  const getStatusStyles = (status = '') => {
-    const normalized = status.toLowerCase();
-
-    if (['completed', 'confirmed', 'accepted'].includes(normalized)) {
-      return {
-        container: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-200',
-        dot: 'bg-green-500'
-      };
-    }
-
-    if (['pending', 'awaiting', 'scheduled'].includes(normalized)) {
-      return {
-        container: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-200',
-        dot: 'bg-amber-500'
-      };
-    }
-
-    if (['cancelled', 'declined', 'rejected'].includes(normalized)) {
-      return {
-        container: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-200',
-        dot: 'bg-red-500'
-      };
-    }
-
-    return {
-      container: 'bg-slate-100 text-slate-600 dark:bg-slate-800/50 dark:text-slate-300',
-      dot: 'bg-slate-500'
-    };
-  };
-
   // Referral states
   const [referralCode, setReferralCode] = useState<string>('');
   const [referralStats, setReferralStats] = useState({
@@ -283,11 +244,6 @@ export default function ProviderDashboard() {
         console.log('Profile response data:', profileData);
         if (profileData.success && profileData.data) {
           const profile = profileData.data;
-          
-          // Update providerProfile state with fresh data from API
-          setProviderProfile(profile);
-          // Also update localStorage to keep it in sync
-          localStorage.setItem('providerProfile', JSON.stringify(profile));
           
           // If no referral code, generate one
           if (!profile.referralCode) {
@@ -582,13 +538,6 @@ export default function ProviderDashboard() {
       active: false
     },
     {
-      title: "Recent Bookings",
-      icon: Clock,
-      href: "/provider/dashboard#recent-bookings",
-      badge: bookings.length ? Math.min(bookings.length, 5) : null,
-      active: false
-    },
-    {
       title: "Earnings",
       icon: DollarSign,
       href: "/provider/earnings"
@@ -703,7 +652,15 @@ export default function ProviderDashboard() {
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
           <div className="flex items-center justify-between p-6 border-b border-slate-200/50 dark:border-slate-700/50 bg-gradient-to-r from-white/80 to-slate-50/80 dark:from-slate-800/80 dark:to-slate-900/80 backdrop-blur-sm">
-           
+            <div className="flex items-center space-x-3 group">
+              <div className="w-12 h-12 bg-pink-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300">
+                <Award className="w-7 h-7 text-white group-hover:rotate-12 transition-transform duration-300" />
+              </div>
+              <div>
+              {/* <Image src="/brand/logo.png" alt="Alabastar" width={100} height={70} priority /> */}
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Provider Portal</p>
+              </div>
+            </div>
             <button
               onClick={() => setSidebarOpen(false)}
               className="lg:hidden p-2 rounded-xl text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all duration-200"
@@ -751,23 +708,10 @@ export default function ProviderDashboard() {
                 key={index}
                 onClick={() => {
                   if (item.href === '/provider/dashboard') {
-                    router.push('/provider/dashboard');
                     setSidebarOpen(false);
                   } else if (item.href === '/provider/bookings') {
                     router.push('/provider/bookings');
                     setSidebarOpen(false);
-                  } else if (item.href.startsWith('/provider/dashboard#')) {
-                    const anchor = item.href.split('#')[1];
-                    if (anchor) {
-                      setSidebarOpen(false);
-                      if (typeof window !== 'undefined') {
-                        const element = document.getElementById(anchor);
-                        if (element) {
-                          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        }
-                        window.history.replaceState(null, '', `/provider/dashboard#${anchor}`);
-                      }
-                    }
                   } else if (item.href === '/provider/earnings') {
                     router.push('/provider/earnings');
                     setSidebarOpen(false);
@@ -986,530 +930,475 @@ export default function ProviderDashboard() {
           </div>
         </header>
 
-          {/* Dashboard Content */}
-          <main className="flex-1 p-3 sm:p-4 md:p-6 lg:p-8 overflow-auto">
-            {/* Stats Overview */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-5 lg:gap-6 mb-6 sm:mb-8">
-              <div className="group bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 rounded-2xl sm:rounded-3xl shadow-lg p-4 sm:p-5 lg:p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 transform hover:scale-[1.02] sm:hover:scale-105 hover:-translate-y-1 sm:hover:-translate-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[10px] sm:text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1 truncate">Total Bookings</p>
-                    <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-pink-600 leading-tight">{stats.totalBookings}</p>
-                    <p className="text-[9px] sm:text-[10px] text-green-600 dark:text-green-400 flex items-center mt-1 font-medium">
-                      <TrendingUp className="w-2 h-2 sm:w-2.5 sm:h-2.5 mr-1 animate-pulse flex-shrink-0" />
-                      <span className="truncate">+12% from last month</span>
-                    </p>
-                  </div>
-                  <div className="p-2 sm:p-3 lg:p-4 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30 rounded-xl sm:rounded-2xl group-hover:scale-110 transition-transform duration-300 flex-shrink-0 ml-2">
-                    <Calendar className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-blue-600 dark:text-blue-400 group-hover:animate-bounce" />
-                  </div>
+        {/* Dashboard Content */}
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
+          {/* Stats Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+            <div className="group bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">Total Bookings</p>
+                  <p className="text-4xl font-bold text-pink-600">{stats.totalBookings}</p>
+                  <p className="text-xs text-green-600 dark:text-green-400 flex items-center mt-2 font-medium">
+                    <TrendingUp className="w-3 h-3 mr-1 animate-pulse" />
+                    +12% from last month
+                  </p>
                 </div>
-              </div>
-
-              <div className="group bg-gradient-to-br from-white via-green-50 to-white dark:from-slate-800 dark:via-green-900/20 dark:to-slate-800 rounded-2xl sm:rounded-3xl shadow-lg p-4 sm:p-5 lg:p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-green-500/10 transition-all duration-500 transform hover:scale-[1.02] sm:hover:scale-105 hover:-translate-y-1 sm:hover:-translate-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[10px] sm:text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1 truncate">Completed</p>
-                    <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-green-600 dark:text-green-400 leading-tight">{stats.completedBookings}</p>
-                    <p className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-medium">
-                      {stats.totalBookings > 0 
-                        ? `${Math.round((stats.completedBookings / stats.totalBookings) * 100)}% completion rate`
-                        : 'No bookings yet'}
-                    </p>
-                  </div>
-                  <div className="p-2 sm:p-3 lg:p-4 bg-gradient-to-br from-green-100 to-emerald-200 dark:from-green-900/30 dark:to-emerald-800/30 rounded-xl sm:rounded-2xl group-hover:scale-110 transition-transform duration-300 flex-shrink-0 ml-2">
-                    <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-green-600 dark:text-green-400 group-hover:animate-pulse" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="group bg-gradient-to-br from-white via-amber-50 to-white dark:from-slate-800 dark:via-amber-900/20 dark:to-slate-800 rounded-2xl sm:rounded-3xl shadow-lg p-4 sm:p-5 lg:p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-amber-500/10 transition-all duration-500 transform hover:scale-[1.02] sm:hover:scale-105 hover:-translate-y-1 sm:hover:-translate-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[10px] sm:text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1 truncate">Pending</p>
-                    <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-amber-600 dark:text-amber-400 leading-tight">{stats.pendingBookings}</p>
-                    <p className="text-[9px] sm:text-[10px] text-amber-600 dark:text-amber-400 mt-1 font-medium truncate">
-                      Requires attention
-                    </p>
-                  </div>
-                  <div className="p-2 sm:p-3 lg:p-4 bg-gradient-to-br from-amber-100 to-yellow-200 dark:from-amber-900/30 dark:to-yellow-800/30 rounded-xl sm:rounded-2xl group-hover:scale-110 transition-transform duration-300 flex-shrink-0 ml-2">
-                    <Clock className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-amber-600 dark:text-amber-400 group-hover:animate-spin" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="group bg-gradient-to-br from-white via-emerald-50 to-white dark:from-slate-800 dark:via-emerald-900/20 dark:to-slate-800 rounded-2xl sm:rounded-3xl shadow-lg p-4 sm:p-5 lg:p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-500 transform hover:scale-[1.02] sm:hover:scale-105 hover:-translate-y-1 sm:hover:-translate-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[10px] sm:text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1 truncate">Total Earnings</p>
-                    <p className="text-lg sm:text-xl lg:text-2xl font-bold text-pink-600 leading-tight break-words">
-                      ₦{stats.totalEarnings.toLocaleString()}
-                    </p>
-                    <p className="text-[9px] sm:text-[10px] text-green-600 dark:text-green-400 flex items-center mt-1 font-medium">
-                      <TrendingUp className="w-2 h-2 sm:w-2.5 sm:h-2.5 mr-1 animate-pulse flex-shrink-0" />
-                      <span className="truncate">+8% from last month</span>
-                    </p>
-                  </div>
-                  <div className="p-2 sm:p-3 lg:p-4 bg-gradient-to-br from-emerald-100 to-green-200 dark:from-emerald-900/30 dark:to-green-800/30 rounded-xl sm:rounded-2xl group-hover:scale-110 transition-transform duration-300 flex-shrink-0 ml-2">
-                    <span className="text-sm sm:text-base lg:text-lg text-emerald-600 dark:text-emerald-400 group-hover:animate-bounce font-bold">₦</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="group bg-gradient-to-br from-white via-purple-50 to-white dark:from-slate-800 dark:via-purple-900/20 dark:to-slate-800 rounded-2xl sm:rounded-3xl shadow-lg p-4 sm:p-5 lg:p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-500 transform hover:scale-[1.02] sm:hover:scale-105 hover:-translate-y-1 sm:hover:-translate-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[10px] sm:text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1 truncate">Wallet Balance</p>
-                    <p className="text-lg sm:text-xl lg:text-2xl font-bold text-purple-600 dark:text-purple-400 leading-tight break-words">
-                      ₦{stats.walletBalance.toLocaleString()}
-                    </p>
-                    <p className="text-[9px] sm:text-[10px] text-purple-600 dark:text-purple-400 mt-1 font-medium truncate">
-                      Available for withdrawal
-                    </p>
-                  </div>
-                  <div className="p-2 sm:p-3 lg:p-4 bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/30 dark:to-purple-800/30 rounded-xl sm:rounded-2xl group-hover:scale-110 transition-transform duration-300 flex-shrink-0 ml-2">
-                    <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-purple-600 dark:text-purple-400 group-hover:animate-bounce" />
-                  </div>
+                <div className="p-4 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                  <Calendar className="w-8 h-8 text-blue-600 dark:text-blue-400 group-hover:animate-bounce" />
                 </div>
               </div>
             </div>
 
-            {/* Top Listing Status Card */}
-            {providerProfile && (
-              <div className="mb-8">
-                {providerProfile.topListingEndDate && new Date(providerProfile.topListingEndDate) > new Date() ? (
-                  <div className="bg-gradient-to-r from-orange-500 to-pink-600 rounded-3xl shadow-2xl p-6 text-white border-2 border-orange-300 dark:border-pink-400 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
-                    <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12"></div>
-                    <div className="relative z-10">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center space-x-3">
-                          <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
-                            <Activity className="w-6 h-6 animate-pulse" />
-                          </div>
-                          <div>
-                            <h3 className="text-xl font-bold">Top Listing Active</h3>
-                            <p className="text-sm text-white/90">Your profile is featured!</p>
-                          </div>
+            <div className="group bg-gradient-to-br from-white via-green-50 to-white dark:from-slate-800 dark:via-green-900/20 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-green-500/10 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">Completed</p>
+                  <p className="text-4xl font-bold text-green-600 dark:text-green-400">{stats.completedBookings}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-medium">
+                    {Math.round((stats.completedBookings / stats.totalBookings) * 100)}% completion rate
+                  </p>
+                </div>
+                <div className="p-4 bg-gradient-to-br from-green-100 to-emerald-200 dark:from-green-900/30 dark:to-emerald-800/30 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                  <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400 group-hover:animate-pulse" />
+                </div>
+              </div>
+            </div>
+
+            <div className="group bg-gradient-to-br from-white via-amber-50 to-white dark:from-slate-800 dark:via-amber-900/20 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-amber-500/10 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">Pending</p>
+                  <p className="text-4xl font-bold text-amber-600 dark:text-amber-400">{stats.pendingBookings}</p>
+                  <p className="text-xs text-amber-600 dark:text-amber-400 mt-2 font-medium">
+                    Requires attention
+                  </p>
+                </div>
+                <div className="p-4 bg-gradient-to-br from-amber-100 to-yellow-200 dark:from-amber-900/30 dark:to-yellow-800/30 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                  <Clock className="w-8 h-8 text-amber-600 dark:text-amber-400 group-hover:animate-spin" />
+                </div>
+              </div>
+            </div>
+
+            <div className="group bg-gradient-to-br from-white via-emerald-50 to-white dark:from-slate-800 dark:via-emerald-900/20 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">Total Earnings</p>
+                  <p className="text-4xl font-bold text-pink-600">₦{stats.totalEarnings.toLocaleString()}</p>
+                  <p className="text-xs text-green-600 dark:text-green-400 flex items-center mt-2 font-medium">
+                    <TrendingUp className="w-3 h-3 mr-1 animate-pulse" />
+                    +8% from last month
+                  </p>
+                </div>
+                <div className="p-4 bg-gradient-to-br from-emerald-100 to-green-200 dark:from-emerald-900/30 dark:to-green-800/30 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                <span className="w-8 h-8 text-emerald-600 dark:text-emerald-400 group-hover:animate-bounce">₦</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="group bg-gradient-to-br from-white via-purple-50 to-white dark:from-slate-800 dark:via-purple-900/20 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">Wallet Balance</p>
+                  <p className="text-4xl font-bold text-purple-600 dark:text-purple-400">₦{stats.walletBalance.toLocaleString()}</p>
+                  <p className="text-xs text-purple-600 dark:text-purple-400 mt-2 font-medium">
+                    Available for withdrawal
+                  </p>
+                </div>
+                <div className="p-4 bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/30 dark:to-purple-800/30 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                  <CreditCard className="w-8 h-8 text-purple-600 dark:text-purple-400 group-hover:animate-bounce" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Top Listing Status Card */}
+          {providerProfile && (
+            <div className="mb-8">
+              {providerProfile.topListingEndDate && new Date(providerProfile.topListingEndDate) > new Date() ? (
+                <div className="bg-gradient-to-r from-orange-500 to-pink-600 rounded-3xl shadow-2xl p-6 text-white border-2 border-orange-300 dark:border-pink-400 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12"></div>
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
+                          <Activity className="w-6 h-6 animate-pulse" />
                         </div>
-                        <div className="px-4 py-2 bg-white/20 rounded-full backdrop-blur-sm">
-                          <span className="text-sm font-bold">PREMIUM</span>
+                        <div>
+                          <h3 className="text-xl font-bold">Top Listing Active</h3>
+                          <p className="text-sm text-white/90">Your profile is featured!</p>
                         </div>
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-                          <p className="text-xs text-white/80 mb-1">Days Remaining</p>
-                          <p className="text-3xl font-bold">
-                            {(() => {
-                              const endDate = new Date(providerProfile.topListingEndDate);
-                              const today = new Date();
-                              
-                              // Normalize both dates to start of day (midnight) in local timezone
-                              const endMidnight = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
-                              const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-                              
-                              // Calculate difference in milliseconds, then convert to days
-                              const diffMs = endMidnight.getTime() - todayMidnight.getTime();
-                              const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-                              
-                              // Return 0 if negative (already expired)
-                              return diffDays > 0 ? diffDays : 0;
-                            })()}
-                          </p>
-                        </div>
-                        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-                          <p className="text-xs text-white/80 mb-1">Ends On</p>
-                          <p className="text-lg font-bold">
-                            {new Date(providerProfile.topListingEndDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                          </p>
-                        </div>
-                        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-                          <p className="text-xs text-white/80 mb-1">Priority Level</p>
-                          <p className="text-lg font-bold flex items-center">
-                            <Award className="w-5 h-5 mr-2" />
-                            Level {providerProfile.listingPriority || 1}
-                          </p>
-                        </div>
+                      <div className="px-4 py-2 bg-white/20 rounded-full backdrop-blur-sm">
+                        <span className="text-sm font-bold">PREMIUM</span>
                       </div>
-                      <div className="mt-4 p-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
-                        <p className="text-xs text-white/90">
-                          <span className="font-semibold">✨ Benefits:</span> Your profile appears at the top of search results, increasing visibility and bookings.
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                      <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                        <p className="text-xs text-white/80 mb-1">Days Remaining</p>
+                        <p className="text-3xl font-bold">
+                          {Math.ceil((new Date(providerProfile.topListingEndDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))}
                         </p>
                       </div>
+                      <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                        <p className="text-xs text-white/80 mb-1">Ends On</p>
+                        <p className="text-lg font-bold">
+                          {new Date(providerProfile.topListingEndDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </p>
+                      </div>
+                      <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                        <p className="text-xs text-white/80 mb-1">Priority Level</p>
+                        <p className="text-lg font-bold flex items-center">
+                          <Award className="w-5 h-5 mr-2" />
+                          Level {providerProfile.listingPriority || 1}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="mt-4 p-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+                      <p className="text-xs text-white/90">
+                        <span className="font-semibold">✨ Benefits:</span> Your profile appears at the top of search results, increasing visibility and bookings.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200 dark:border-slate-700 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-100 to-pink-100 dark:from-orange-900/20 dark:to-pink-900/20 rounded-full -mr-16 -mt-16"></div>
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-xl">
+                          <Activity className="w-6 h-6 text-slate-400" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-slate-900 dark:text-slate-50">Top Listing Inactive</h3>
+                          <p className="text-sm text-slate-600 dark:text-slate-400">Boost your visibility</p>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                      Upgrade to Premium to get featured at the top of search results and increase your bookings by up to 3x!
+                    </p>
+                    <Link 
+                      href="/provider/settings"
+                      className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-600 text-white rounded-xl font-semibold hover:opacity-90 transition-all duration-300 shadow-lg hover:shadow-xl"
+                    >
+                      <Award className="w-5 h-5" />
+                      <span>Upgrade to Premium</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Rating & Profile Cards */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 border border-slate-200 dark:border-slate-700">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">Rating & Reviews</h3>
+                <Star className="w-5 h-5 text-yellow-500" />
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="text-4xl font-bold text-slate-900 dark:text-slate-50">
+                  {stats.reviews > 0 ? stats.rating.toFixed(1) : 'New'}
+                </div>
+                <div>
+                  <div className="flex items-center space-x-1">
+                    {stats.reviews > 0 ? (
+                      [...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-4 h-4 ${i < Math.floor(stats.rating) ? 'text-yellow-500 fill-current' : 'text-slate-300 dark:text-slate-600'}`}
+                        />
+                      ))
+                    ) : (
+                      [...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className="w-4 h-4 text-slate-300 dark:text-slate-600"
+                        />
+                      ))
+                    )}
+                  </div>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    {stats.reviews > 0 ? `${stats.reviews} reviews` : 'No reviews yet'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 border border-slate-200 dark:border-slate-700">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">Verification Status</h3>
+                <Shield className="w-5 h-5 text-blue-500" />
+              </div>
+              <div className="flex items-center space-x-3 mb-3">
+                <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  providerProfile?.verificationStatus === 'verified' 
+                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                    : providerProfile?.verificationStatus === 'pending'
+                    ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
+                    : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                }`}>
+                  {providerProfile?.verificationStatus === 'verified' ? 'Verified' : 
+                   providerProfile?.verificationStatus === 'pending' ? 'Pending Review' : 'Rejected'}
+                </div>
+                {providerProfile?.verificationStatus === 'pending' && (
+                  <AlertCircle className="w-4 h-4 text-amber-500" />
+                )}
+              </div>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                {providerProfile?.verificationStatus === 'verified' 
+                  ? 'Your account is verified and active'
+                  : providerProfile?.verificationStatus === 'pending'
+                  ? 'Your documents are under review'
+                  : 'Please contact support for assistance'}
+              </p>
+            </div>
+
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 border border-slate-200 dark:border-slate-700">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">Business Info</h3>
+                <Activity className="w-5 h-5 text-purple-500" />
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2 text-sm">
+                  <MapPin className="w-4 h-4 text-slate-400" />
+                  <span className="text-slate-600 dark:text-slate-400">Lagos, Nigeria</span>
+                </div>
+                <div className="flex items-center space-x-2 text-sm">
+                  <Phone className="w-4 h-4 text-slate-400" />
+                  <span className="text-slate-600 dark:text-slate-400">{user?.phone || '+234 800 000 0000'}</span>
+                </div>
+                <div className="flex items-center space-x-2 text-sm">
+                  <Mail className="w-4 h-4 text-slate-400" />
+                  <span className="text-slate-600 dark:text-slate-400">{user?.email || 'provider@example.com'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Referral Program Section */}
+          <div className="mb-8">
+            <h3 className="text-2xl font-bold text-pink-600 mb-6">Referral Program</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Referral Code Card */}
+              <div className="bg-gradient-to-br from-white via-pink-50 to-white dark:from-slate-800 dark:via-pink-900/20 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-lg font-semibold text-slate-900 dark:text-slate-50">Your Referral Code</h4>
+                  <Gift className="w-6 h-6 text-pink-600" />
+                </div>
+                
+                {referralCode ? (
+                  <div className="space-y-4">
+                    <div className="bg-gradient-to-r from-pink-100 to-pink-200 dark:from-pink-900/30 dark:to-pink-800/30 rounded-2xl p-4 border-2 border-dashed border-pink-300 dark:border-pink-600">
+                      <div className="text-center">
+                        <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">Share this code with new providers</p>
+                        <div className="text-3xl font-bold text-pink-600 font-mono tracking-wider">
+                          {referralCode}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex space-x-3">
+                      <button
+                        onClick={copyReferralCode}
+                        className="flex-1 flex items-center justify-center space-x-2 px-4 py-3 bg-pink-600 text-white rounded-xl font-semibold hover:bg-pink-700 transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+                      >
+                        <Copy className="w-4 h-4" />
+                        <span>Copy Code</span>
+                      </button>
+                      <button
+                        onClick={shareReferralCode}
+                        className="flex-1 flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-orange-500 to-pink-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-pink-700 transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+                      >
+                        <Share2 className="w-4 h-4" />
+                        <span>Share</span>
+                      </button>
+                    </div>
+                    
+                    <div className="text-center">
+                      <p className="text-sm text-slate-600 dark:text-slate-400">
+                        Earn <span className="font-semibold text-pink-600">10% commission</span> when your referrals subscribe!
+                      </p>
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200 dark:border-slate-700 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-100 to-pink-100 dark:from-orange-900/20 dark:to-pink-900/20 rounded-full -mr-16 -mt-16"></div>
-                    <div className="relative z-10">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center space-x-3">
-                          <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-xl">
-                            <Activity className="w-6 h-6 text-slate-400" />
-                          </div>
-                          <div>
-                            <h3 className="text-xl font-bold text-slate-900 dark:text-slate-50">Top Listing Inactive</h3>
-                            <p className="text-sm text-slate-600 dark:text-slate-400">Boost your visibility</p>
-                          </div>
-                        </div>
-                      </div>
-                      <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-                        Upgrade to Premium to get featured at the top of search results and increase your bookings by up to 3x!
-                      </p>
-                      <Link 
-                        href="/provider/settings"
-                        className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-600 text-white rounded-xl font-semibold hover:opacity-90 transition-all duration-300 shadow-lg hover:shadow-xl"
-                      >
-                        <Award className="w-5 h-5" />
-                        <span>Upgrade to Premium</span>
-                        <ChevronRight className="w-4 h-4" />
-                      </Link>
-                    </div>
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600 mx-auto mb-4"></div>
+                    <p className="text-slate-600 dark:text-slate-400">Generating your referral code...</p>
                   </div>
                 )}
               </div>
-            )}
 
-            {/* Rating & Profile Cards */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-              <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 border border-slate-200 dark:border-slate-700">
+              {/* Referral Stats Card */}
+              <div className="bg-gradient-to-br from-white via-emerald-50 to-white dark:from-slate-800 dark:via-emerald-900/20 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">Rating & Reviews</h3>
-                  <Star className="w-5 h-5 text-yellow-500" />
+                  <h4 className="text-lg font-semibold text-slate-900 dark:text-slate-50">Referral Stats</h4>
+                  <TrendingUp className="w-6 h-6 text-emerald-600" />
                 </div>
-                <div className="flex items-center space-x-4">
-                  <div className="text-4xl font-bold text-slate-900 dark:text-slate-50">
-                    {stats.reviews > 0 ? stats.rating.toFixed(1) : 'New'}
-                  </div>
-                  <div>
-                    <div className="flex items-center space-x-1">
-                      {stats.reviews > 0 ? (
-                        [...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`w-4 h-4 ${i < Math.floor(stats.rating) ? 'text-yellow-500 fill-current' : 'text-slate-300 dark:text-slate-600'}`}
-                          />
-                        ))
-                      ) : (
-                        [...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className="w-4 h-4 text-slate-300 dark:text-slate-600"
-                          />
-                        ))
-                      )}
+                
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center p-4 bg-gradient-to-br from-emerald-100 to-green-200 dark:from-emerald-900/30 dark:to-green-800/30 rounded-2xl">
+                      <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                        {referralStats.totalReferrals}
+                      </div>
+                      <div className="text-sm text-slate-600 dark:text-slate-400 font-medium">
+                        Total Referrals
+                      </div>
                     </div>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
-                      {stats.reviews > 0 ? `${stats.reviews} reviews` : 'No reviews yet'}
+                    <div className="text-center p-4 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30 rounded-2xl">
+                      <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                        {referralStats.completedReferrals}
+                      </div>
+                      <div className="text-sm text-slate-600 dark:text-slate-400 font-medium">
+                        Completed
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl">
+                      <div className="flex items-center space-x-2">
+                        <DollarSign className="w-4 h-4 text-green-600" />
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Total Commissions</span>
+                      </div>
+                      <span className="font-bold text-green-600 dark:text-green-400">
+                        ₦{referralStats.totalCommissions.toLocaleString()}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between p-3 bg-gradient-to-r from-amber-100 to-yellow-100 dark:from-amber-900/20 dark:to-yellow-900/20 rounded-xl">
+                      <div className="flex items-center space-x-2">
+                        <Clock className="w-4 h-4 text-amber-600" />
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Pending</span>
+                      </div>
+                      <span className="font-bold text-amber-600 dark:text-amber-400">
+                        ₦{referralStats.pendingCommissions.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="text-center pt-2">
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Commissions are paid when referrals complete their first subscription
                     </p>
                   </div>
                 </div>
               </div>
-
-              <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 border border-slate-200 dark:border-slate-700">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">Verification Status</h3>
-                  <Shield className="w-5 h-5 text-blue-500" />
-                </div>
-                <div className="flex items-center space-x-3 mb-3">
-                  <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    providerProfile?.verificationStatus === 'verified' 
-                      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                      : providerProfile?.verificationStatus === 'pending'
-                      ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
-                      : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                  }`}>
-                    {providerProfile?.verificationStatus === 'verified' ? 'Verified' : 
-                     providerProfile?.verificationStatus === 'pending' ? 'Pending Review' : 'Rejected'}
-                  </div>
-                  {providerProfile?.verificationStatus === 'pending' && (
-                    <AlertCircle className="w-4 h-4 text-amber-500" />
-                  )}
-                </div>
-                <p className="text-sm text-slate-600 dark:text-slate-400">
-                  {providerProfile?.verificationStatus === 'verified' 
-                    ? 'Your account is verified and active'
-                    : providerProfile?.verificationStatus === 'pending'
-                    ? 'Your documents are under review'
-                    : 'Please contact support for assistance'}
-                </p>
-              </div>
-
-              <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 border border-slate-200 dark:border-slate-700">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">Business Info</h3>
-                  <Activity className="w-5 h-5 text-purple-500" />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2 text-sm">
-                    <MapPin className="w-4 h-4 text-slate-400" />
-                    <span className="text-slate-600 dark:text-slate-400">Lagos, Nigeria</span>
-                  </div>
-                  <div className="flex items-center space-x-2 text-sm">
-                    <Phone className="w-4 h-4 text-slate-400" />
-                    <span className="text-slate-600 dark:text-slate-400">{user?.phone || '+234 800 000 0000'}</span>
-                  </div>
-                  <div className="flex items-center space-x-2 text-sm">
-                    <Mail className="w-4 h-4 text-slate-400" />
-                    <span className="text-slate-600 dark:text-slate-400">{user?.email || 'provider@example.com'}</span>
-                  </div>
-                </div>
-              </div>
             </div>
+          </div>
 
-            {/* Referral Program Section */}
-            <div className="mb-8">
-              <h3 className="text-2xl font-bold text-pink-600 mb-6">Referral Program</h3>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Referral Code Card */}
-                <div className="bg-gradient-to-br from-white via-pink-50 to-white dark:from-slate-800 dark:via-pink-900/20 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50">
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-lg font-semibold text-slate-900 dark:text-slate-50">Your Referral Code</h4>
-                    <Gift className="w-6 h-6 text-pink-600" />
-                  </div>
-                  
-                  {referralCode ? (
-                    <div className="space-y-4">
-                      <div className="bg-gradient-to-r from-pink-100 to-pink-200 dark:from-pink-900/30 dark:to-pink-800/30 rounded-2xl p-4 border-2 border-dashed border-pink-300 dark:border-pink-600">
-                        <div className="text-center">
-                          <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">Share this code with new providers</p>
-                          <div className="text-3xl font-bold text-pink-600 font-mono tracking-wider">
-                            {referralCode}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex space-x-3">
-                        <button
-                          onClick={copyReferralCode}
-                          className="flex-1 flex items-center justify-center space-x-2 px-4 py-3 bg-pink-600 text-white rounded-xl font-semibold hover:bg-pink-700 transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
-                        >
-                          <Copy className="w-4 h-4" />
-                          <span>Copy Code</span>
-                        </button>
-                        <button
-                          onClick={shareReferralCode}
-                          className="flex-1 flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-orange-500 to-pink-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-pink-700 transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
-                        >
-                          <Share2 className="w-4 h-4" />
-                          <span>Share</span>
-                        </button>
-                      </div>
-                      
-                      <div className="text-center">
-                        <p className="text-sm text-slate-600 dark:text-slate-400">
-                          Earn <span className="font-semibold text-pink-600">10% commission</span> when your referrals subscribe!
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600 mx-auto mb-4"></div>
-                      <p className="text-slate-600 dark:text-slate-400">Generating your referral code...</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Referral Stats Card */}
-                <div className="bg-gradient-to-br from-white via-emerald-50 to-white dark:from-slate-800 dark:via-emerald-900/20 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50">
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-lg font-semibold text-slate-900 dark:text-slate-50">Referral Stats</h4>
-                    <TrendingUp className="w-6 h-6 text-emerald-600" />
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="text-center p-4 bg-gradient-to-br from-emerald-100 to-green-200 dark:from-emerald-900/30 dark:to-green-800/30 rounded-2xl">
-                        <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                          {referralStats.totalReferrals}
-                        </div>
-                        <div className="text-sm text-slate-600 dark:text-slate-400 font-medium">
-                          Total Referrals
-                        </div>
-                      </div>
-                      <div className="text-center p-4 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30 rounded-2xl">
-                        <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                          {referralStats.completedReferrals}
-                        </div>
-                        <div className="text-sm text-slate-600 dark:text-slate-400 font-medium">
-                          Completed
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between p-3 bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl">
-                        <div className="flex items-center space-x-2">
-                          <DollarSign className="w-4 h-4 text-green-600" />
-                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Total Commissions</span>
-                        </div>
-                        <span className="font-bold text-green-600 dark:text-green-400">
-                          ₦{referralStats.totalCommissions.toLocaleString()}
-                        </span>
-                      </div>
-                      
-                      <div className="flex items-center justify-between p-3 bg-gradient-to-r from-amber-100 to-yellow-100 dark:from-amber-900/20 dark:to-yellow-900/20 rounded-xl">
-                        <div className="flex items-center space-x-2">
-                          <Clock className="w-4 h-4 text-amber-600" />
-                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Pending</span>
-                        </div>
-                        <span className="font-bold text-amber-600 dark:text-amber-400">
-                          ₦{referralStats.pendingCommissions.toLocaleString()}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div className="text-center pt-2">
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Commissions are paid when referrals complete their first subscription
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="mb-6 sm:mb-8">
-              <h3 className="text-xl sm:text-2xl font-bold text-pink-600 mb-4 sm:mb-6 lg:mb-8">Quick Actions</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
-                {quickActions.map((action, index) => (
-                  <button
-                    key={index}
-                    onClick={action.onClick}
-                    className="group bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 rounded-2xl sm:rounded-3xl shadow-lg p-4 sm:p-5 lg:p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl transition-all duration-500 text-left transform hover:scale-105 hover:-translate-y-1 sm:hover:-translate-y-2"
-                    style={{ animationDelay: `${index * 100}ms` }}
-                  >
-                    <div className="flex items-center space-x-3 sm:space-x-4 mb-3 sm:mb-4">
-                      <div className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl ${action.color} text-white group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg flex-shrink-0`}>
-                        <action.icon className="w-5 h-5 sm:w-6 sm:h-6" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-slate-50 group-hover:text-pink-600 transition-colors duration-200 truncate">{action.title}</h4>
-                        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium line-clamp-2 mt-1">{action.description}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="w-full h-1 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                        <div className="h-full bg-pink-600 rounded-full transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
-                      </div>
-                      <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400 ml-2 sm:ml-3 group-hover:text-pink-600 group-hover:translate-x-1 transition-all duration-300 flex-shrink-0" />
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Recent Bookings */}
-            <section
-              id="recent-bookings"
-              className="bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 rounded-3xl shadow-xl p-8 border border-slate-200/50 dark:border-slate-700/50"
-            >
-              <div className="flex items-center justify-between mb-8">
-                <div>
-                  <h3 className="text-2xl font-bold text-pink-600">Recent Bookings</h3>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
-                    Stay on top of the latest requests and confirmations.
-                  </p>
-                </div>
+          {/* Quick Actions */}
+          <div className="mb-8">
+            <h3 className="text-2xl font-bold text-pink-600 mb-8">Quick Actions</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {quickActions.map((action, index) => (
                 <button
-                  onClick={() => {
-                    refreshDashboardData();
-                    router.push('/provider/bookings');
-                  }}
-                  className="group px-4 py-2 bg-pink-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-pink-500/25 transition-all duration-300 transform hover:scale-105"
+                  key={index}
+                  onClick={action.onClick}
+                  className="group bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl transition-all duration-500 text-left transform hover:scale-105 hover:-translate-y-2"
+                  style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  <span className="flex items-center space-x-2">
-                    <span>View All Bookings</span>
-                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
-                  </span>
+                  <div className="flex items-center space-x-4 mb-4">
+                    <div className={`p-4 rounded-2xl ${action.color} text-white group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg`}>
+                      <action.icon className="w-6 h-6" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-bold text-slate-900 dark:text-slate-50 group-hover:text-pink-600 transition-colors duration-200">{action.title}</h4>
+                      <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">{action.description}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="w-full h-1 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                      <div className="h-full bg-pink-600 rounded-full transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-slate-400 ml-3 group-hover:text-pink-600 group-hover:translate-x-1 transition-all duration-300" />
+                  </div>
                 </button>
-              </div>
+              ))}
+            </div>
+          </div>
 
-              {loading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-pink-600"></div>
-                  <span className="ml-3 text-slate-600 dark:text-slate-400 font-medium">
-                    Loading recent bookings...
-                  </span>
+          {/* Recent Activity */}
+          <div className="bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 rounded-3xl shadow-xl p-8 border border-slate-200/50 dark:border-slate-700/50">
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="text-2xl font-bold text-pink-600">Recent Activity</h3>
+              <button 
+                onClick={() => {
+                  refreshDashboardData();
+                  router.push('/provider/bookings');
+                }}
+                className="group px-4 py-2 bg-pink-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-pink-500/25 transition-all duration-300 transform hover:scale-105"
+              >
+                <span className="flex items-center space-x-2">
+                  <span>View All Bookings</span>
+                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
+                </span>
+              </button>
+            </div>
+            <div className="space-y-4">
+                {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600"></div>
+                  <span className="ml-2 text-slate-600 dark:text-slate-400">Loading activities...</span>
                 </div>
-              ) : bookings.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-                  {bookings.slice(0, 4).map((booking: any) => {
-                    const statusStyles = getStatusStyles(booking.status || '');
-                    const scheduledDate = booking.scheduledAt || booking.date || booking.createdAt;
-                    const formattedDate = scheduledDate
-                      ? new Date(scheduledDate).toLocaleString(undefined, {
-                          dateStyle: 'medium',
-                          timeStyle: 'short'
-                        })
-                      : 'Date not available';
-                    const amount = booking.amount || booking.totalAmount || booking.price || 0;
-                    const serviceTitle = booking.serviceTitle || booking.service?.name || booking.category || 'Service Booking';
-                    const customerName = booking.customer?.fullName || booking.customerName || booking.customer?.name || 'Customer';
-                    const locationLabel = booking.location || booking.address || [booking.locationCity, booking.locationState].filter(Boolean).join(', ');
-
-                    return (
-                      <div
-                        key={booking.id || `${serviceTitle}-${formattedDate}`}
-                        className="rounded-3xl border border-slate-200/60 dark:border-slate-700/60 bg-white dark:bg-slate-800 shadow-lg p-6 flex flex-col gap-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
-                      >
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <p className="text-lg font-semibold text-slate-900 dark:text-slate-50 leading-tight">
-                              {serviceTitle}
-                            </p>
-                            <p className="text-sm text-slate-500 dark:text-slate-400">for {customerName}</p>
-                          </div>
-                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${statusStyles.container}`}>
-                            <span className={`w-2 h-2 rounded-full mr-2 ${statusStyles.dot}`} />
-                            {(booking.status || 'Unknown').toUpperCase()}
-                          </span>
-                        </div>
-
-                        <div className="space-y-2 text-sm">
-                          <div className="flex items-center space-x-2 text-slate-600 dark:text-slate-300">
-                            <Clock className="w-4 h-4" />
-                            <span>{formattedDate}</span>
-                          </div>
-                          <div className="flex items-center space-x-2 text-slate-600 dark:text-slate-300">
-                            <CreditCard className="w-4 h-4" />
-                            <span>{formatCurrency(amount)}</span>
-                          </div>
-                          {locationLabel && (
-                            <div className="flex items-center space-x-2 text-slate-600 dark:text-slate-300">
-                              <MapPin className="w-4 h-4" />
-                              <span>{locationLabel}</span>
-                            </div>
+              ) : allActivities.length > 0 ? (
+                allActivities.map((activity, index) => (
+                  <div key={index} className="flex items-center space-x-4 p-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                    <div className={`p-3 rounded-full ${
+                      activity.status === 'completed' ? 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400' :
+                      activity.status === 'pending' ? 'bg-amber-100 text-amber-600 dark:bg-amber-900 dark:text-amber-400' :
+                      'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400'
+                    }`}>
+                      {activity.type === 'booking' && <Calendar className="w-5 h-5" />}
+                      {activity.type === 'review' && <Star className="w-5 h-5" />}
+                      {activity.type === 'payment' && <DollarSign className="w-5 h-5" />}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-slate-900 dark:text-slate-50">{activity.message}</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">{activity.time}</p>
+                      {'booking' in activity && activity.booking && (
+                        <div className="text-xs text-slate-400 dark:text-slate-500 mt-1 space-y-1">
+                          <p>Service: {activity.booking.serviceType || activity.booking.category || 'General Service'}</p>
+                          {activity.booking.locationCity && (
+                            <p>Location: {activity.booking.locationCity}, {activity.booking.locationState}</p>
+                          )}
+                          {activity.booking.scheduledAt && (
+                            <p>Scheduled: {new Date(activity.booking.scheduledAt).toLocaleDateString()}</p>
                           )}
                         </div>
-
-                        <Link
-                          href="/provider/bookings"
-                          className="mt-auto inline-flex items-center space-x-2 text-sm font-semibold text-pink-600 hover:text-pink-500 dark:text-pink-400"
-                        >
-                          <span>Manage booking</span>
-                          <ChevronRight className="w-4 h-4" />
-                        </Link>
-                      </div>
-                    );
-                  })}
-                </div>
+                      )}
+                    </div>
+                    <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      activity.status === 'completed' 
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                        : activity.status === 'pending'
+                        ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
+                        : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                    }`}>
+                      {activity.status}
+                    </div>
+                  </div>
+                ))
               ) : (
-                <div className="text-center py-12">
-                  <Calendar className="w-12 h-12 text-slate-400 dark:text-slate-500 mx-auto mb-4" />
-                  <p className="text-slate-600 dark:text-slate-400">No bookings yet.</p>
-                  <p className="text-sm text-slate-500 dark:text-slate-500 mt-1">
-                    New bookings will appear here as soon as customers request your services.
-                  </p>
+                <div className="text-center py-8">
+                  <Calendar className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                  <p className="text-slate-600 dark:text-slate-400">No recent activities</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-500 mt-1">Your booking activities will appear here</p>
                 </div>
               )}
-            </section>
-          </main>
-        </div>
+            </div>
+          </div>
+        </main>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
 
 

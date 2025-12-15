@@ -37,15 +37,6 @@ export default function ProviderSignIn() {
 
       const data = await response.json();
       
-      console.log('Login response:', { 
-        ok: response.ok, 
-        status: response.status,
-        success: data.success, 
-        hasData: !!data.data, 
-        hasToken: !!data.data?.token,
-        message: data.message 
-      });
-      
       if (response.ok && data.success) {
         // Store authentication data
         if (data.data?.token) {
@@ -60,11 +51,9 @@ export default function ProviderSignIn() {
             router.push('/provider/dashboard');
           }, 1500);
         } else {
-          console.error('Token missing in response:', data);
-          toast.error('Login failed. Token not received. Please try again.');
+          toast.error('Login failed. Please try again.');
         }
       } else {
-        console.error('Login failed:', { status: response.status, data });
         toast.error(data.message || 'Login failed');
       }
     } catch (error) {
@@ -247,7 +236,7 @@ export default function ProviderSignIn() {
             {/* Sign Up Link */}
             <div className="mt-6 text-center">
               <p className="text-sm text-slate-600 dark:text-slate-400">
-                Don&apos;t have a provider account?{' '}
+                Don't have a provider account?{' '}
                 <button
                   onClick={() => router.push('/become-provider')}
                   className="text-pink-600 hover:text-pink-500 font-medium"

@@ -1150,7 +1150,7 @@ export default function ProviderSettings() {
                         </div>
                         <div className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
                           <div className="flex items-center justify-between">
-                            <span>{activeSubscription.SubscriptionPlan?.interval || 'Yearly'} fee</span>
+                            <span>{activeSubscription.SubscriptionPlan?.interval || 'Monthly'} fee</span>
                             <span className="font-semibold">
                               ₦{(activeSubscription.SubscriptionPlan?.price || 0).toLocaleString()}
                             </span>

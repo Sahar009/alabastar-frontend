@@ -47,7 +47,7 @@ const subscriptionPlans: SubscriptionPlan[] = [
     id: 'premium',
     name: 'Premium',
     price: 15000,
-    duration: 'Yearly',
+    duration: 'Monthly',
     features: {
       maxPhotos: 10,
       maxVideos: 1,
@@ -144,20 +144,11 @@ export default function SubscriptionManagement() {
       price = parseFloat(plan.price) || 0;
     }
 
-    // Format interval: convert 'yearly' to 'Yearly', 'monthly' to 'Monthly', etc.
-    const formatInterval = (interval: string | undefined) => {
-      if (!interval) return 'Yearly';
-      const lower = interval.toLowerCase();
-      if (lower === 'yearly' || lower === 'year') return 'Yearly';
-      if (lower === 'monthly' || lower === 'month') return 'Monthly';
-      return interval.charAt(0).toUpperCase() + interval.slice(1).toLowerCase();
-    };
-
     return {
       id: plan.id || 'unknown',
       name: plan.name || 'Plan',
       price: price,
-      duration: plan.duration || formatInterval(plan.interval) || 'Yearly',
+      duration: plan.duration || plan.interval || 'month',
       benefits: plan.benefits || [],
       maxPhotos: plan.maxPhotos || plan.features?.maxPhotos || 5,
       maxVideos: plan.maxVideos || plan.features?.maxVideos || 0,
@@ -799,7 +790,7 @@ export default function SubscriptionManagement() {
                     <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
                       <p className="text-sm text-white/80 mb-2">Current Plan</p>
                       <p className="text-xl font-bold">{validatedSubscription.planName}</p>
-                      <p className="text-sm text-white/70">₦{validatedSubscription.amount.toLocaleString()}/year</p>
+                      <p className="text-sm text-white/70">₦{validatedSubscription.amount.toLocaleString()}/month</p>
                     </div>
                     <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
                       <p className="text-sm text-white/80 mb-2">
@@ -1174,7 +1165,7 @@ export default function SubscriptionManagement() {
                   ₦{(selectedPlan.price || 0).toLocaleString()}
                 </div>
                 <p className="text-slate-600 dark:text-slate-400">
-                  {(selectedPlan.price || 0) === 0 ? 'Free forever' : `per ${(selectedPlan.duration || 'year').toLowerCase()}`}
+                  {(selectedPlan.price || 0) === 0 ? 'Free forever' : `per ${(selectedPlan.duration || 'month').toLowerCase()}`}
                 </p>
               </div>
 
