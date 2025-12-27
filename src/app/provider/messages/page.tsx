@@ -184,7 +184,7 @@ function ProviderMessagesPageContent() {
 
   // Load selected conversation from URL
   useEffect(() => {
-    if (selectedConversationId && conversations.length > 0) {
+    if (selectedConversationId && conversations.length > 0 && !selectedConversation) {
       const conv = conversations.find(c => c.id === parseInt(selectedConversationId));
       if (conv) {
         handleSelectConversation(conv);
@@ -653,7 +653,11 @@ function ProviderMessagesPageContent() {
               <div className="p-4 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <button
-                    onClick={() => setSelectedConversation(null)}
+                    onClick={() => {
+                      setSelectedConversation(null);
+                      // Clear URL parameter to prevent reopening
+                      router.push('/provider/messages');
+                    }}
                     className="lg:hidden p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full"
                   >
                     <ArrowLeft className="w-5 h-5" />

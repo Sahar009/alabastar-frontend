@@ -24,7 +24,8 @@ import {
   AlertCircle,
   CheckCircle2,
   X,
-  Loader2
+  Loader2,
+  Mail
 } from "lucide-react";
 
 export default function ProviderBookings() {
@@ -65,16 +66,19 @@ export default function ProviderBookings() {
 
       if (response.ok) {
         const data = await response.json();
-        setBookings(data.bookings || []);
+        console.log('API Response:', data);
+        const bookingsData = data.data?.bookings || [];
+        console.log('Bookings Data:', bookingsData);
+        setBookings(bookingsData);
         
         // Calculate stats
-        const total = data.bookings?.length || 0;
-        const pending = data.bookings?.filter((b: any) => b.status === 'pending').length || 0;
-        const confirmed = data.bookings?.filter((b: any) => b.status === 'confirmed').length || 0;
-        const completed = data.bookings?.filter((b: any) => b.status === 'completed').length || 0;
-        const cancelled = data.bookings?.filter((b: any) => b.status === 'cancelled').length || 0;
-        const totalEarnings = data.bookings?.reduce((sum: number, b: any) => {
-          return b.status === 'completed' ? sum + (b.totalAmount || 0) : sum;
+        const total = bookingsData.length || 0;
+        const pending = bookingsData.filter((b: any) => b.status === 'pending').length || 0;
+        const confirmed = bookingsData.filter((b: any) => b.status === 'confirmed' || b.status === 'accepted').length || 0;
+        const completed = bookingsData.filter((b: any) => b.status === 'completed').length || 0;
+        const cancelled = bookingsData.filter((b: any) => b.status === 'cancelled').length || 0;
+        const totalEarnings = bookingsData.reduce((sum: number, b: any) => {
+          return b.status === 'completed' ? sum + (parseFloat(b.totalAmount) || 0) : sum;
         }, 0) || 0;
 
         setStats({ total, pending, confirmed, completed, cancelled, totalEarnings });
@@ -133,18 +137,52 @@ export default function ProviderBookings() {
     });
   };
 
+  const handleMessageCustomer = async (customer: any) => {
+    try {
+      const token = localStorage.getItem('token');
+      const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      
+      // Create or get direct conversation with customer
+      const response = await fetch(`${base}/api/messages/conversations/direct`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ recipientId: customer.id })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Conversation API Response:', result);
+        if (result.success && result.data?.id) {
+          // Navigate to messages page with conversation ID
+          router.push(`/provider/messages?conversation=${result.data.id}`);
+        } else {
+          toast.error('Failed to start conversation');
+        }
+      } else {
+        toast.error('Failed to start conversation');
+      }
+    } catch (error) {
+      console.error('Error starting conversation:', error);
+      toast.error('Error starting conversation');
+    }
+  };
+
   const filteredBookings = bookings.filter(booking => {
     const matchesFilter = filter === 'all' || booking.status === filter;
     const matchesSearch = booking.customer?.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         booking.service?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         booking.service?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          booking.notes?.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesFilter && matchesSearch;
   });
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-      case 'confirmed': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+      case 'pending': return 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200';
+      case 'accepted': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+      case 'confirmed': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
       case 'completed': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
       case 'cancelled': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
       default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
@@ -156,19 +194,20 @@ export default function ProviderBookings() {
       case 'pending': 
         return (
           <div className="relative">
-            <Clock className="w-4 h-4 text-green-500" />
-            <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <Clock className="w-4 h-4 text-amber-600" />
+            <div className="absolute -top-1 -right-1 w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
           </div>
         );
+      case 'accepted':
       case 'confirmed': 
         return (
           <div className="relative">
-            <CheckCircle className="w-4 h-4 text-green-500" />
-            <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <CheckCircle className="w-4 h-4 text-blue-600" />
+            <div className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
           </div>
         );
-      case 'completed': return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'cancelled': return <XCircle className="w-4 h-4 text-red-500" />;
+      case 'completed': return <CheckCircle className="w-4 h-4 text-green-600" />;
+      case 'cancelled': return <XCircle className="w-4 h-4 text-red-600" />;
       default: return <Clock className="w-4 h-4 text-gray-500" />;
     }
   };
@@ -258,7 +297,7 @@ export default function ProviderBookings() {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700 hover:shadow-md transition-shadow">
+          {/* <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">Earnings</p>
@@ -268,7 +307,7 @@ export default function ProviderBookings() {
                 <DollarSign className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Filters and Search */}
@@ -328,14 +367,14 @@ export default function ProviderBookings() {
                     <div className="flex-1">
                       <div className="flex items-center space-x-4 mb-4">
                         <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
-                          {booking.service?.name || 'General Service'}
+                          {booking.service?.title || 'General Service'}
                         </h3>
                       <div className="flex items-center space-x-3">
                         <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium ${getStatusColor(booking.status)}`}>
                           {getStatusIcon(booking.status)}
                           <span className="ml-2 capitalize">{booking.status}</span>
                         </span>
-                        {(booking.status === 'pending' || booking.status === 'confirmed') && (
+                        {(booking.status === 'pending' || booking.status === 'confirmed' || booking.status === 'accepted') && (
                           <div className="flex items-center space-x-1">
                             <div className="flex space-x-1">
                               <div className="w-2 h-2 bg-green-500 rounded-full animate-progress-dots" style={{ animationDelay: '0ms' }}></div>
@@ -350,53 +389,87 @@ export default function ProviderBookings() {
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-3">
-                          <div className="flex items-center space-x-3 text-sm text-slate-600 dark:text-slate-400">
-                            <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg">
-                              <User className="w-4 h-4" />
+                          <div className="bg-gradient-to-r from-pink-50 to-purple-50 dark:from-pink-900/20 dark:to-purple-900/20 p-4 rounded-lg border border-pink-100 dark:border-pink-800">
+                            <p className="text-xs font-semibold text-pink-600 dark:text-pink-400 uppercase tracking-wide mb-2">Customer Details</p>
+                            <div className="space-y-2">
+                              <div className="flex items-center space-x-2 text-sm">
+                                <User className="w-4 h-4 text-pink-600 dark:text-pink-400" />
+                                <span className="font-semibold text-slate-900 dark:text-slate-100">{booking.customer?.fullName || 'Customer'}</span>
+                              </div>
+                              {booking.customer?.email && (
+                                <div className="flex items-center space-x-2 text-sm text-slate-600 dark:text-slate-400">
+                                  <Mail className="w-4 h-4" />
+                                  <span>{booking.customer.email}</span>
+                                </div>
+                              )}
+                              <div className="flex items-center space-x-2 text-sm text-slate-600 dark:text-slate-400">
+                                <Phone className="w-4 h-4" />
+                                <span>{booking.customer?.phone || 'N/A'}</span>
+                              </div>
                             </div>
-                            <span className="font-medium">{booking.customer?.fullName || 'Customer'}</span>
                           </div>
-                          <div className="flex items-center space-x-3 text-sm text-slate-600 dark:text-slate-400">
-                            <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg">
-                              <Phone className="w-4 h-4" />
+                          
+                          <div className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800">
+                            <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-2">Service Location</p>
+                            <div className="flex items-start space-x-2 text-sm">
+                              <MapPin className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                              <div className="flex flex-col">
+                                {booking.locationAddress && (
+                                  <span className="font-medium text-slate-900 dark:text-slate-100">{booking.locationAddress}</span>
+                                )}
+                                <span className="text-slate-600 dark:text-slate-400">
+                                  {booking.locationCity && booking.locationState 
+                                    ? `${booking.locationCity}, ${booking.locationState}`
+                                    : booking.locationCity || booking.locationState || 'Location not specified'}
+                                </span>
+                              </div>
                             </div>
-                            <span>{booking.customer?.phone || 'N/A'}</span>
-                          </div>
-                          <div className="flex items-center space-x-3 text-sm text-slate-600 dark:text-slate-400">
-                            <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg">
-                              <MapPin className="w-4 h-4" />
-                            </div>
-                            <span>{booking.locationAddress || 'Location not specified'}</span>
                           </div>
                         </div>
                         
                         <div className="space-y-3">
-                          <div className="flex items-center space-x-3 text-sm text-slate-600 dark:text-slate-400">
-                            <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg">
-                              <Calendar className="w-4 h-4" />
+                          <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-4 rounded-lg border border-green-100 dark:border-green-800">
+                            <p className="text-xs font-semibold text-green-600 dark:text-green-400 uppercase tracking-wide mb-2">Scheduled Date & Time</p>
+                            <div className="flex items-center space-x-2 text-sm">
+                              <Calendar className="w-4 h-4 text-green-600 dark:text-green-400" />
+                              <span className="font-medium text-slate-900 dark:text-slate-100">
+                                {new Date(booking.scheduledAt).toLocaleDateString('en-US', { 
+                                  weekday: 'short', 
+                                  year: 'numeric', 
+                                  month: 'short', 
+                                  day: 'numeric' 
+                                })}
+                              </span>
                             </div>
-                            <span>{new Date(booking.scheduledAt).toLocaleDateString()} at {new Date(booking.scheduledAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                            <div className="flex items-center space-x-2 text-sm mt-1">
+                              <Clock className="w-4 h-4 text-green-600 dark:text-green-400" />
+                              <span className="text-slate-600 dark:text-slate-400">
+                                {new Date(booking.scheduledAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                              </span>
+                            </div>
                           </div>
-                          <div className="text-2xl font-bold text-slate-900 dark:text-white">
-                            ₦{booking.totalAmount?.toLocaleString() || '0'}
-                          </div>
+                          
+
+                          
                           {booking.notes && (
-                            <p className="text-sm text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-700 p-3 rounded-lg">
-                              <strong>Notes:</strong> {booking.notes}
-                            </p>
+                            <div className="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-lg border border-slate-200 dark:border-slate-600">
+                              <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide mb-2">Notes</p>
+                              <p className="text-sm text-slate-700 dark:text-slate-300">{booking.notes}</p>
+                            </div>
                           )}
                         </div>
                       </div>
                     </div>
 
                     {/* Actions */}
-                    <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="flex flex-col gap-3">
+                      {/* Booking Status Actions */}
                       {booking.status === 'pending' && (
-                        <>
+                        <div className="flex flex-wrap gap-2">
                           <button
                             onClick={() => handleStatusChange(booking.id, 'confirmed')}
                             disabled={updating === booking.id}
-                            className="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
+                            className="flex-1 min-w-[120px] px-4 py-2.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-all disabled:opacity-50 flex items-center justify-center space-x-2 shadow-sm hover:shadow-md"
                           >
                             {updating === booking.id ? (
                               <Loader2 className="w-4 h-4 animate-spin" />
@@ -408,7 +481,7 @@ export default function ProviderBookings() {
                           <button
                             onClick={() => handleStatusChange(booking.id, 'cancelled')}
                             disabled={updating === booking.id}
-                            className="px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
+                            className="flex-1 min-w-[120px] px-4 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-all disabled:opacity-50 flex items-center justify-center space-x-2 shadow-sm hover:shadow-md"
                           >
                             {updating === booking.id ? (
                               <Loader2 className="w-4 h-4 animate-spin" />
@@ -417,31 +490,46 @@ export default function ProviderBookings() {
                             )}
                             <span>Decline</span>
                           </button>
-                        </>
+                        </div>
                       )}
                       
-                      {booking.status === 'confirmed' && (
+                      {/* Contact Actions */}
+                      <div className="flex flex-wrap gap-2">
                         <button
-                          onClick={() => handleStatusChange(booking.id, 'completed')}
-                          disabled={updating === booking.id}
-                          className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
+                          onClick={() => handleMessageCustomer(booking.customer)}
+                          className="flex-1 min-w-[100px] px-4 py-2.5 bg-pink-600 text-white rounded-lg font-medium hover:bg-pink-700 transition-all flex items-center justify-center space-x-2 shadow-sm hover:shadow-md"
                         >
-                          {updating === booking.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <CheckCircle2 className="w-4 h-4" />
-                          )}
-                          <span>Mark Complete</span>
+                          <MessageSquare className="w-4 h-4" />
+                          <span>Message</span>
                         </button>
-                      )}
-
-                      <button
-                        onClick={() => handleComingSoon("Customer Messages")}
-                        className="px-6 py-3 border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg font-medium hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-pink-600 hover:text-pink-600 transition-colors flex items-center space-x-2"
-                      >
-                        <MessageSquare className="w-4 h-4" />
-                        <span>Message</span>
-                      </button>
+                        
+                        {booking.customer?.phone && (
+                          <>
+                            <button
+                              onClick={() => {
+                                const phone = booking.customer?.phone?.replace(/\D/g, '');
+                                const message = `Hi ${booking.customer?.fullName}, I'm reaching out regarding your booking (ID: ${booking.id}).`;
+                                const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+                                window.open(whatsappUrl, '_blank');
+                              }}
+                              className="flex-1 min-w-[100px] px-4 py-2.5 bg-[#25D366] text-white rounded-lg font-medium hover:bg-[#20BA5A] transition-all flex items-center justify-center space-x-2 shadow-sm hover:shadow-md"
+                            >
+                              <MessageSquare className="w-4 h-4" />
+                              <span>WhatsApp</span>
+                            </button>
+                            
+                            <button
+                              onClick={() => {
+                                window.location.href = `tel:${booking.customer?.phone}`;
+                              }}
+                              className="flex-1 min-w-[100px] px-4 py-2.5 bg-white dark:bg-slate-700 border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg font-medium hover:bg-slate-50 dark:hover:bg-slate-600 hover:border-slate-400 transition-all flex items-center justify-center space-x-2 shadow-sm hover:shadow-md"
+                            >
+                              <Phone className="w-4 h-4" />
+                              <span>Call</span>
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
