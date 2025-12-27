@@ -174,7 +174,7 @@ export default function ProviderBookings() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -187,10 +187,10 @@ export default function ProviderBookings() {
                 <ArrowLeft className="w-6 h-6" />
               </button>
               <div>
-                <h1 className="text-4xl font-bold text-[#ec4899] mb-2">
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
                   Bookings
                 </h1>
-                <p className="text-slate-600 dark:text-slate-400 font-medium">
+                <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
                   Manage your service bookings and track your progress
                 </p>
               </div>
@@ -198,10 +198,10 @@ export default function ProviderBookings() {
             <button
               onClick={fetchBookings}
               disabled={loading}
-              className="group px-4 py-2 bg-[#ec4899] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-pink-500/25 transition-all duration-300 transform hover:scale-105 disabled:opacity-50"
+              className="group px-4 py-2 bg-pink-600 text-white rounded-lg font-medium hover:bg-pink-700 transition-colors disabled:opacity-50"
             >
               <div className="flex items-center space-x-2">
-                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : 'group-hover:rotate-180'} transition-transform duration-500`} />
+                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                 <span>Refresh</span>
               </div>
             </button>
@@ -210,81 +210,80 @@ export default function ProviderBookings() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-          <div className="group bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-pink-500/10 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">Total Bookings</p>
-                <p className="text-3xl font-bold text-[#ec4899]">{stats.total}</p>
+                <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">Total Bookings</p>
+                <p className="text-3xl font-bold text-slate-900 dark:text-white">{stats.total}</p>
               </div>
-              <div className="p-3 bg-pink-100 dark:from-pink-900/30 dark:to-pink-800/30 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                <Calendar className="w-6 h-6 text-[#ec4899] group-hover:animate-bounce" />
+              <div className="p-3 bg-pink-100 dark:bg-pink-900/30 rounded-lg">
+                <Calendar className="w-6 h-6 text-pink-600 dark:text-pink-400" />
               </div>
             </div>
           </div>
 
-          <div className="group bg-gradient-to-br from-white via-amber-50 to-white dark:from-slate-800 dark:via-amber-900/20 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-amber-500/10 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">Pending</p>
-                <p className="text-3xl font-bold text-amber-600 dark:text-amber-400">{stats.pending}</p>
+                <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">Pending</p>
+                <p className="text-3xl font-bold text-slate-900 dark:text-white">{stats.pending}</p>
               </div>
-              <div className="p-3 bg-gradient-to-br from-amber-100 to-yellow-200 dark:from-amber-900/30 dark:to-yellow-800/30 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                <Clock className="w-6 h-6 text-amber-600 dark:text-amber-400 group-hover:animate-pulse" />
+              <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+                <Clock className="w-6 h-6 text-amber-600 dark:text-amber-400" />
               </div>
             </div>
           </div>
 
-          <div className="group bg-gradient-to-br from-white via-pink-50 to-white dark:from-slate-800 dark:via-pink-900/20 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-pink-500/10 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">Confirmed</p>
-                <p className="text-3xl font-bold text-[#ec4899]">{stats.confirmed}</p>
+                <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">Confirmed</p>
+                <p className="text-3xl font-bold text-slate-900 dark:text-white">{stats.confirmed}</p>
               </div>
-              <div className="p-3 bg-pink-100 dark:from-pink-900/30 dark:to-pink-800/30 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                <CheckCircle className="w-6 h-6 text-[#ec4899] group-hover:animate-bounce" />
+              <div className="p-3 bg-pink-100 dark:bg-pink-900/30 rounded-lg">
+                <CheckCircle className="w-6 h-6 text-pink-600 dark:text-pink-400" />
               </div>
             </div>
           </div>
 
-          <div className="group bg-gradient-to-br from-white via-green-50 to-white dark:from-slate-800 dark:via-green-900/20 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-green-500/10 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">Completed</p>
-                <p className="text-3xl font-bold text-green-600 dark:text-green-400">{stats.completed}</p>
+                <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">Completed</p>
+                <p className="text-3xl font-bold text-slate-900 dark:text-white">{stats.completed}</p>
               </div>
-              <div className="p-3 bg-gradient-to-br from-green-100 to-emerald-200 dark:from-green-900/30 dark:to-emerald-800/30 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                <CheckCircle2 className="w-6 h-6 text-green-600 dark:text-green-400 group-hover:animate-pulse" />
+              <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                <CheckCircle2 className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
             </div>
           </div>
 
-          <div className="group bg-gradient-to-br from-white via-emerald-50 to-white dark:from-slate-800 dark:via-emerald-900/20 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">Earnings</p>
-                <p className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">₦{stats.totalEarnings.toLocaleString()}</p>
+                <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">Earnings</p>
+                <p className="text-3xl font-bold text-slate-900 dark:text-white">₦{stats.totalEarnings.toLocaleString()}</p>
               </div>
-              <div className="p-3 bg-gradient-to-br from-emerald-100 to-green-200 dark:from-emerald-900/30 dark:to-emerald-800/30 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-               
-                <span className="w-6 h-6 text-emerald-600 dark:text-emerald-400 group-hover:animate-bounce">₦</span>
+              <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
+                <DollarSign className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
               </div>
             </div>
           </div>
         </div>
 
         {/* Filters and Search */}
-        <div className="bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 mb-8">
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700 mb-8">
           <div className="flex flex-col md:flex-row gap-4">
             {/* Search */}
             <div className="flex-1">
               <div className="relative group">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 group-hover:text-[#ec4899] transition-colors duration-200" />
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
                 <input
                   type="text"
                   placeholder="Search bookings by customer, service, or notes..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 border border-slate-300 dark:border-slate-600 rounded-2xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#ec4899] focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md"
+                  className="w-full pl-12 pr-4 py-3 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-pink-600 focus:border-transparent transition-colors"
                 />
               </div>
             </div>
@@ -295,7 +294,7 @@ export default function ProviderBookings() {
               <select
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
-                className="px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-2xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#ec4899] focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md font-medium"
+                className="px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-pink-600 focus:border-transparent transition-colors font-medium"
               >
                 <option value="all">All Status</option>
                 <option value="pending">Pending</option>
@@ -320,19 +319,19 @@ export default function ProviderBookings() {
             {filteredBookings.map((booking, index) => (
               <div 
                 key={booking.id} 
-                className="group bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 rounded-3xl shadow-lg border border-slate-200/50 dark:border-slate-700/50 overflow-hidden hover:shadow-2xl transition-all duration-500 transform hover:scale-[1.02] hover:-translate-y-1"
+                className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-md transition-shadow"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
-                <div className="p-8">
+                <div className="p-6">
                   <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
                     {/* Booking Info */}
                     <div className="flex-1">
                       <div className="flex items-center space-x-4 mb-4">
-                        <h3 className="text-xl font-bold text-slate-900 dark:text-slate-50 group-hover:text-[#ec4899] transition-colors duration-200">
+                        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
                           {booking.service?.name || 'General Service'}
                         </h3>
                       <div className="flex items-center space-x-3">
-                        <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold shadow-sm status-progress ${getStatusColor(booking.status)}`}>
+                        <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium ${getStatusColor(booking.status)}`}>
                           {getStatusIcon(booking.status)}
                           <span className="ml-2 capitalize">{booking.status}</span>
                         </span>
@@ -352,19 +351,19 @@ export default function ProviderBookings() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-3">
                           <div className="flex items-center space-x-3 text-sm text-slate-600 dark:text-slate-400">
-                            <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-xl">
+                            <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg">
                               <User className="w-4 h-4" />
                             </div>
                             <span className="font-medium">{booking.customer?.fullName || 'Customer'}</span>
                           </div>
                           <div className="flex items-center space-x-3 text-sm text-slate-600 dark:text-slate-400">
-                            <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-xl">
+                            <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg">
                               <Phone className="w-4 h-4" />
                             </div>
                             <span>{booking.customer?.phone || 'N/A'}</span>
                           </div>
                           <div className="flex items-center space-x-3 text-sm text-slate-600 dark:text-slate-400">
-                            <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-xl">
+                            <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg">
                               <MapPin className="w-4 h-4" />
                             </div>
                             <span>{booking.locationAddress || 'Location not specified'}</span>
@@ -373,16 +372,16 @@ export default function ProviderBookings() {
                         
                         <div className="space-y-3">
                           <div className="flex items-center space-x-3 text-sm text-slate-600 dark:text-slate-400">
-                            <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-xl">
+                            <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg">
                               <Calendar className="w-4 h-4" />
                             </div>
                             <span>{new Date(booking.scheduledAt).toLocaleDateString()} at {new Date(booking.scheduledAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                           </div>
-                          <div className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">
+                          <div className="text-2xl font-bold text-slate-900 dark:text-white">
                             ₦{booking.totalAmount?.toLocaleString() || '0'}
                           </div>
                           {booking.notes && (
-                            <p className="text-sm text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-700 p-3 rounded-xl">
+                            <p className="text-sm text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-700 p-3 rounded-lg">
                               <strong>Notes:</strong> {booking.notes}
                             </p>
                           )}
@@ -397,24 +396,24 @@ export default function ProviderBookings() {
                           <button
                             onClick={() => handleStatusChange(booking.id, 'confirmed')}
                             disabled={updating === booking.id}
-                            className="group px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-2xl font-semibold hover:shadow-lg hover:shadow-green-500/25 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 flex items-center space-x-2"
+                            className="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
                           >
                             {updating === booking.id ? (
                               <Loader2 className="w-4 h-4 animate-spin" />
                             ) : (
-                              <CheckCircle className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                              <CheckCircle className="w-4 h-4" />
                             )}
                             <span>Accept</span>
                           </button>
                           <button
                             onClick={() => handleStatusChange(booking.id, 'cancelled')}
                             disabled={updating === booking.id}
-                            className="group px-6 py-3 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-2xl font-semibold hover:shadow-lg hover:shadow-red-500/25 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 flex items-center space-x-2"
+                            className="px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
                           >
                             {updating === booking.id ? (
                               <Loader2 className="w-4 h-4 animate-spin" />
                             ) : (
-                              <XCircle className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                              <XCircle className="w-4 h-4" />
                             )}
                             <span>Decline</span>
                           </button>
@@ -425,12 +424,12 @@ export default function ProviderBookings() {
                         <button
                           onClick={() => handleStatusChange(booking.id, 'completed')}
                           disabled={updating === booking.id}
-                          className="group px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-2xl font-semibold hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 flex items-center space-x-2"
+                          className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
                         >
                           {updating === booking.id ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
                           ) : (
-                            <CheckCircle2 className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                            <CheckCircle2 className="w-4 h-4" />
                           )}
                           <span>Mark Complete</span>
                         </button>
@@ -438,9 +437,9 @@ export default function ProviderBookings() {
 
                       <button
                         onClick={() => handleComingSoon("Customer Messages")}
-                        className="group px-6 py-3 border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-2xl font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-[#ec4899] hover:text-[#ec4899] transition-all duration-300 transform hover:scale-105 flex items-center space-x-2"
+                        className="px-6 py-3 border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg font-medium hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-pink-600 hover:text-pink-600 transition-colors flex items-center space-x-2"
                       >
-                        <MessageSquare className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                        <MessageSquare className="w-4 h-4" />
                         <span>Message</span>
                       </button>
                     </div>
@@ -454,12 +453,12 @@ export default function ProviderBookings() {
         {/* Empty State */}
         {!loading && filteredBookings.length === 0 && (
           <div className="text-center py-16">
-            <div className="relative w-32 h-32 mx-auto mb-8">
-              <div className="absolute inset-0 bg-[#ec4899]/20 rounded-full animate-pulse"></div>
-              <div className="absolute inset-4 bg-[#ec4899]/10 rounded-full"></div>
-              <Calendar className="absolute inset-0 w-16 h-16 text-[#ec4899] mx-auto my-auto animate-bounce" />
+            <div className="relative w-24 h-24 mx-auto mb-8">
+              <div className="p-6 bg-pink-100 dark:bg-pink-900/20 rounded-full">
+                <Calendar className="w-12 h-12 text-pink-600 dark:text-pink-400" />
+              </div>
             </div>
-            <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-50 mb-4">
+            <h3 className="text-xl font-bold text-slate-900 dark:text-slate-50 mb-4">
               {searchTerm || filter !== 'all' ? 'No bookings found' : 'No bookings yet'}
             </h3>
             <p className="text-slate-600 dark:text-slate-400 mb-8 max-w-md mx-auto">
@@ -470,11 +469,11 @@ export default function ProviderBookings() {
             {!searchTerm && filter === 'all' && (
               <button
                 onClick={() => router.push('/provider/dashboard')}
-                className="group px-6 py-3 bg-[#ec4899] text-white rounded-2xl font-semibold hover:shadow-lg hover:shadow-pink-500/25 transition-all duration-300 transform hover:scale-105"
+                className="px-6 py-3 bg-pink-600 text-white rounded-lg font-medium hover:bg-pink-700 transition-colors"
               >
                 <span className="flex items-center space-x-2">
                   <span>Go to Dashboard</span>
-                  <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform duration-200" />
+                  <ArrowLeft className="w-4 h-4" />
                 </span>
               </button>
             )}

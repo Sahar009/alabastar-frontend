@@ -626,7 +626,7 @@ export default function ProviderDashboard() {
   // Show loading while checking profile completion
   if (!profileCompletionChecked) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600 mx-auto mb-4"></div>
           <p className="text-slate-600 dark:text-slate-400">Checking profile completion...</p>
@@ -636,7 +636,7 @@ export default function ProviderDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div 
@@ -646,15 +646,15 @@ export default function ProviderDashboard() {
       )}
 
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-white via-slate-50 to-slate-100 dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 shadow-2xl border-r border-slate-200/50 dark:border-slate-700/50 backdrop-blur-xl transform transition-all duration-500 ease-in-out lg:translate-x-0 lg:static lg:inset-0 lg:flex-shrink-0 ${
-        sidebarOpen ? 'translate-x-0 shadow-3xl' : '-translate-x-full'
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-slate-800 shadow-xl border-r border-slate-200 dark:border-slate-700 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 lg:flex-shrink-0 ${
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
-          <div className="flex items-center justify-between p-6 border-b border-slate-200/50 dark:border-slate-700/50 bg-gradient-to-r from-white/80 to-slate-50/80 dark:from-slate-800/80 dark:to-slate-900/80 backdrop-blur-sm">
-            <div className="flex items-center space-x-3 group">
-              <div className="w-12 h-12 bg-pink-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300">
-                <Award className="w-7 h-7 text-white group-hover:rotate-12 transition-transform duration-300" />
+          <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
+            <div className="flex items-center space-x-3">
+              <div className="w-12 h-12 bg-pink-600 rounded-xl flex items-center justify-center">
+                <Award className="w-7 h-7 text-white" />
               </div>
               <div>
               {/* <Image src="/brand/logo.png" alt="Alabastar" width={100} height={70} priority /> */}
@@ -670,18 +670,18 @@ export default function ProviderDashboard() {
           </div>
 
           {/* User Profile Section */}
-          <div className="p-6 border-b border-slate-200/50 dark:border-slate-700/50 bg-gradient-to-r from-slate-50/50 to-white/50 dark:from-slate-800/50 dark:to-slate-900/50">
-            <div className="flex items-center space-x-3 group">
+          <div className="p-6 border-b border-slate-200 dark:border-slate-700">
+            <div className="flex items-center space-x-3">
               <div className="relative">
-                <div className="w-14 h-14 bg-gradient-to-r from-[#FF6B35] to-[#EC4899] rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300">
-                  <User className="w-7 h-7 text-white group-hover:scale-110 transition-transform duration-300" />
+                <div className="w-14 h-14 bg-pink-600 rounded-xl flex items-center justify-center">
+                  <User className="w-7 h-7 text-white" />
                 </div>
                 <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white dark:border-slate-800 flex items-center justify-center">
                   <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
                 </div>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-slate-900 dark:text-slate-50 truncate group-hover:text-pink-600 transition-colors duration-200">
+                <p className="text-sm font-semibold text-slate-900 dark:text-slate-50 truncate">
                   {user?.fullName || 'Provider'}
                 </p>
                 <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
@@ -690,10 +690,10 @@ export default function ProviderDashboard() {
               </div>
             </div>
             <div className="mt-4 flex items-center space-x-2">
-              <div className={`px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm transition-all duration-200 ${
+              <div className={`px-3 py-1.5 rounded-full text-xs font-semibold ${
                 providerProfile?.verificationStatus === 'verified' 
-                  ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 dark:from-green-900 dark:to-emerald-900 dark:text-green-200'
-                  : 'bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-800 dark:from-amber-900 dark:to-yellow-900 dark:text-amber-200'
+                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                  : 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
               }`}>
                 {providerProfile?.verificationStatus === 'verified' ? '✓ Verified' : '⏳ Pending'}
               </div>
@@ -734,26 +734,26 @@ export default function ProviderDashboard() {
                     handleComingSoon(item.title);
                   }
                 }}
-                className={`group w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-300 transform hover:scale-105 ${
+                className={`group w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
                   item.active 
-                    ? 'bg-pink-600 text-white shadow-lg shadow-pink-500/25' 
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-gradient-to-r hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-700 dark:hover:to-slate-600 hover:text-slate-900 dark:hover:text-slate-100 hover:shadow-md'
+                    ? 'bg-pink-600 text-white' 
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100'
                 }`}
                 style={{ animationDelay: `${index * 50}ms` }}
               >
                 <div className="flex items-center space-x-3">
-                  <div className={`p-2 rounded-xl transition-all duration-300 ${
+                  <div className={`p-2 rounded-lg ${
                     item.active 
                       ? 'bg-white/20' 
-                      : 'bg-slate-100 dark:bg-slate-700 group-hover:bg-white dark:group-hover:bg-slate-600'
+                      : 'bg-slate-100 dark:bg-slate-700'
                   }`}>
-                    <item.icon className={`w-5 h-5 transition-all duration-300 ${
+                    <item.icon className={`w-5 h-5 ${
                       item.active 
                         ? 'text-white' 
-                        : 'text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-100 group-hover:scale-110'
+                        : 'text-slate-600 dark:text-slate-400'
                     }`} />
                   </div>
-                  <span className="transition-all duration-300">{item.title}</span>
+                  <span>{item.title}</span>
                 </div>
                 {item.badge && (
                   <span className="px-2.5 py-1 text-xs bg-red-500 text-white rounded-full shadow-lg animate-pulse">
@@ -765,13 +765,13 @@ export default function ProviderDashboard() {
           </nav>
 
           {/* Logout Button */}
-          <div className="p-4 border-t border-slate-200/50 dark:border-slate-700/50 bg-gradient-to-r from-red-50/50 to-pink-50/50 dark:from-red-900/10 dark:to-pink-900/10">
+          <div className="p-4 border-t border-slate-200 dark:border-slate-700">
             <button
               onClick={handleLogout}
-              className="group w-full flex items-center space-x-3 px-4 py-3 text-sm font-semibold text-red-600 dark:text-red-400 hover:bg-gradient-to-r hover:from-red-100 hover:to-pink-100 dark:hover:from-red-900/30 dark:hover:to-pink-900/30 rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+              className="group w-full flex items-center space-x-3 px-4 py-3 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors"
             >
-              <div className="p-2 rounded-xl bg-red-100 dark:bg-red-900/30 group-hover:bg-red-200 dark:group-hover:bg-red-800/50 transition-all duration-300">
-                <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+              <div className="p-2 rounded-lg bg-red-100 dark:bg-red-900/30">
+                <LogOut className="w-5 h-5" />
               </div>
               <span>Logout</span>
             </button>
@@ -782,22 +782,22 @@ export default function ProviderDashboard() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Header */}
-        <header className="bg-gradient-to-r from-white via-slate-50 to-white dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 shadow-lg border-b border-slate-200/50 dark:border-slate-700/50 backdrop-blur-xl">
+        <header className="bg-white dark:bg-slate-800 shadow-sm border-b border-slate-200 dark:border-slate-700">
           <div className="px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center py-6">
               <div className="flex items-center space-x-4">
                 <button
                   onClick={() => setSidebarOpen(true)}
-                  className="lg:hidden p-3 rounded-2xl text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all duration-200"
+                  className="lg:hidden p-3 rounded-xl text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                 >
                   <Menu className="w-6 h-6" />
                 </button>
                 <div>
-                  <h1 className="text-3xl font-bold text-pink-600">
+                  <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
                     Dashboard
                   </h1>
-                  <p className="text-slate-600 dark:text-slate-400 font-medium">
-                    Welcome back, <span className="text-pink-600 font-semibold">{user?.fullName || 'Provider'}</span>! 👋
+                  <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                    Welcome back, <span className="font-medium text-slate-900 dark:text-white">{user?.fullName || 'Provider'}</span>
                   </p>
                 </div>
               </div>
@@ -934,79 +934,79 @@ export default function ProviderDashboard() {
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
           {/* Stats Overview */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-            <div className="group bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">Total Bookings</p>
-                  <p className="text-4xl font-bold text-pink-600">{stats.totalBookings}</p>
-                  <p className="text-xs text-green-600 dark:text-green-400 flex items-center mt-2 font-medium">
-                    <TrendingUp className="w-3 h-3 mr-1 animate-pulse" />
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">Total Bookings</p>
+                  <p className="text-3xl font-bold text-slate-900 dark:text-white">{stats.totalBookings}</p>
+                  <p className="text-xs text-green-600 dark:text-green-400 flex items-center mt-2">
+                    <TrendingUp className="w-3 h-3 mr-1" />
                     +12% from last month
                   </p>
                 </div>
-                <div className="p-4 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                  <Calendar className="w-8 h-8 text-blue-600 dark:text-blue-400 group-hover:animate-bounce" />
+                <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                  <Calendar className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                 </div>
               </div>
             </div>
 
-            <div className="group bg-gradient-to-br from-white via-green-50 to-white dark:from-slate-800 dark:via-green-900/20 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-green-500/10 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">Completed</p>
-                  <p className="text-4xl font-bold text-green-600 dark:text-green-400">{stats.completedBookings}</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-medium">
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">Completed</p>
+                  <p className="text-3xl font-bold text-slate-900 dark:text-white">{stats.completedBookings}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
                     {Math.round((stats.completedBookings / stats.totalBookings) * 100)}% completion rate
                   </p>
                 </div>
-                <div className="p-4 bg-gradient-to-br from-green-100 to-emerald-200 dark:from-green-900/30 dark:to-emerald-800/30 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                  <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400 group-hover:animate-pulse" />
+                <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                  <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
                 </div>
               </div>
             </div>
 
-            <div className="group bg-gradient-to-br from-white via-amber-50 to-white dark:from-slate-800 dark:via-amber-900/20 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-amber-500/10 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">Pending</p>
-                  <p className="text-4xl font-bold text-amber-600 dark:text-amber-400">{stats.pendingBookings}</p>
-                  <p className="text-xs text-amber-600 dark:text-amber-400 mt-2 font-medium">
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">Pending</p>
+                  <p className="text-3xl font-bold text-slate-900 dark:text-white">{stats.pendingBookings}</p>
+                  <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
                     Requires attention
                   </p>
                 </div>
-                <div className="p-4 bg-gradient-to-br from-amber-100 to-yellow-200 dark:from-amber-900/30 dark:to-yellow-800/30 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                  <Clock className="w-8 h-8 text-amber-600 dark:text-amber-400 group-hover:animate-spin" />
+                <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+                  <Clock className="w-6 h-6 text-amber-600 dark:text-amber-400" />
                 </div>
               </div>
             </div>
 
-            <div className="group bg-gradient-to-br from-white via-emerald-50 to-white dark:from-slate-800 dark:via-emerald-900/20 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">Total Earnings</p>
-                  <p className="text-4xl font-bold text-pink-600">₦{stats.totalEarnings.toLocaleString()}</p>
-                  <p className="text-xs text-green-600 dark:text-green-400 flex items-center mt-2 font-medium">
-                    <TrendingUp className="w-3 h-3 mr-1 animate-pulse" />
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">Total Earnings</p>
+                  <p className="text-3xl font-bold text-slate-900 dark:text-white">₦{stats.totalEarnings.toLocaleString()}</p>
+                  <p className="text-xs text-green-600 dark:text-green-400 flex items-center mt-2">
+                    <TrendingUp className="w-3 h-3 mr-1" />
                     +8% from last month
                   </p>
                 </div>
-                <div className="p-4 bg-gradient-to-br from-emerald-100 to-green-200 dark:from-emerald-900/30 dark:to-green-800/30 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                <span className="w-8 h-8 text-emerald-600 dark:text-emerald-400 group-hover:animate-bounce">₦</span>
+                <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
+                  <DollarSign className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
                 </div>
               </div>
             </div>
 
-            <div className="group bg-gradient-to-br from-white via-purple-50 to-white dark:from-slate-800 dark:via-purple-900/20 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">Wallet Balance</p>
-                  <p className="text-4xl font-bold text-purple-600 dark:text-purple-400">₦{stats.walletBalance.toLocaleString()}</p>
-                  <p className="text-xs text-purple-600 dark:text-purple-400 mt-2 font-medium">
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">Wallet Balance</p>
+                  <p className="text-3xl font-bold text-slate-900 dark:text-white">₦{stats.walletBalance.toLocaleString()}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
                     Available for withdrawal
                   </p>
                 </div>
-                <div className="p-4 bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/30 dark:to-purple-800/30 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                  <CreditCard className="w-8 h-8 text-purple-600 dark:text-purple-400 group-hover:animate-bounce" />
+                <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                  <CreditCard className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                 </div>
               </div>
             </div>
@@ -1016,21 +1016,19 @@ export default function ProviderDashboard() {
           {providerProfile && (
             <div className="mb-8">
               {providerProfile.topListingEndDate && new Date(providerProfile.topListingEndDate) > new Date() ? (
-                <div className="bg-gradient-to-r from-orange-500 to-pink-600 rounded-3xl shadow-2xl p-6 text-white border-2 border-orange-300 dark:border-pink-400 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
-                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12"></div>
+                <div className="bg-gradient-to-r from-pink-600 to-pink-700 rounded-xl shadow-lg p-6 text-white relative overflow-hidden">
                   <div className="relative z-10">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center space-x-3">
-                        <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
-                          <Activity className="w-6 h-6 animate-pulse" />
+                        <div className="p-2 bg-white/20 rounded-lg">
+                          <Activity className="w-6 h-6" />
                         </div>
                         <div>
                           <h3 className="text-xl font-bold">Top Listing Active</h3>
                           <p className="text-sm text-white/90">Your profile is featured!</p>
                         </div>
                       </div>
-                      <div className="px-4 py-2 bg-white/20 rounded-full backdrop-blur-sm">
+                      <div className="px-4 py-2 bg-white/20 rounded-full">
                         <span className="text-sm font-bold">PREMIUM</span>
                       </div>
                     </div>
@@ -1055,7 +1053,7 @@ export default function ProviderDashboard() {
                         </p>
                       </div>
                     </div>
-                    <div className="mt-4 p-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+                    <div className="mt-4 p-3 bg-white/10 rounded-lg border border-white/20">
                       <p className="text-xs text-white/90">
                         <span className="font-semibold">✨ Benefits:</span> Your profile appears at the top of search results, increasing visibility and bookings.
                       </p>
@@ -1063,8 +1061,7 @@ export default function ProviderDashboard() {
                   </div>
                 </div>
               ) : (
-                <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200 dark:border-slate-700 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-100 to-pink-100 dark:from-orange-900/20 dark:to-pink-900/20 rounded-full -mr-16 -mt-16"></div>
+                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700">
                   <div className="relative z-10">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center space-x-3">
@@ -1082,7 +1079,7 @@ export default function ProviderDashboard() {
                     </p>
                     <Link 
                       href="/provider/settings"
-                      className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-600 text-white rounded-xl font-semibold hover:opacity-90 transition-all duration-300 shadow-lg hover:shadow-xl"
+                      className="inline-flex items-center space-x-2 px-6 py-3 bg-pink-600 text-white rounded-lg font-medium hover:bg-pink-700 transition-colors"
                     >
                       <Award className="w-5 h-5" />
                       <span>Upgrade to Premium</span>
@@ -1096,7 +1093,7 @@ export default function ProviderDashboard() {
 
           {/* Rating & Profile Cards */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 border border-slate-200 dark:border-slate-700">
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">Rating & Reviews</h3>
                 <Star className="w-5 h-5 text-yellow-500" />
@@ -1183,10 +1180,10 @@ export default function ProviderDashboard() {
 
           {/* Referral Program Section */}
           <div className="mb-8">
-            <h3 className="text-2xl font-bold text-pink-600 mb-6">Referral Program</h3>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Referral Program</h3>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Referral Code Card */}
-              <div className="bg-gradient-to-br from-white via-pink-50 to-white dark:from-slate-800 dark:via-pink-900/20 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50">
+              <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700">
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="text-lg font-semibold text-slate-900 dark:text-slate-50">Your Referral Code</h4>
                   <Gift className="w-6 h-6 text-pink-600" />
@@ -1194,7 +1191,7 @@ export default function ProviderDashboard() {
                 
                 {referralCode ? (
                   <div className="space-y-4">
-                    <div className="bg-gradient-to-r from-pink-100 to-pink-200 dark:from-pink-900/30 dark:to-pink-800/30 rounded-2xl p-4 border-2 border-dashed border-pink-300 dark:border-pink-600">
+                    <div className="bg-pink-50 dark:bg-pink-900/20 rounded-lg p-4 border-2 border-dashed border-pink-200 dark:border-pink-800">
                       <div className="text-center">
                         <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">Share this code with new providers</p>
                         <div className="text-3xl font-bold text-pink-600 font-mono tracking-wider">
@@ -1206,14 +1203,14 @@ export default function ProviderDashboard() {
                     <div className="flex space-x-3">
                       <button
                         onClick={copyReferralCode}
-                        className="flex-1 flex items-center justify-center space-x-2 px-4 py-3 bg-pink-600 text-white rounded-xl font-semibold hover:bg-pink-700 transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+                        className="flex-1 flex items-center justify-center space-x-2 px-4 py-3 bg-pink-600 text-white rounded-lg font-medium hover:bg-pink-700 transition-colors"
                       >
                         <Copy className="w-4 h-4" />
                         <span>Copy Code</span>
                       </button>
                       <button
                         onClick={shareReferralCode}
-                        className="flex-1 flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-orange-500 to-pink-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-pink-700 transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+                        className="flex-1 flex items-center justify-center space-x-2 px-4 py-3 bg-slate-700 dark:bg-slate-600 text-white rounded-lg font-medium hover:bg-slate-800 dark:hover:bg-slate-500 transition-colors"
                       >
                         <Share2 className="w-4 h-4" />
                         <span>Share</span>
@@ -1235,7 +1232,7 @@ export default function ProviderDashboard() {
               </div>
 
               {/* Referral Stats Card */}
-              <div className="bg-gradient-to-br from-white via-emerald-50 to-white dark:from-slate-800 dark:via-emerald-900/20 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50">
+              <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700">
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="text-lg font-semibold text-slate-900 dark:text-slate-50">Referral Stats</h4>
                   <TrendingUp className="w-6 h-6 text-emerald-600" />
@@ -1243,7 +1240,7 @@ export default function ProviderDashboard() {
                 
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-4 bg-gradient-to-br from-emerald-100 to-green-200 dark:from-emerald-900/30 dark:to-green-800/30 rounded-2xl">
+                    <div className="text-center p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
                       <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                         {referralStats.totalReferrals}
                       </div>
@@ -1251,7 +1248,7 @@ export default function ProviderDashboard() {
                         Total Referrals
                       </div>
                     </div>
-                    <div className="text-center p-4 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30 rounded-2xl">
+                    <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                       <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                         {referralStats.completedReferrals}
                       </div>
@@ -1262,7 +1259,7 @@ export default function ProviderDashboard() {
                   </div>
                   
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl">
+                    <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
                       <div className="flex items-center space-x-2">
                         <DollarSign className="w-4 h-4 text-green-600" />
                         <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Total Commissions</span>
@@ -1272,7 +1269,7 @@ export default function ProviderDashboard() {
                       </span>
                     </div>
                     
-                    <div className="flex items-center justify-between p-3 bg-gradient-to-r from-amber-100 to-yellow-100 dark:from-amber-900/20 dark:to-yellow-900/20 rounded-xl">
+                    <div className="flex items-center justify-between p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
                       <div className="flex items-center space-x-2">
                         <Clock className="w-4 h-4 text-amber-600" />
                         <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Pending</span>
@@ -1295,29 +1292,26 @@ export default function ProviderDashboard() {
 
           {/* Quick Actions */}
           <div className="mb-8">
-            <h3 className="text-2xl font-bold text-pink-600 mb-8">Quick Actions</h3>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Quick Actions</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {quickActions.map((action, index) => (
                 <button
                   key={index}
                   onClick={action.onClick}
-                  className="group bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 rounded-3xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl transition-all duration-500 text-left transform hover:scale-105 hover:-translate-y-2"
+                  className="group bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700 hover:shadow-md transition-shadow text-left"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <div className="flex items-center space-x-4 mb-4">
-                    <div className={`p-4 rounded-2xl ${action.color} text-white group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg`}>
-                      <action.icon className="w-6 h-6" />
+                    <div className={`p-3 rounded-lg ${action.color} text-white`}>
+                      <action.icon className="w-5 h-5" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-bold text-slate-900 dark:text-slate-50 group-hover:text-pink-600 transition-colors duration-200">{action.title}</h4>
-                      <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">{action.description}</p>
+                      <h4 className="font-semibold text-slate-900 dark:text-slate-50">{action.title}</h4>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">{action.description}</p>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <div className="w-full h-1 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                      <div className="h-full bg-pink-600 rounded-full transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-slate-400 ml-3 group-hover:text-pink-600 group-hover:translate-x-1 transition-all duration-300" />
+                  <div className="flex items-center justify-end">
+                    <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300 transition-colors" />
                   </div>
                 </button>
               ))}
@@ -1325,19 +1319,19 @@ export default function ProviderDashboard() {
           </div>
 
           {/* Recent Activity */}
-          <div className="bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 rounded-3xl shadow-xl p-8 border border-slate-200/50 dark:border-slate-700/50">
-            <div className="flex items-center justify-between mb-8">
-              <h3 className="text-2xl font-bold text-pink-600">Recent Activity</h3>
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">Recent Activity</h3>
               <button 
                 onClick={() => {
                   refreshDashboardData();
                   router.push('/provider/bookings');
                 }}
-                className="group px-4 py-2 bg-pink-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-pink-500/25 transition-all duration-300 transform hover:scale-105"
+                className="group px-4 py-2 bg-pink-600 text-white rounded-lg font-medium hover:bg-pink-700 transition-colors"
               >
                 <span className="flex items-center space-x-2">
                   <span>View All Bookings</span>
-                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
+                  <ChevronRight className="w-4 h-4" />
                 </span>
               </button>
             </div>
@@ -1349,7 +1343,7 @@ export default function ProviderDashboard() {
                 </div>
               ) : allActivities.length > 0 ? (
                 allActivities.map((activity, index) => (
-                  <div key={index} className="flex items-center space-x-4 p-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                  <div key={index} className="flex items-center space-x-4 p-4 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                     <div className={`p-3 rounded-full ${
                       activity.status === 'completed' ? 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400' :
                       activity.status === 'pending' ? 'bg-amber-100 text-amber-600 dark:bg-amber-900 dark:text-amber-400' :
